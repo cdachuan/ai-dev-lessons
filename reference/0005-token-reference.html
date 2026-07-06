@@ -1,0 +1,57 @@
+# Token 速查表
+
+> 第 5 课参考文档 · 2026-06-27
+
+## 什么是 Token？
+
+Token 是大语言模型处理文本的**最小单位**。模型不按「字」或「词」读文本，而是按 token。分词器（tokenizer）负责把文本切成 token 序列。
+
+## 经验换算
+
+| 语言 | 1 个 token ≈ |
+|------|-------------|
+| 英文 | 0.75 个单词 / 4 个字符 |
+| 中文 | 1~2 个汉字 |
+| 代码 | 运算符、括号常独立为 1 token |
+
+## Token 切分示例
+
+| 原文 | Token 数 | 切分（示意） |
+|------|---------|-------------|
+| `Hello, world!` | 4 | `Hello` `,` ` world` `!` |
+| `你好世界` | 2 | `你好` `世界` |
+| `请帮我总结合同` | 5 | `请` `帮` `我` `总结` `合同` |
+| `print("hi")` | 5 | `print` `(` `"` `hi` `"` `)` |
+
+## DeepSeek API 定价（截至 2026-06）
+
+| 模型 | 输入 (百万 token) | 输出 (百万 token) |
+|------|-------------------|-------------------|
+| deepseek-chat (V3) | ¥2 | ¥8 |
+
+## 常见用量参考
+
+| 场景 | 输入 token | 输出 token | 费用（约） |
+|------|-----------|-----------|-----------|
+| 简单问答 | 50~200 | 100~500 | < ¥0.01 |
+| 文档总结 | 2000~5000 | 500~1500 | ¥0.01~0.03 |
+| 长对话 (20轮) | 3000~8000 | 500~2000 | ¥0.02~0.05 |
+
+## API 中获取 token 统计
+
+```python
+response = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=[{"role": "user", "content": "..."}]
+)
+
+print(response.usage.prompt_tokens)      # 输入 token
+print(response.usage.completion_tokens)  # 输出 token
+print(response.usage.total_tokens)       # 总计
+```
+
+## 上下文窗口
+
+DeepSeek-V3：**128K token**（约等于一本书）
+
+超过窗口的对话历史会被截断——最早的对话「被遗忘」。

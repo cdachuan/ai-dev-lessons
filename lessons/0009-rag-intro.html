@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0009 · RAG：让 AI 基于你的文档回答</title>
+<style>
+  :root {
+    --bg: #fdfcf9;
+    --text: #2c2c2c;
+    --accent: #c44d34;
+    --subtle: #6b6b6b;
+    --card: #f6f3ee;
+    --border: #e0dcd4;
+    --code-bg: #f0ede8;
+    --green: #2b6e4f;
+    --highlight: #fef3c7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", Georgia, "Times New Roman", serif;
+    background: var(--bg); color: var(--text);
+    max-width: 720px; margin: 0 auto; padding: 48px 24px 72px;
+    line-height: 1.8;
+  }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  h1 span { color: var(--accent); }
+  .meta { color: var(--subtle); font-size: 14px; margin-bottom: 32px; }
+  h2 {
+    font-size: 18px; font-weight: 700; margin: 36px 0 12px;
+    border-bottom: 1px solid var(--border); padding-bottom: 4px;
+  }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 24px; }
+  li { margin-bottom: 6px; }
+  pre, code {
+    font-family: "JetBrains Mono", "Cascadia Code", "SF Mono", Consolas, monospace;
+    font-size: 14px;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    line-height: 1.6;
+    margin: 16px 0;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 6px; padding: 16px 20px; margin: 16px 0;
+  }
+  .card-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; color: var(--accent); }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 14px;
+  }
+  .callout strong { color: #92400e; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 15px; }
+  th, td { padding: 8px 12px; border: 1px solid var(--border); text-align: left; }
+  th { background: var(--card); font-weight: 700; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .nav-links { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 14px; }
+  .nav-links a { margin-right: 16px; }
+  .diagram {
+    text-align: center; margin: 20px 0; font-size: 15px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    line-height: 2;
+    color: var(--subtle);
+  }
+  .diagram .highlight { color: var(--accent); font-weight: 700; }
+  .quiz { margin: 20px 0; }
+  .quiz ol { list-style-type: upper-alpha; }
+  .footnote { color: var(--subtle); font-size: 13px; margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<h1>📚 <span>RAG</span>：让 AI 基于你的文档回答</h1>
+<p class="meta">第 9 课 · 2026-07-06 · 概念 + 代码</p>
+
+<div class="callout">
+  <strong>🎯 增量胜利：</strong>学完这课，你就理解了为什么让 AI 「先查资料再回答」比「直接回答」靠谱得多，以及用 10 行代码就能实现这个能力。
+</div>
+
+<h2>回顾：上节课的问题</h2>
+
+<p>在第 5 课，我们写了一个读文件总结脚本。那个脚本有一个<strong>明显的天花板</strong>：</p>
+
+<ul>
+  <li>把<strong>整份文档当 prompt 发给 AI</strong></li>
+  <li>如果文档太长（超过模型的上下文窗口），会报错或被截断</li>
+  <li>如果只问文档里的某个细节，AI 还是要处理整份文档——浪费 token，浪费钱</li>
+</ul>
+
+<p>更糟糕的场景更常见：你手头有<strong>几十份文档</strong>或者一个<strong>公司的知识库</strong>（产品手册、合同模板、制度文件），你不可能把全部内容塞进一个 prompt。这就是 RAG 要解决的问题。</p>
+
+<div class="card">
+  <div class="card-title">💡 RAG 的全称</div>
+  <p><strong>R</strong>etrieval-<strong>A</strong>ugmented <strong>G</strong>eneration = <strong>检索增强生成</strong>。</p>
+  <p>核心思想很简单：<strong>回答问题之前，先到文档库里找相关信息，把找到的内容塞进 prompt 里，再让 AI 回答。</strong></p>
+</div>
+
+<h2>RAG 的三步流程</h2>
+
+<p>RAG 其实就三步，非常直观：</p>
+
+<div class="diagram">
+  ┌──────────┐    ┌──────────┐    ┌──────────┐<br>
+  │  1. 检索  │ →  │  2. 增强  │ →  │  3. 生成  │<br>
+  │ 找相关文档 │    │ 拼进prompt│    │ AI 作答   │<br>
+  └──────────┘    └──────────┘    └──────────┘
+</div>
+
+<table>
+  <tr><th>步骤</th><th>做什么</th><th>大白话</th></tr>
+  <tr>
+    <td><strong>1. 检索（Retrieve）</strong></td>
+    <td>从文档库里找到与问题最相关的几段</td>
+    <td>「关于这个问题的资料在文档的哪儿？」</td>
+  </tr>
+  <tr>
+    <td><strong>2. 增强（Augment）</strong></td>
+    <td>把检索到的段落 + 原问题拼成一个 prompt</td>
+    <td>「给你三段参考资料，请基于它们回答以下问题」</td>
+  </tr>
+  <tr>
+    <td><strong>3. 生成（Generate）</strong></td>
+    <td>把拼好的 prompt 发给 DeepSeek API</td>
+    <td>第 3 课学过的那一行 <code>client.chat.completions.create()</code></td>
+  </tr>
+</table>
+
+<h2>可视化理解</h2>
+
+<p>对比一下「纯模型回答」和「RAG 回答」：</p>
+
+<table>
+  <tr><th></th><th>纯模型回答</th><th>RAG 回答</th></tr>
+  <tr>
+    <td>信息来源</td>
+    <td>模型训练时的记忆（可能过时）</td>
+    <td>你提供的实时文档</td>
+  </tr>
+  <tr>
+    <td>能回答</td>
+    <td>「什么是变压器？」（常识）</td>
+    <td>「咱们公司去年的营收是多少？」（内部信息）</td>
+  </tr>
+  <tr>
+    <td>幻觉风险</td>
+    <td>高——模型可能「编」答案</td>
+    <td>低——基于你的文档说话</td>
+  </tr>
+  <tr>
+    <td>知识更新</td>
+    <td>要重新训练模型（贵）</td>
+    <td>换一个文档即可（便宜）</td>
+  </tr>
+  <tr>
+    <td>适用场景</td>
+    <td>闲聊、常识问答、翻译、写作</td>
+    <td>客服问答、企业内部搜索、合同审查</td>
+  </tr>
+</table>
+
+<h2>10 行核心代码</h2>
+
+<p>下面是最简 RAG 的实现。先看代码，再看逐行解释。</p>
+
+<pre><code>from openai import OpenAI
+import jieba                            # ← 用于分词
+
+client = OpenAI(api_key="sk-你的密钥", base_url="https://api.deepseek.com")
+
+# —— 1. 准备文档库（三句话当做三篇「文档」） ——
+docs = [
+    "公司2024年营收为12.5亿元，同比增长18%。",
+    "公司主营业务为AI软件开发，客户包括金融和医疗行业。",
+    "2025年Q1净利润为3200万元，毛利率65%。"
+]
+
+# —— 2. 用户提问 ——
+question = "公司去年营收是多少？"
+
+# —— 3. 检索：用关键词匹配找相关文档 ——
+words = set(jieba.lcut(question))      # 把问题切成词
+scores = []
+for i, doc in enumerate(docs):
+    doc_words = set(jieba.lcut(doc))
+    overlap = len(words & doc_words)    # 交集大小 = 相关度
+    scores.append((overlap, i))
+scores.sort(reverse=True)
+top_docs = [docs[i] for _, i in scores[:2]]  # 取前 2 条
+
+# —— 4. 增强：构造 prompt ——
+context = "\n".join(top_docs)
+prompt = f"""基于以下资料回答问题：
+
+{context}
+
+问题：{question}
+请用中文简洁回答。如果资料中没有相关信息，请说「资料中未找到相关信息」"""
+
+# —— 5. 生成：调 API ——
+response = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=[{"role": "user", "content": prompt}]
+)
+print(response.choices[0].message.content)
+</code></pre>
+
+<h2>逐行解释</h2>
+
+<table>
+  <tr><th>代码</th><th>什么意思</th></tr>
+  <tr>
+    <td><code>import jieba</code></td>
+    <td>引入分词库。中文不按空格分词，需要这个库把「公司去年营收是多少？」切成「公司/去年/营收/是/多少」。<a href="https://github.com/fxsjy/jieba" target="_blank">jieba</a> 是最流行的中文分词库</td>
+  </tr>
+  <tr>
+    <td><code>set(jieba.lcut(question))</code></td>
+    <td>把句子分词后转成集合（set），方便做交集运算</td>
+  </tr>
+  <tr>
+    <td><code>len(words & doc_words)</code></td>
+    <td>计算问题和文档有多少个<strong>相同的词</strong>。词重叠越多 ≈ 越相关。这就是最简单的「检索」——<strong>基于关键词匹配</strong></td>
+  </tr>
+  <tr>
+    <td><code>scores.sort(reverse=True)</code></td>
+    <td>按相关度从高到低排序，取前 2 条最相关的文档</td>
+  </tr>
+  <tr>
+    <td><code>context = "\n".join(top_docs)</code></td>
+    <td>把检索到的文档拼接成一段「参考资料」</td>
+  </tr>
+  <tr>
+    <td><code>f"""基于以下资料回答问题：\n{context}\n问题：{question}"""</code></td>
+    <td><strong>增强（Augment）</strong>——把资料和问题拼成一段完整的 prompt，明确告诉 AI「基于资料回答」</td>
+  </tr>
+  <tr>
+    <td><code>if not found → 说未找到</code></td>
+    <td>prompt 里加了这个指令，AI 就不会在资料没相关内容时瞎编</td>
+  </tr>
+</table>
+
+<div class="callout">
+  <strong>⚡ 注意：</strong>这里的关键词匹配检索只是演示原理。生产环境中，RAG 用的是<strong>向量检索</strong>（把文字转成数学向量，计算语义相似度），能匹配「虽然用词不同但意思相近」的内容。那是进阶话题，以后会讲。
+</div>
+
+<h2>运行前的准备</h2>
+
+<ol>
+  <li>安装 <code>jieba</code>：<code>pip install jieba</code></li>
+  <li>把 <code>api_key</code> 改成你的 DeepSeek API Key</li>
+  <li>运行 <code>python rag_demo.py</code></li>
+</ol>
+
+<p>试试修改 <code>docs</code> 里的内容，换成你自己的文档片段。再改改问题，看 AI 的回答是否基于你给的资料。</p>
+
+<h2>RAG 和你的工作有什么关系？</h2>
+
+<p>作为项目助理，你可能经常需要：</p>
+
+<ul>
+  <li><strong>查制度</strong>：公司几十份制度文件——不用翻，直接问「病假怎么请？」RAG 帮你找到对应条款</li>
+  <li><strong>审合同</strong>：合同模板库——「我们合同里的违约金上限是多少？」RAG 找到对应条款</li>
+  <li><strong>写周报</strong>：翻看过去几周的周报——「上周项目 A 的进展是什么？」RAG 从周报库中提取</li>
+  <li><strong>做培训</strong>：产品手册——「V3.2 版新增了什么功能？」RAG 基于手册回答</li>
+</ul>
+
+<p>这些都是 RAG 可以自动化的事。之前你说「AI 不知道我们公司内部的事」——有了 RAG，它就能知道了。</p>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ RAG 的全称和核心思想：检索 → 增强 → 生成</li>
+  <li>✅ RAG 和纯模型回答的区别——什么时候该用 RAG</li>
+  <li>✅ 最简 RAG 的代码实现（文档库 + 关键词检索 + prompt 拼接 + API 调用）</li>
+  <li>✅ RAG 能解决什么实际工作问题</li>
+  <li>✅ 关键词检索的局限性（下一课讲更高级的检索方式）</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<div class="quiz">
+<p>RAG 中的「增强（Augment）」步骤具体做了什么？</p>
+<ol type="A">
+  <li>用更多 GPU 加快 AI 的推理速度</li>
+  <li>把检索到的文档和用户的提问一起拼成一段 prompt，然后发给 AI</li>
+  <li>增强模型的能力，让它不需要外部知识也能回答</li>
+  <li>对检索结果进行人工审核</li>
+</ol>
+</div>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:16px;font-size:14px;color:var(--subtle);">
+  💬 有任何疑问，随时问你的 AI 教练。<br>
+  搞不懂分词？jieba 装不上？想把示例改成你自己的文档？直接问。
+</p>
+
+<div class="nav-links">
+  <a href="../reference/glossary.html">📖 术语表</a>
+  <a href="../reference/0005-token-reference.html">📖 Token 速查表</a>
+  <a href="0010-function-calling.html">→ 下一课：Function Calling / Tool Use</a>
+</div>
+
+<hr style="margin-top:40px;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:20px;font-size:13px;color:var(--subtle);">
+<strong>小测答案：</strong>B。RAG 的三步是「检索 → 增强 → 生成」。增强（Augment）就是把第 1 步找到的相关文档片段和用户的原始提问，<strong>拼接成一个完整的 prompt</strong>，然后交给第 3 步的 AI 模型去回答。没有增强步骤，模型就没有上下文可以参考。
+</p>
+
+</body>
+</html>

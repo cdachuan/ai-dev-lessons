@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0003 · Hello World — 用 Python 调一次 DeepSeek API</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    margin: 2.2rem 0 0.8rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 2px solid var(--border);
+    font-weight: 700;
+  }
+  h3 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; font-weight: 700; }
+  p { margin: 0.8rem 0; }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+    margin: 1.2rem 0;
+  }
+  .card.highlight { background: var(--highlight); border-color: #f59e0b; }
+  code {
+    background: #f1f5f9;
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.9em;
+  }
+  pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0;
+  }
+  .pre-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 1.2rem;
+    margin-bottom: 0.2rem;
+    font-weight: 600;
+  }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .quiz {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin: 1.5rem 0;
+  }
+  .step-list { list-style: none; padding: 0; counter-reset: step; }
+  .step-list li {
+    counter-increment: step;
+    margin: 1.2rem 0;
+    padding-left: 2.5rem;
+    position: relative;
+  }
+  .step-list li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1.8rem;
+    height: 1.8rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1.8rem;
+  }
+  .ref-list { list-style: none; padding: 0; }
+  .ref-list li { margin: 0.4rem 0; }
+  .ref-list li::before { content: "→ "; color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  td, th { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; font-size: 0.9rem; }
+  th { background: #f8fafc; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>📚 第 3 课 · Hello World — 用 Python 调一次 DeepSeek API</h1>
+<div class="meta">2026-07-01 · 阅读约 5 分钟 · <a href="../reference/glossary.md">术语表</a></div>
+
+<h2>一句话讲清</h2>
+
+<p><strong>用不到 10 行 Python 代码，让 DeepSeek 的 AI 模型直接回答你的问题</strong>——不再通过赫默，而是你亲手写的程序调用 <a href="../lessons/0002-what-is-api.html">API</a>。</p>
+
+<div class="card highlight">
+  <strong>🎯 今天学完你能做这件事：</strong><br>
+  在自己的电脑上写一个 Python 脚本，运行后输入任何问题，AI 直接给出回答。这是你搭建 AI 小工具的第一步。
+</div>
+
+<h2>你需要准备什么？</h2>
+
+<p>在开始之前，先确认三样东西：</p>
+
+<table>
+  <tr><th>你需要</th><th>说明</th><th>有了吗？</th></tr>
+  <tr>
+    <td>Python 环境</td>
+    <td>你的电脑上能运行 Python 3.8+</td>
+    <td>赫默终端里 <code>python --version</code> 可查</td>
+  </tr>
+  <tr>
+    <td>DeepSeek API Key</td>
+    <td>调用 API 的「密码」，去 <a href="https://platform.deepseek.com/api_keys">platform.deepseek.com</a> 免费注册获取</td>
+    <td>需要注册，首次送 500 万 token</td>
+  </tr>
+  <tr>
+    <td><code>openai</code> 库</td>
+    <td>Python 里调 DeepSeek API 的工具包</td>
+    <td><code>pip install openai</code> 安装</td>
+  </tr>
+</table>
+
+<div class="card">
+  <strong>⚠️ 重要提醒：</strong>API Key 就是你的密码。<strong>永远不要</strong>把它写在代码里给别人看，不要上传到 GitHub。后面课程会教你怎么安全地管理它。
+</div>
+
+<h2>Step by Step</h2>
+
+<h3>第一步：安装 openai 库</h3>
+
+<p>在赫默的终端（Terminal）里运行这行命令：</p>
+
+<div class="pre-label"># 终端执行</div>
+<pre>pip install openai</pre>
+
+<p>成功后会显示类似 <code>Successfully installed openai-x.x.x</code>。这个库把复杂的 API 调用细节封装成简单的 Python 函数，你不需要自己处理 HTTP 请求。</p>
+
+<h3>第二步：写代码</h3>
+
+<p>创建一个叫 <code>hello_ai.py</code> 的文件，输入以下内容：</p>
+
+<div class="pre-label"># hello_ai.py</div>
+<pre>from openai import OpenAI
+
+client = OpenAI(
+    api_key="sk-你的API密钥",          # ← 换成你自己的 API Key
+    base_url="https://api.deepseek.com/v1"
+)
+
+response = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=[
+        {"role": "user", "content": "用一句话介绍你自己"}
+    ]
+)
+
+print(response.choices[0].message.content)</pre>
+
+<div class="card">
+  <strong>🔍 逐行解释：</strong>
+  <ol style="margin-top:0.5rem;padding-left:1.2rem;">
+    <li><code>from openai import OpenAI</code> — 导入安装好的工具包</li>
+    <li><code>client = OpenAI(...)</code> — 创建客户端，告诉程序「连接谁的服务器、用谁的密码」</li>
+    <li><code>api_key</code> — 你的身份凭证（去 DeepSeek 官网注册获取）</li>
+    <li><code>base_url</code> — DeepSeek API 的服务器地址</li>
+    <li><code>client.chat.completions.create(...)</code> — 发送请求给模型，让它生成回答</li>
+    <li><code>model="deepseek-chat"</code> — 指定用 DeepSeek 的聊天模型</li>
+    <li><code>messages</code> — 你要说的话（<a href="../lessons/0004-what-is-prompt.html">prompt</a>），格式是 JSON 列表</li>
+    <li><code>print(...)</code> — 把模型返回的结果打印到屏幕上</li>
+  </ol>
+</div>
+
+<h3>第三步：运行</h3>
+
+<p>在终端里运行：</p>
+
+<div class="pre-label"># 终端执行</div>
+<pre>python hello_ai.py</pre>
+
+<p>几秒钟后，你应该能看到模型打印出一段自我介绍。</p>
+
+<h2>理解返回的数据结构</h2>
+
+<p>你可能好奇：为什么代码里写的是 <code>response.choices[0].message.content</code>？</p>
+
+<p>因为 API 返回的是一个结构化的 JSON 对象，像这样：</p>
+
+<pre>{
+  "id": "chatcmpl-xxx",
+  "choices": [
+    {
+      "message": {
+        "content": "我是 DeepSeek，一个 AI 助手……"
+      }
+    }
+  ]
+}</pre>
+
+<p>所以 <code>response.choices[0].message.content</code> 就是「从返回结果里，取出第一条（索引0）选择里的消息内容」。这就是编程里常见的「从嵌套结构中取数据」。</p>
+
+<h2>🎁 你的第一个增量胜利</h2>
+
+<div class="card highlight">
+  <p>试试修改 <code>content</code> 里的问题，换成：</p>
+  <pre style="margin:0.5rem 0;">{"role": "user", "content": "帮我写一份项目周报的模板"}</pre>
+  <p>运行后，AI 就会生成周报模板。换一个问题，AI 就换一个回答——<strong>你现在是在「编程式地用 AI」了</strong>，不再是在对话框里手动打字。</p>
+</div>
+
+<h2>关键知识点</h2>
+
+<ul>
+  <li><strong>pip install</strong> — Python 的「应用商店」，装一次永久可用</li>
+  <li><strong>Client</strong> — 一个连接器对象，负责你和 API 之间的通信</li>
+  <li><strong>API Key</strong> — 你的身份凭证，必须保密</li>
+  <li><strong>model 参数</strong> — 指定用哪个模型（DeepSeek 有多个模型可选）</li>
+  <li><strong>messages 格式</strong> — 你发给模型的对话，是一个 JSON 列表，每条有 role 和 content</li>
+  <li><strong>choices[0].message.content</strong> — 从返回结果中提取模型回复的文字</li>
+</ul>
+
+<h2>常见问题</h2>
+
+<div class="card">
+  <p><strong>Q: 报错 "ModuleNotFoundError: No module named 'openai'"</strong><br>
+  A: 忘记装库了，先运行 <code>pip install openai</code></p>
+  
+  <p><strong>Q: 报错 "AuthenticationError" 或 "401"</strong><br>
+  A: API Key 填错了，检查是否有多余空格、引号是否正确</p>
+  
+  <p><strong>Q: 报错 "ConnectionError"</strong><br>
+  A: 网络问题，检查是否能访问 api.deepseek.com</p>
+</div>
+
+<h2>❓ 小测</h2>
+
+<div class="quiz">
+  <p><strong>以下哪段代码能正确调用 DeepSeek API 并打印模型回答？</strong></p>
+  <ol type="A">
+    <li><code>print(openai.chat("你好"))</code></li>
+    <li><code>response = client.chat.completions.create(model="deepseek-chat", messages=[{"role":"user","content":"你好"}])</code></li>
+    <li><code>client.send("你好").get_reply()</code></li>
+    <li><code>print(client.chat("你好"))</code></li>
+  </ol>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:0.8rem;">（答案见底部）</p>
+</div>
+
+<h2>📖 推荐阅读</h2>
+
+<ul class="ref-list">
+  <li><a href="https://api-docs.deepseek.com/quick_start">DeepSeek 官方快速入门</a>（本课的官方版本，含更多语言示例）</li>
+  <li><a href="https://api-docs.deepseek.com/">DeepSeek API 文档</a>（后续课的参考）</li>
+</ul>
+
+<h2>下一课预告</h2>
+<p>004 · <a href="./0004-what-is-prompt.html">什么是 Prompt？</a> — 给你的 AI 指令写得更清楚、更好用。</p>
+
+<p style="margin-top:3rem;color:var(--muted);font-size:0.85rem;">
+  有问题随时找赫默：「帮我解释第 3 课里 ___ 这部分」<br>
+  答案：B。<code>client.chat.completions.create()</code> 是标准调用方式。其他选项的写法不存在。
+</p>
+
+</body>
+</html>

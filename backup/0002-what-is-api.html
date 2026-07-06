@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0002 · 什么是 API？</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    margin: 2.2rem 0 0.8rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 2px solid var(--border);
+    font-weight: 700;
+  }
+  p { margin: 0.8rem 0; }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+    margin: 1.2rem 0;
+  }
+  .card.highlight { background: var(--highlight); border-color: #f59e0b; }
+  code {
+    background: #f1f5f9;
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.9em;
+  }
+  pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0;
+  }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .quiz {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin: 1.5rem 0;
+  }
+  .analogy-box {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  .analogy-step {
+    flex: 1;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+  .analogy-step .emoji { font-size: 1.8rem; display: block; margin-bottom: 0.4rem; }
+  .arrow { display: flex; align-items: center; font-size: 1.5rem; color: var(--muted); }
+  .next-link {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 0.5rem 1rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .next-link:hover { text-decoration: none; opacity: 0.9; }
+  .ref-list { list-style: none; padding: 0; }
+  .ref-list li { margin: 0.4rem 0; }
+  .ref-list li::before { content: "→ "; color: var(--accent); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.8rem;
+    text-align: left;
+  }
+  th { background: #f8fafc; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>📚 第 2 课 · 什么是 API？</h1>
+<div class="meta">2026-06-24 · 阅读约 5 分钟 · <a href="../reference/glossary.md">术语表</a></div>
+
+<h2>一句话讲清</h2>
+
+<p><strong>API（Application Programming Interface，应用程序接口）</strong> 是两个程序之间的「传话筒」。<br>
+就像你去餐厅——你告诉服务员你要什么，服务员去后厨通知厨师，再把做好的菜端回来给你。<br>
+<strong>你不必亲自进厨房。</strong></p>
+
+<div class="card highlight">
+  <strong>对你有什么用？</strong><br>
+  赫默帮你「点了菜」。学会自己调 API = 你自己当服务员，想什么时候点菜、点什么菜都行。这就是自动化的起点——你写一个脚本，让 AI 模型批量处理 100 个文件，而不是一个个手动粘贴到赫默里。
+</div>
+
+<h2>服务员、厨房、你的关系</h2>
+
+<div class="analogy-box">
+  <div class="analogy-step">
+    <span class="emoji">🙋</span>
+    <strong>你（客户端）</strong><br>
+    告诉服务员你想要什么
+  </div>
+  <div class="arrow">→</div>
+  <div class="analogy-step">
+    <span class="emoji">🧑‍🍳</span>
+    <strong>API（服务员）</strong><br>
+    把指令传给厨房，把菜端回来
+  </div>
+  <div class="arrow">→</div>
+  <div class="analogy-step">
+    <span class="emoji">🔥</span>
+    <strong>模型（厨房）</strong><br>
+    收到指令，开始工作，产出结果
+  </div>
+</div>
+
+<p>套用到你每天用的赫默上：</p>
+
+<table>
+  <tr><th>角色</th><th>你的日常</th><th>类比</th></tr>
+  <tr><td><strong>你</strong></td><td>在赫默对话框里打字提问</td><td>顾客看菜单、点菜</td></tr>
+  <tr><td><strong>赫默</strong></td><td>把你的输入转成 API 请求并发送</td><td>服务员下单</td></tr>
+  <tr><td><strong>DeepSeek API</strong></td><td>接收请求、传给模型、返回结果</td><td>服务员与厨房的通道</td></tr>
+  <tr><td><strong>AI 模型</strong></td><td>阅读你的输入，逐字生成回复</td><td>后厨炒菜</td></tr>
+  <tr><td><strong>回复</strong></td><td>赫默把结果显示给你看</td><td>服务员端菜上桌</td></tr>
+</table>
+
+<h2>API 调用长什么样？</h2>
+
+<p>API 不是什么高深技术——它本质上就是一个 <strong>URL 地址 + 一段消息</strong>。<br>
+你的程序往这个地址发一条消息，对方服务器就会回复你。</p>
+
+<p>拿 DeepSeek 来举例，一次 API 调用大概长这样：</p>
+
+<pre>POST https://api.deepseek.com/chat/completions
+Authorization: Bearer sk-your-api-key-here
+Content-Type: application/json
+
+{
+  "model": "deepseek-chat",
+  "messages": [
+    {"role": "user", "content": "用一句话解释什么是 API"}
+  ]
+}</pre>
+
+<p>回复（简化后）：</p>
+
+<pre>{
+  "choices": [
+    {
+      "message": {
+        "content": "API 是两个程序之间的传话筒，让它们能互相通信。"
+      }
+    }
+  ]
+}</pre>
+
+<div class="card">
+  <strong>💡 关键洞察：</strong>上面这段代码就是你每次在赫默里打字时，赫默替你在背后做的事。看懂这段 JSON 格式的请求，你就看懂了 AI 应用的核心通信机制。<br><br>
+  JSON 只是一「种」数据格式，像表格一样有「键」和「值」——比如 <code>"model"</code> 是键，<code>"deepseek-chat"</code> 是值。你不需要记住括号怎么打，只需要理解：你在发一条结构化的消息给 AI。
+</div>
+
+<h2>为什么不用赫默，要自己调 API？</h2>
+
+<p>这是一个很自然的问题。答案：<strong>赫默是给人用的，API 是给程序用的。</strong></p>
+
+<table>
+  <tr><th>场景</th><th>用赫默</th><th>自己调 API</th></tr>
+  <tr><td>问一个问题</td><td>✅ 打字就行</td><td>❌ 需要写代码</td></tr>
+  <tr><td>批量处理 100 个文件</td><td>❌ 手动粘贴 100 次</td><td>✅ 一个脚本全自动</td></tr>
+  <tr><td>每天定时生成报表</td><td>❌ 每天手动操作</td><td>✅ 设个定时任务</td></tr>
+  <tr><td>和其他系统对接</td><td>❌ 没法集成</td><td>✅ 嵌入你的工具链</td></tr>
+</table>
+
+<p><strong>你的元目标</strong>是「从只会用赫默聊天进阶为能自己搭 AI 小工具的人」——自己调 API 就是跨过这道门槛的第一步。</p>
+
+<h2>术语：API Key</h2>
+
+<p>上面代码里那个 <code>sk-your-api-key-here</code> 就是 <strong>API 密钥</strong>。<br>
+它像你的身份证 + 银行卡密码——证明是你本人在调用，DeepSeek 按这个来计费。<br>
+<strong>⚠️ 不要把 API Key 发到公开地方（GitHub、群里）</strong>，别人拿了就能用你的额度。</p>
+
+<h2>❓ 小测</h2>
+
+<div class="quiz">
+  <p><strong>以下哪个说法最能解释「为什么需要 API」？</strong></p>
+  <ol type="A">
+    <li>API 是给程序写文档用的工具</li>
+    <li>API 是连接两个程序的「服务员」，让它们能互相通信，而你不需要知道另一方的内部实现</li>
+    <li>API 就是数据库的名字</li>
+    <li>API 只有 DeepSeek 才有，其他模型没有</li>
+  </ol>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:0.8rem;">（答案见底部）</p>
+</div>
+
+<h2>📖 推荐阅读</h2>
+
+<ul class="ref-list">
+  <li><a href="https://api-docs.deepseek.com/">DeepSeek API 文档</a> — 不用全看懂，翻到「Quick Start」看两眼代码长什么样就行</li>
+  <li><a href="https://developer.mozilla.org/zh-CN/docs/Learn_web_development/Extensions/Client-side_APIs/Introduction">MDN: Web API 介绍</a>（给非程序员看的 API 入门）</li>
+</ul>
+
+<h2>下一课预告</h2>
+<p>0003 · <a href="./0003-hello-world-api.html">Hello World — 用 Python 调一次 DeepSeek API</a> — 这是第一次实操，你会在你的电脑上真正调用一次 AI 模型。<br>
+我会帮你准备好一切——你只需要复制两行命令。</p>
+
+<p style="margin-top:3rem;color:var(--muted);font-size:0.85rem;">
+  有问题随时问赫默：「帮我解释第 2 课里的 ___」<br>
+  答案：B。API 的本质是<strong>中间人/传话筒/服务员</strong>，让两个程序能通信。其他选项都是干扰项。
+</p>
+
+</body>
+</html>

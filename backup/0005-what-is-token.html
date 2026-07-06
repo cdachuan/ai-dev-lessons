@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 5 课 · 什么是 Token？</title>
+<style>
+  :root {
+    --bg: #fdfcf9;
+    --text: #2c2c2c;
+    --accent: #c44d34;
+    --subtle: #6b6b6b;
+    --card: #f6f3ee;
+    --border: #e0dcd4;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", Georgia, "Times New Roman", serif;
+    background: var(--bg); color: var(--text);
+    max-width: 720px; margin: 0 auto; padding: 48px 24px 72px;
+    line-height: 1.8;
+  }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  h1 span { color: var(--accent); }
+  .meta { color: var(--subtle); font-size: 14px; margin-bottom: 32px; }
+  h2 {
+    font-size: 18px; font-weight: 700; margin: 36px 0 12px;
+    border-bottom: 1px solid var(--border); padding-bottom: 4px;
+  }
+  p { margin-bottom: 14px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 6px; padding: 16px 20px; margin: 16px 0;
+  }
+  .card-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 15px; }
+  th, td { padding: 8px 12px; border: 1px solid var(--border); text-align: left; }
+  th { background: var(--card); font-weight: 700; }
+  code {
+    font-family: "IBM Plex Mono", "Fira Code", monospace;
+    background: #eee7db; padding: 2px 6px; border-radius: 3px; font-size: 14px;
+  }
+  pre {
+    background: #2c2c2c; color: #e8e4d9; padding: 16px 20px;
+    border-radius: 6px; overflow-x: auto; margin: 12px 0; font-size: 14px;
+    line-height: 1.6;
+  }
+  .quiz { 
+    background: #fef8f2; border-left: 4px solid var(--accent);
+    padding: 16px 20px; margin: 24px 0; border-radius: 0 6px 6px 0;
+  }
+  .quiz-label { font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+  .quiz ol { padding-left: 20px; }
+  .quiz li { margin-bottom: 6px; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+  .quiz li:hover { background: #fdf0e5; }
+  .quiz .correct { background: #d4edda; }
+  .quiz .wrong { background: #fce4e4; }
+  .feedback { display: none; margin-top: 8px; font-weight: 600; }
+  .nav { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--subtle); }
+  .nav a { color: var(--accent); text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+  .reminder {
+    background: #eaf2fb; border: 1px solid #b8d4f0;
+    padding: 14px 18px; border-radius: 6px; margin: 28px 0; font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<h1><span>📚 第 5 课</span> · 什么是 Token？</h1>
+<div class="meta">2026-06-27 · 预计阅读 4 分钟 · 课程 0005</div>
+
+<h2>一句话讲清</h2>
+<p>
+<strong>Token 是 AI 模型「读」文字的最小单位。</strong>
+就像我们数文章长度用「字」，AI 用「token」。你的 prompt 被拆成 token 送进模型，模型的回复也是一个一个 token 生成的。Token 直接决定两件事：<strong>你花多少钱</strong>和<strong>AI 能记住多少</strong>。
+</p>
+
+<h2>Token 长什么样？</h2>
+
+<p>把一句话丢给 tokenizer（分词器），它会切成这样：</p>
+
+<table>
+  <tr><th>语言</th><th>原文</th><th>切分结果（示意）</th><th>Token 数</th></tr>
+  <tr>
+    <td>英文</td>
+    <td><code>Hello, world!</code></td>
+    <td><code>Hello</code> | <code>,</code> | <code> world</code> | <code>!</code></td>
+    <td>4</td>
+  </tr>
+  <tr>
+    <td>中文</td>
+    <td><code>你好世界</code></td>
+    <td><code>你好</code> | <code>世界</code></td>
+    <td>2</td>
+  </tr>
+  <tr>
+    <td>中文长句</td>
+    <td><code>请帮我总结这份合同。</code></td>
+    <td><code>请</code> | <code>帮</code> | <code>我</code> | <code>总结</code> | <code>这份</code> | <code>合同</code> | <code>。</code></td>
+    <td>7</td>
+  </tr>
+</table>
+
+<div class="card">
+  <div class="card-title">🧮 经验公式</div>
+  <ul style="padding-left:20px;">
+    <li><strong>英文</strong>：1 个 token ≈ ¾ 个单词（约 4 个字符）</li>
+    <li><strong>中文</strong>：1 个 token ≈ 1~2 个汉字</li>
+    <li><strong>代码</strong>：每个运算符、关键字都可能独立成 token</li>
+  </ul>
+</div>
+
+<p>
+<strong>重要：</strong>token ≠ 字，也 ≠ 词。常见的词如「the」「是」是 1 个 token，生僻词或 emoji 可能吃掉多个 token。标点也算！
+</p>
+
+<h2>Token 为什么重要？——三个现实影响</h2>
+
+<h3>1️⃣ 计费：你按 token 付钱</h3>
+
+<p>
+调用 DeepSeek API 时，你为 <strong>输入 token（你的 prompt）+ 输出 token（AI 的回复）</strong> 付钱。<br>
+DeepSeek 当前定价（截至 2026 年 6 月）：
+</p>
+<table>
+  <tr><th></th><th>输入（每百万 token）</th><th>输出（每百万 token）</th></tr>
+  <tr><td>DeepSeek-V3</td><td>¥2</td><td>¥8</td></tr>
+</table>
+<p style="font-size:14px;color:var(--subtle);">来源：<a href="https://api-docs.deepseek.com/quick_start/pricing">DeepSeek API 定价页</a></p>
+
+<p>发一条 500 token 的问题、收到 1000 token 的回答，成本约 <strong>¥0.01</strong>——几乎免费，但 <strong>积少成多</strong>。</p>
+
+<h3>2️⃣ 上下文窗口：AI 一次能「看到」多少</h3>
+
+<p>
+模型的上下文窗口（context window）以 token 为单位。DeepSeek-V3 的上下文窗口是 <strong>128K token</strong>——约等于一本 200 页小说的量。<br>
+超过这个上限？AI 就「忘掉」最早的内容了。
+</p>
+
+<h3>3️⃣ 对话记忆：为什么 AI 会「断片」</h3>
+
+<p>
+每次你回复，赫默会把你和 AI 的<strong>整个对话历史</strong>重新发给模型。对话越长 → token 越多 → 接近上限时，最早的消息被截断。这就是为什么聊久了 AI 似乎「忘了」开头说了什么。
+</p>
+
+<h2>看一眼代码：怎么数 token？</h2>
+
+<pre><code># 用 DeepSeek 估算 token 数（不实际发请求）
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="sk-your-key",
+    base_url="https://api.deepseek.com"
+)
+
+# 这个 prompt 大概多少 token？
+prompt = "请帮我总结一下这份合同的核心条款。"
+# DeepSeek 目前不直接提供 tokenizer endpoint，
+# 但可以在实际调用后从 response.usage 看到 token 统计
+
+response = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=[{"role": "user", "content": prompt}],
+    max_tokens=100
+)
+
+print(f"输入用了 {response.usage.prompt_tokens} token")
+print(f"输出用了 {response.usage.completion_tokens} token")
+print(f"一共 {response.usage.total_tokens} token")</code></pre>
+
+<div class="card">
+  <div class="card-title">📊 输出示例</div>
+  <pre style="background:var(--bg);color:var(--text);">输入用了 12 token
+输出用了 38 token
+一共 50 token</pre>
+</div>
+
+<p>
+<code>usage</code> 对象就是你的「账单明细」——每次调用都能看到花了多少 token。
+</p>
+
+<h2>❓ 小测</h2>
+<div class="quiz" id="quiz">
+  <div class="quiz-label">🔍 关于 Token，以下哪项说法是正确的？</div>
+  <ol>
+    <li onclick="checkQuiz(this, false)">A. 一个汉字一定等于一个 token</li>
+    <li onclick="checkQuiz(this, false)">B. Token 只计算输入，输出不收费</li>
+    <li onclick="checkQuiz(this, true)">C. Token 同时决定费用上限和 AI 一次能记住多少</li>
+    <li onclick="checkQuiz(this, false)">D. 用英文比中文更省 token，因为英文单词短</li>
+  </ol>
+  <div class="feedback" id="fb-correct" style="color:#2e7d32;">✅ 正确！Token 是计费单位和上下文窗口单位的统一度量。</div>
+  <div class="feedback" id="fb-wrong" style="color:#c62828;">❌ 再想想：token ≠ 字，且输入输出都收费。英文 1 token ≈ 0.75 个单词，中英文的 token 效率差不多。</div>
+</div>
+
+<div class="reminder">
+  <strong>💬 有问题？</strong> 任何没搞懂的地方，直接问赫默 agent：「帮我解释一下 tokenization 是什么意思」、「为什么中英文 token 数不一样？」——你的 AI 教练随时在线。
+</div>
+
+<div class="nav">
+  ← <a href="0004-what-is-prompt.html">第 4 课 · 什么是 Prompt？</a> &nbsp;|&nbsp;
+  <a href="0006-what-is-agent.html">第 6 课 · 什么是 Agent？</a> →
+  <br><br>
+  参考文档：<a href="../reference/glossary.md">术语表</a> · 
+  <a href="../reference/0005-token-reference.html">Token 速查表</a>
+</div>
+
+<script>
+function checkQuiz(el, correct) {
+  // Reset
+  document.querySelectorAll('#quiz li').forEach(li => {
+    li.classList.remove('correct', 'wrong');
+  });
+  document.getElementById('fb-correct').style.display = 'none';
+  document.getElementById('fb-wrong').style.display = 'none';
+  // Mark
+  if (correct) {
+    el.classList.add('correct');
+    document.getElementById('fb-correct').style.display = 'block';
+  } else {
+    el.classList.add('wrong');
+    document.getElementById('fb-wrong').style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>

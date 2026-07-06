@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0010 · Function Calling / Tool Use</title>
+<style>
+  :root {
+    --bg: #fdfcf9;
+    --text: #2c2c2c;
+    --accent: #c44d34;
+    --subtle: #6b6b6b;
+    --card: #f6f3ee;
+    --border: #e0dcd4;
+    --code-bg: #f0ede8;
+    --green: #2b6e4f;
+    --highlight: #fef3c7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", Georgia, "Times New Roman", serif;
+    background: var(--bg); color: var(--text);
+    max-width: 720px; margin: 0 auto; padding: 48px 24px 72px;
+    line-height: 1.8;
+  }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  h1 span { color: var(--accent); }
+  .meta { color: var(--subtle); font-size: 14px; margin-bottom: 32px; }
+  h2 {
+    font-size: 18px; font-weight: 700; margin: 36px 0 12px;
+    border-bottom: 1px solid var(--border); padding-bottom: 4px;
+  }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 24px; }
+  li { margin-bottom: 6px; }
+  pre, code {
+    font-family: "JetBrains Mono", "Cascadia Code", "SF Mono", Consolas, monospace;
+    font-size: 14px;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    line-height: 1.6;
+    margin: 16px 0;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 6px; padding: 16px 20px; margin: 16px 0;
+  }
+  .card-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; color: var(--accent); }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 14px;
+  }
+  .callout strong { color: #92400e; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 15px; }
+  th, td { padding: 8px 12px; border: 1px solid var(--border); text-align: left; }
+  th { background: var(--card); font-weight: 700; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .nav-links { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 14px; }
+  .nav-links a { margin-right: 16px; }
+  .diagram {
+    text-align: center; margin: 20px 0; font-size: 15px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    line-height: 2;
+    color: var(--subtle);
+  }
+  .diagram .highlight { color: var(--accent); font-weight: 700; }
+  .quiz { margin: 20px 0; }
+  .quiz ol { list-style-type: upper-alpha; }
+  .footnote { color: var(--subtle); font-size: 13px; margin-top: 24px; }
+
+  @media print {
+    body { padding: 24px 36px; max-width: none; background: white; color: black; }
+    pre, table, .card, .callout, .quiz, .diagram, .nav-links { page-break-inside: avoid; }
+    h1, h2 { page-break-after: avoid; }
+    pre { border: 1px solid #ccc; }
+    a { color: black; text-decoration: underline; }
+    .nav-links { page-break-before: always; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🔧 <span>Function Calling</span>：让 AI 能「动手做事」</h1>
+<p class="meta">第 10 课 · 2026-07-06 · 概念 + 代码</p>
+
+<div class="callout">
+  <strong>🎯 最后一课！</strong>学完这课，你就理解了赫默 agent 最核心的能力——<strong>工具调用</strong>。这也是 AI 从「聊天机器人」走向「AI 代理（Agent）」的关键一步。
+</div>
+
+<h2>回顾：之前学的</h2>
+
+<p>我们已经学了：</p>
+<ul>
+  <li>第 3 课：调 DeepSeek API，AI <strong>回答文本</strong>问题</li>
+  <li>第 5 课：用 API 读文件、总结——但是<strong> AI 只会「说」，不会「做」</strong></li>
+  <li>第 9 课：RAG——让 AI <strong>基于你的文档</strong>回答问题</li>
+</ul>
+
+<p>但你有没有发现一个问题？<strong>AI 一直停留在「说话」层面。</strong>你让它「查一下天气」，它只能告诉你「我是 AI，我查不了」——因为它没有手去点击浏览器，没有眼睛去看屏幕。</p>
+
+<p>那如果<strong>我们给 AI 一双手呢？</strong></p>
+
+<h2>什么是 Function Calling？</h2>
+
+<div class="card">
+  <div class="card-title">💡 一句话</div>
+  <p>Function Calling = 让 AI 模型能<strong>请求调用</strong>你预先写好的函数（工具）。<br>模型自身<strong>不执行代码</strong>，它只是决定「该用什么工具、传什么参数」，由你的程序去执行。</p>
+</div>
+
+<p>流程是这样的：</p>
+
+<div class="diagram">
+  你提问 → AI 判断需要工具 → 返回工具名+参数<br>
+  ↓<br>
+  你的代码<strong>实际执行</strong>工具 → 拿到结果<br>
+  ↓<br>
+  把结果塞回给 AI → AI 组织语言回答你
+</div>
+
+<p>举个具体例子——你问「北京今天多少度？」：</p>
+
+<table>
+  <tr><th>步骤</th><th>做了什么</th><th>谁做的</th></tr>
+  <tr>
+    <td>1. 解析意图</td>
+    <td>用户想查天气 → 需要「查询天气」工具</td>
+    <td>AI 模型</td>
+  </tr>
+  <tr>
+    <td>2. 调用工具</td>
+    <td>调用 <code>get_weather(city="北京")</code></td>
+    <td><strong>你的代码</strong>（不是 AI！）</td>
+  </tr>
+  <tr>
+    <td>3. 返回结果</td>
+    <td>「北京当前温度 32°C，晴」</td>
+    <td>天气 API</td>
+  </tr>
+  <tr>
+    <td>4. 组织回答</td>
+    <td>「北京今天 32°C，挺热的，建议带伞防晒」</td>
+    <td>AI 模型</td>
+  </tr>
+</table>
+
+<h2>一个完整的例子：骰子工具</h2>
+
+<p>我们写一个最简单的工具——掷骰子。AI 不会凭空产生随机数，但它可以调用你的 <code>roll_dice</code> 函数。</p>
+
+<pre><code>from openai import OpenAI
+
+client = OpenAI(api_key="sk-你的密钥", base_url="https://api.deepseek.com")
+
+# —— 1. 定义工具 ——
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "roll_dice",
+            "description": "掷一个 N 面骰子，返回 1~N 之间的随机数",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "sides": {
+                        "type": "integer",
+                        "description": "骰子的面数，默认 6",
+                    }
+                },
+                "required": []
+            }
+        }
+    }
+]
+
+# —— 2. 发消息（带工具定义） ——
+messages = [{"role": "user", "content": "帮我掷一个 20 面骰子"}]
+response = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=messages,
+    tools=tools      # ← 关键：告诉 AI 有这些工具可用
+)
+
+# —— 3. AI 决定调用工具 ——
+msg = response.choices[0].message
+print(f"AI 想调用的工具：{msg.tool_calls[0].function.name}")
+print(f"参数：{msg.tool_calls[0].function.arguments}")
+
+# —— 4. 实际执行工具 ——
+import json, random
+args = json.loads(msg.tool_calls[0].function.arguments)
+result = random.randint(1, args.get("sides", 6))
+print(f"掷骰结果：{result}")
+
+# —— 5. 把结果送回给 AI 组织回答 ——
+messages.append(msg)
+messages.append({
+    "role": "tool",
+    "tool_call_id": msg.tool_calls[0].id,
+    "content": str(result)
+})
+final = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=messages
+)
+print(f"AI 最终回答：{final.choices[0].message.content}")
+</code></pre>
+
+<h2>逐行解释</h2>
+
+<table>
+  <tr><th>代码</th><th>什么意思</th></tr>
+  <tr>
+    <td><code>tools = [...]</code></td>
+    <td>给 AI 一份<strong>工具清单</strong>，告诉它「你有这些工具可以用」<br>每个工具必须声明：名字、描述（AI 靠描述判断何时用）、参数（什么参数、什么类型）</td>
+  </tr>
+  <tr>
+    <td><code>tools=tools</code></td>
+    <td>API 调用时把工具清单传进去，AI 就知道「这次对话我可以调用工具」</td>
+  </tr>
+  <tr>
+    <td><code>msg.tool_calls</code></td>
+    <td>AI 的回复里如果有 <code>tool_calls</code>，说明它<strong>想调用工具</strong>。它不会自己执行，只返回「我想调用 roll_dice，参数为 {"sides": 20}」</td>
+  </tr>
+  <tr>
+    <td><code>role: "tool"</code></td>
+    <td>你把工具执行结果送回对话时的固定角色。告诉 AI：「这是刚才那个工具调用的结果，基于此回答用户」</td>
+  </tr>
+  <tr>
+    <td>第 2 次 API 调用</td>
+    <td>第一次调用让 AI 决定了用什么工具。第二次调用把工具结果喂回去，让 AI 组织成自然语言</td>
+  </tr>
+</table>
+
+<div class="callout">
+  <strong>⚡ 关键理解：</strong>AI 模型<strong>不执行代码</strong>。它只做两件事：<br>
+  ① 判断「用户这个问题需要调用哪个工具」<br>
+  ② 提取出正确的参数<br>
+  <strong>实际执行代码的是你——你的 Python 脚本拿到参数后真正去跑函数。</strong>
+</div>
+
+<h2>和赫默 agent 的关系</h2>
+
+<div class="card">
+  <div class="card-title">🔗 你现在就在用 Function Calling</div>
+  <p>你现在跟我聊天时，我回答里出现的「查文件」「搜网页」「读数据库」——全都是 Function Calling。你看到我写 <code>web_search()</code>、<code>read_file()</code> 这些工具调用，本质上就和上面骰子的例子一模一样：</p>
+  <ul>
+    <li>你的问题 → 我（AI）判断需要什么工具</li>
+    <li>Hermes 框架执行工具 → 返回结果</li>
+    <li>我基于结果组织回答</li>
+  </ul>
+  <p>现在你从「使用者」变成「创造者」了——你也可以写自己的工具！</p>
+</div>
+
+<h2>可以写什么工具？</h2>
+
+<p>工具可以是<strong>任何 Python 函数</strong>：</p>
+
+<table>
+  <tr><th>工具</th><th>功能</th><th>对你有什么用</th></tr>
+  <tr>
+    <td><code>search_file(keyword)</code></td>
+    <td>在指定文件夹里搜索文件</td>
+    <td>不用记住文件放哪了</td>
+  </tr>
+  <tr>
+    <td><code>read_excel(path)</code></td>
+    <td>读取 Excel 表格的关键数据</td>
+    <td>让 AI 帮你分析报表</td>
+  </tr>
+  <tr>
+    <td><code>send_wechat(msg)</code></td>
+    <td>通过接口发微信消息</td>
+    <td>AI 帮你通知人</td>
+  </tr>
+  <tr>
+    <td><code>summarize_doc(path)</code></td>
+    <td>读文档返回摘要</td>
+    <td>第 5 课的升级版</td>
+  </tr>
+  <tr>
+    <td><code>query_db(sql)</code></td>
+    <td>查数据库</td>
+    <td>让 AI 直接给你数据</td>
+  </tr>
+</table>
+
+<p>你只需要定义好「名字、描述、参数」三样东西，AI 就能自动学会什么时候调用哪个工具。</p>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ Function Calling 的核心：AI 决定「用什么工具和参数」，你的代码执行</li>
+  <li>✅ 完整的 5 步流程：定义工具 → 发消息 → AI 选工具 → 你执行 → 送回结果</li>
+  <li>✅ DeepSeek API 的 <code>tools</code> 参数用法</li>
+  <li>✅ 工具调用的消息格式（<code>tool_calls</code>、<code>role: "tool"</code>）</li>
+  <li>✅ 你现在用的赫默 agent 就是这样工作的</li>
+  <li>✅ 你能自己写工具了！</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<div class="quiz">
+<p>在 Function Calling 中，AI 模型负责以下哪一项？</p>
+<ol type="A">
+  <li>直接执行 <code>roll_dice()</code> 函数并返回随机数</li>
+  <li>判断用户意图，选择要调用的工具并提取参数</li>
+  <li>安装 Python 依赖包</li>
+  <li>自动生成新工具的代码</li>
+</ol>
+</div>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:16px;font-size:14px;color:var(--subtle);">
+  💬 🎉 恭喜完成全部 10 课！<br>
+  从「什么是 AI 模型」一路走到「理解 agent 的核心机制」。
+  你已经不是初学者了——你是能自己理解 AI 工具原理的人了。
+</p>
+
+<div class="nav-links">
+  <a href="../reference/glossary.html">📖 术语表</a>
+  <a href="../reference/0005-token-reference.html">📖 Token 速查表</a>
+  <a href="../index.html">🏠 返回课程首页</a>
+</div>
+
+<hr style="margin-top:40px;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:20px;font-size:13px;color:var(--subtle);">
+<strong>小测答案：</strong>B。AI 模型只负责「理解用户意图 → 选工具 → 提取参数」。它<strong>不执行代码</strong>，执行代码的是你的程序。这是 Function Calling 最核心的设计——AI 负责「思考」和「决策」，代码负责「执行」。
+</p>
+
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 7 课 · 什么是 Tool Calling？</title>
+<style>
+  :root {
+    --bg: #fdfcf9;
+    --text: #2c2c2c;
+    --accent: #c44d34;
+    --subtle: #6b6b6b;
+    --card: #f6f3ee;
+    --border: #e0dcd4;
+    --code-bg: #f0ede8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", Georgia, "Times New Roman", serif;
+    background: var(--bg); color: var(--text);
+    max-width: 720px; margin: 0 auto; padding: 48px 24px 72px;
+    line-height: 1.8;
+  }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  h1 span { color: var(--accent); }
+  .meta { color: var(--subtle); font-size: 14px; margin-bottom: 32px; }
+  h2 {
+    font-size: 18px; font-weight: 700; margin: 36px 0 12px;
+    border-bottom: 1px solid var(--border); padding-bottom: 4px;
+  }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 24px; }
+  li { margin-bottom: 6px; }
+  pre, code {
+    font-family: "JetBrains Mono", "Cascadia Code", "SF Mono", Consolas, monospace;
+    font-size: 14px;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 14px;
+  }
+  .card {
+    background: var(--card);
+    border-left: 4px solid var(--accent);
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    border-radius: 0 6px 6px 0;
+  }
+  .card p:last-child { margin-bottom: 0; }
+  .quiz {
+    background: #f0f4f8;
+    border: 1px solid #d0d8e0;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+  }
+  .quiz p { margin-bottom: 8px; }
+  .quiz strong { color: var(--accent); }
+  .nav {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--subtle);
+  }
+  .nav a { color: var(--accent); text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<h1><span>第 7 课</span> · 什么是 Tool Calling？</h1>
+<p class="meta">2026-06-29 · 阅读时间 5 分钟</p>
+
+<p>上节课我们学了 <strong>Agent</strong>——它能自动思考、调用工具、完成任务。但你有没有想过一个关键问题：<strong>AI 模型只会生成文字，它是怎么「调用工具」的？</strong></p>
+
+<p>答案就是 <strong>Tool Calling（工具调用）</strong>。它是让 AI 从「聊天机器人」变成「办事机器人」的核心技术。今天我们就把它彻底讲明白。</p>
+
+<h2>问题：AI 只有一张嘴</h2>
+
+<p>想象一下：你让一个助手「帮我查一下明天的天气」。助手答应了，但他没有手机、没有电脑、不能出门——他只是一张嘴。<strong>LLM 就是这个状态</strong>：它能理解你的问题，能回答，但它「手」上什么也没有。</p>
+
+<p>那赫默是怎么帮我们查天气、读文件、搜网页的？</p>
+
+<p>答案是：<strong>模型不直接做这些事，它告诉你「你应该做这些事」——然后由程序（赫默自己）来执行。</strong></p>
+
+<h2>Tool Calling 的核心机制</h2>
+
+<p>普通的 API 调用，你问一句，模型回一段文字：</p>
+
+<pre>
+你  →  "明天北京天气怎么样？"
+模型  →  "抱歉，我没有实时数据，无法查到天气信息。"</pre>
+
+<p>但用了 Tool Calling 之后，模型的回答会变成<strong>结构化指令</strong>：</p>
+
+<pre>
+你  →  "明天北京天气怎么样？"
+模型  →  {
+    "tool": "get_weather",
+    "params": {
+      "city": "北京",
+      "date": "2026-06-30"
+    }
+  }</pre>
+
+<p>模型输出的不再是自然语言，而是一个 <strong>JSON 指令</strong>——告诉程序：去调 <code>get_weather</code> 这个函数，参数是"北京"和"明天"。</p>
+
+<p>程序收到 JSON 后：</p>
+<ol>
+  <li><strong>解析指令</strong>：知道要调哪个工具、传什么参数</li>
+  <li><strong>执行工具</strong>：调用天气 API，拿到结果</li>
+  <li><strong>结果回填</strong>：把天气数据送回模型</li>
+  <li><strong>最终回答</strong>：模型基于真实数据告诉你「明天北京 25°C，多云」</li>
+</ol>
+
+<div class="card">
+  <p><strong>💡 一句话总结：</strong>Tool Calling = 模型输出「做事指令」（JSON），程序负责执行。</p>
+</div>
+
+<h2>你每天都在用 Tool Calling</h2>
+
+<p>赫默的所有「非聊天」能力都靠 Tool Calling：</p>
+
+<ul>
+  <li><strong>搜索网页</strong> → 模型输出 <code>{tool: "web_search", query: "..."}</code></li>
+  <li><strong>读文件</strong> → 模型输出 <code>{tool: "read_file", path: "..."}</code></li>
+  <li><strong>写文件</strong> → 模型输出 <code>{tool: "write_file", path: "...", content: "..."}</code></li>
+  <li><strong>执行代码</strong> → 模型输出 <code>{tool: "execute_python", code: "..."}</code></li>
+</ul>
+
+<p>你每次看到赫默在「正在搜索…」「正在读取…」，背后都是一个 Tool Calling 流程在跑。</p>
+
+<h2>和 Agent 循环的关系</h2>
+
+<p>上节课讲的 <strong>Agent 循环（Think → Act → Observe）</strong> 中，<strong>Act</strong> 这一步就是用 Tool Calling 实现的：</p>
+
+<pre>
+  用户提问
+      ↓
+Think: "这个需要查天气"
+      ↓
+Act: 模型输出 JSON → 程序执行 get_weather()
+      ↓
+Observe: 天气数据返回给模型
+      ↓
+Think: "好了，现在我有数据了，回答用户"
+      ↓
+Act: 模型输出最终回答
+</pre>
+
+<p>看懂了吗？Tool Calling 就是 Agent 循环中「动手」的那一步——Agent 是整个系统，Tool Calling 是它「伸手拿东西」的机制。</p>
+
+<h2>代码看一眼</h2>
+
+<p>用 DeepSeek API 调 Tool Calling 的真实代码大概长这样（不用全懂，看个样子）：</p>
+
+<pre>import requests
+
+# 定义工具
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "获取城市的实时天气",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "city": {"type": "string"}
+            },
+            "required": ["city"]
+        }
+    }
+}]
+
+# 发送请求，告诉他你有哪些工具可以用
+response = requests.post(
+    "https://api.deepseek.com/chat/completions",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={
+        "model": "deepseek-chat",
+        "messages": [{"role": "user", "content": "北京天气如何？"}],
+        "tools": tools           # ← 告诉模型你有这些工具可用
+    }
+)
+
+print(response.json())
+# 模型中返回的不是文字，而是工具调用指令</pre>
+
+<p>关键就两件事：</p>
+<ol>
+  <li><strong>告诉模型你有什么工具</strong>（名称、参数说明）</li>
+  <li><strong>模型决定要不要用</strong>——它会自己判断「这个问题需不需要工具」，需要就输出 JSON 指令</li>
+</ol>
+
+<h2>为什么这很重要？</h2>
+
+<p>理解 Tool Calling 之后，你就能明白：<strong>AI 应用的能力边界，不取决于模型，而取决于你给了它什么工具。</strong></p>
+
+<p>给模型一个「搜索工具」，它就能查资料。<br>
+给模型一个「读数据库工具」，它就能做数据分析。<br>
+给模型一个「发邮件工具」，它就能自动回复客户。</p>
+
+<p>这就是为什么赫默可以不断添加新能力——每次加一个新工具就行了。模型不需要重新训练，它本来就会「用」工具，只是需要你告诉它有哪些工具可选。</p>
+
+<div class="quiz">
+  <p><strong>❓ 小测：</strong></p>
+  <p>Tool Calling 中，AI 模型返回的「做事指令」是什么格式？</p>
+  <p>A. 自然语言的句子，比如「帮我查天气」</p>
+  <p>B. ⭐ JSON 格式的结构化数据</p>
+  <p>C. 图片格式</p>
+  <p><em>（答案是 B。模型输出 JSON，程序执行，结果回填模型再输出最终回答。）</em></p>
+</div>
+
+<h2>增量胜利</h2>
+
+<p>🎯 学完今天这课，你多了一个新能力：<strong>你能理解赫默每次「正在搜索/读取/执行」时背后发生了什么——而且知道这个机制不神秘，就是「输出 JSON → 执行 → 回填结果」的循环。</strong></p>
+
+<h2>推荐阅读</h2>
+
+<ul>
+  <li><a href="https://platform.openai.com/docs/guides/function-calling" target="_blank">OpenAI Function Calling 官方文档</a>（概念通用，与 DeepSeek 兼容）</li>
+  <li>参照 <a href="../reference/0005-token-reference.html">Token 参考</a> 理解 Tool Calling 多步循环中的 token 消耗</li>
+</ul>
+
+<p>有疑问？下次课之前随时问你的 AI 教练——学习就是不断追问的过程。</p>
+
+<div class="nav">
+  <p>← <a href="0006-what-is-agent.html">上一课：什么是 Agent？</a> · <a href="../reference/glossary.html">术语表</a></p>
+</div>
+
+</body>
+</html>

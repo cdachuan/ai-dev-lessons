@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>术语表 · AI 应用开发</title>
+<style>
+  :root {
+    --bg: #fdfcf9;
+    --text: #2c2c2c;
+    --accent: #c44d34;
+    --subtle: #6b6b6b;
+    --border: #e0dcd4;
+    --card: #f6f3ee;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+    background: var(--bg); color: var(--text);
+    max-width: 800px; margin: 0 auto; padding: 48px 24px 72px;
+    line-height: 1.8;
+  }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  h1 span { color: var(--accent); }
+  .meta { color: var(--subtle); font-size: 14px; margin-bottom: 32px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--card); font-weight: 700; font-size: 14px; }
+  td { font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
+  .footnote { color: var(--subtle); font-size: 13px; margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<h1><span>术语表</span> · AI 应用开发</h1>
+<p class="meta">按首次出现顺序排列 · 随课程推进更新</p>
+
+<table>
+<tr><th>术语</th><th>英文</th><th>定义</th><th>课程</th></tr>
+<tr><td>AI 模型</td><td>AI Model</td><td>被训练来从输入预测输出的程序；LLM 特指预测下一个词的模型</td><td>0001</td></tr>
+<tr><td>LLM</td><td>Large Language Model</td><td>大语言模型，参数量达数十亿以上，能理解和生成自然语言</td><td>0001</td></tr>
+<tr><td>训练</td><td>Training</td><td>给模型喂海量数据，让它调整内部参数以学习规律</td><td>0001</td></tr>
+<tr><td>推理</td><td>Inference</td><td>训练完成后，模型根据输入实时生成输出的过程</td><td>0001</td></tr>
+<tr><td>上下文窗口</td><td>Context Window</td><td>模型一次能「看到」的最大文字量上限</td><td>0001</td></tr>
+<tr><td>API</td><td>Application Programming Interface</td><td>应用程序接口，让两个程序互相通信的约定</td><td>0002</td></tr>
+<tr><td>API Key</td><td>API Key</td><td>API 密钥，调用 API 时用来验证身份的「密码」，必须保密</td><td>0003</td></tr>
+<tr><td>SDK</td><td>Software Development Kit</td><td>软件开发工具包，把 API 调用封装成更方便的代码库</td><td>0003</td></tr>
+<tr><td>Prompt</td><td>—</td><td>给 AI 模型的输入指令，告诉它你想要什么</td><td>0004</td></tr>
+<tr><td>Token</td><td>—</td><td>模型读取文本的最小单位，约 0.75 个英文单词或 1-2 个汉字</td><td>0005</td></tr>
+<tr><td>Agent</td><td>—</td><td>能自主使用工具、规划步骤、执行多步任务的 AI 系统</td><td>0006</td></tr>
+<tr><td>Tool Calling</td><td>工具调用</td><td>AI 模型输出结构化 JSON 指令来描述「要调什么工具、传什么参数」，由程序负责执行</td><td>0007</td></tr>
+<tr><td>RAG</td><td>Retrieval-Augmented Generation</td><td>检索增强生成：先搜索相关文档，再让模型基于文档回答</td><td>0009</td></tr>
+<tr><td>Function Calling</td><td>函数调用</td><td>让 AI 模型决定调用哪个函数并填入参数的能力</td><td>0010</td></tr>
+</table>
+
+<p class="footnote">创建于 2026-06-22 · 最后更新 2026-06-29</p>
+</body>
+</html>

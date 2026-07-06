@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0005 · 动手写一个能读文件并总结的脚本</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back { margin-top: 2.5rem; font-size: 0.9rem; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .inline-highlight { background: #dbeafe; padding: 0.1em 0.3em; border-radius: 3px; }
+  .step { margin-bottom: 1.5rem; }
+  .step-num { display: inline-block; background: var(--accent); color: #fff; width: 24px; height: 24px; text-align: center; line-height: 24px; border-radius: 50%; font-size: 0.8rem; font-weight: 700; margin-right: 0.5rem; }
+  .output-sample { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.8rem 1rem; margin: 0.8rem 0; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>📄 动手写一个能读文件并总结的脚本</h1>
+<p class="meta">第 0008 课 · 2026-07-03 · 实践课</p>
+
+<p>前几课学了概念（Token、Agent、Tool Calling），今天我们把它们<strong>串起来做一个真实能用的脚本</strong>。</p>
+
+<div class="callout">
+  <strong>🎯 增量胜利：</strong>学完这课，你就能写一个脚本：<strong>把任意文件丢给它 → AI 自动读并给出总结</strong>。马上能用在日常工作里。
+</div>
+
+<h2>问题场景</h2>
+
+<p>你是项目助理，每周要处理一堆报告、会议纪要、文章。以前的做法是：</p>
+<ol>
+  <li>手动打开文件，复制内容</li>
+  <li>粘到赫默对话框里</li>
+  <li>写"请总结一下"</li>
+  <li>等回复，再复制出来</li>
+  <li>重复 10 次（每个文件来一遍）</li>
+</ol>
+<p>今天的脚本就是把这个流程<strong>自动化</strong>——人只需要执行一行命令，剩下的交给代码。</p>
+
+<h2>三步走</h2>
+
+<p>这个脚本只做三件事，每件事你都已经学过：</p>
+
+<div class="step">
+  <span class="step-num">1</span> <strong>读文件</strong> —— Python 的基本文件操作。把文件内容读到变量里。
+</div>
+<div class="step">
+  <span class="step-num">2</span> <strong>调 API</strong> —— 用第 3 课学过的 <code>client.chat.completions.create()</code> 把内容发给 DeepSeek。
+</div>
+<div class="step">
+  <span class="step-num">3</span> <strong>打印结果</strong> —— 取出 <code>response.choices[0].message.content</code>，打印到屏幕上。
+</div>
+
+<h2>完整脚本</h2>
+
+<p>创建一个文件 <code>summarize.py</code>，复制以下代码：</p>
+
+<pre><code><span style="color:#89b4fa;">from</span> <span style="color:#89b4fa;">openai</span> <span style="color:#89b4fa;">import</span> <span style="color:#89b4fa;">OpenAI</span>
+
+<span style="color:#a6adc8;"># 1. 连接 API</span>
+client = OpenAI(
+    api_key=<span style="color:#a6e3a1;">"sk-你的密钥"</span>,       <span style="color:#6c7086;"># ← 改成你的 DeepSeek API Key</span>
+    base_url=<span style="color:#a6e3a1;">"https://api.deepseek.com"</span>
+)
+
+<span style="color:#a6adc8;"># 2. 读文件</span>
+file_path = <span style="color:#a6e3a1;">"report.txt"</span>               <span style="color:#6c7086;"># ← 改成你要总结的文件路径</span>
+<span style="color:#89b4fa;">with</span> <span style="color:#89b4fa;">open</span>(file_path, <span style="color:#a6e3a1;">"r"</span>, encoding=<span style="color:#a6e3a1;">"utf-8"</span>) <span style="color:#89b4fa;">as</span> f:
+    content = f.read()
+
+<span style="color:#a6adc8;"># 3. 构造 prompt（把文件内容嵌入到指令里）</span>
+prompt = <span style="color:#a6e3a1;">f"""请用简洁的中文总结以下内容，100 字以内：</span>
+
+<span style="color:#a6e3a1;">{content}</span>
+<span style="color:#a6e3a1;">"""</span>
+
+<span style="color:#a6adc8;"># 4. 调 API</span>
+response = client.chat.completions.create(
+    model=<span style="color:#a6e3a1;">"deepseek-chat"</span>,
+    messages=[
+        {<span style="color:#a6e3a1;">"role"</span>: <span style="color:#a6e3a1;">"user"</span>, <span style="color:#a6e3a1;">"content"</span>: prompt}
+    ]
+)
+
+<span style="color:#a6adc8;"># 5. 输出结果</span>
+<span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"\n=== 总结 ===\n"</span>)
+<span style="color:#89b4fa;">print</span>(response.choices[0].message.content)
+</code></pre>
+
+<h2>逐行解释</h2>
+
+<table>
+  <tr><th>代码</th><th>什么意思</th></tr>
+  <tr>
+    <td><code>from openai import OpenAI</code></td>
+    <td>引入第 3 课装的「openai」库，这是和 DeepSeek 对话的桥梁</td>
+  </tr>
+  <tr>
+    <td><code>open(file_path, "r", encoding="utf-8")</code></td>
+    <td><code>open()</code> 是 Python 内置的文件打开函数。<code>"r"</code> 表示只读模式。<code>encoding="utf-8"</code> 保证中文不乱码</td>
+  </tr>
+  <tr>
+    <td><code>content = f.read()</code></td>
+    <td>把文件的全部文本读进 <code>content</code> 这个变量里</td>
+  </tr>
+  <tr>
+    <td><code>f"请总结……{content}"</code></td>
+    <td><strong>f-string（格式化字符串）</strong>—— <code>{content}</code> 会被替换成文件的实际内容。这样 prompt = "请总结 xxx"</td>
+  </tr>
+  <tr>
+    <td><code>client.chat.completions.create(...)</code></td>
+    <td>跟第 3 课一模一样的 API 调用，区别是 prompt 里包含了文件内容</td>
+  </tr>
+  <tr>
+    <td><code>print(response.choices[0].message.content)</code></td>
+    <td>从 API 回复中取出 AI 生成的总结文字，打印到终端</td>
+  </tr>
+</table>
+
+<h2>运行试试</h2>
+
+<ol>
+  <li>在当前目录下创建一个测试文件 <code>report.txt</code>，随便写几段话（比如你最近的一个任务说明）</li>
+  <li>把 <code>api_key</code> 改成你的 DeepSeek API Key</li>
+  <li>在终端中运行：</li>
+</ol>
+
+<pre><code><span style="color:#89b4fa;">$</span> python summarize.py
+
+<span style="color:#6c7086;">=== 总结 ===</span>
+<span style="color:#a6e3a1;">该报告主要讨论了第三季度的项目进度，核心问题是...</span>
+</code></pre>
+
+<div class="callout">
+  <strong>⚡ 注意：</strong>如果文件太大（比如几千字），可能会超出模型的上下文窗口（Token 过多）。关于如何分块处理长文档，是第 0009 课（RAG）的内容。今天先处理几百字的短文即可。
+</div>
+
+<h2>升级玩法</h2>
+
+<p>脚本写出来后，改几行就能做不同的事：</p>
+
+<table>
+  <tr><th>改哪里</th><th>效果</th></tr>
+  <tr>
+    <td>把 prompt 里的"总结"改成"翻译成英文"</td>
+    <td>变成英译脚本</td>
+  </tr>
+  <tr>
+    <td>在 prompt 前面加 <code>{"role": "system", "content": "你是一个专业的合同审查律师"}</code></td>
+    <td>变成合同审查助手</td>
+  </tr>
+  <tr>
+    <td>把 <code>file_path</code> 改成从命令行参数读入</td>
+    <td>变成通用工具：<code>python summarize.py 任何文件</code></td>
+  </tr>
+  <tr>
+    <td>用 <code>for file in files:</code> 循环处理多个文件</td>
+    <td>批量处理一整批报告</td>
+  </tr>
+</table>
+
+<h2>本课学了什么</h2>
+
+<ul>
+  <li>✅ 用 Python 读本地文件（<code>open()</code> / <code>read()</code>）</li>
+  <li>✅ 把文件内容嵌入到 prompt 里发给 AI（f-string 拼接）</li>
+  <li>✅ 完整的"读文件 → 调 API → 输出" 流程</li>
+  <li>✅ 一个可以立刻投入使用的脚本</li>
+</ul>
+
+<p>你现在可以自己做一个小工具了。下次遇到要反复复制粘贴给 AI 的活儿，想想能不能用这个脚本代替。</p>
+
+<h2>🤔 小测</h2>
+
+<p>下面哪一项是 <code>prompt = f"请总结：{content}"</code> 中 <code>f</code> 的作用？</p>
+<ol type="A">
+  <li>表示"文件"（file）的缩写</li>
+  <li>表示"格式化字符串"——把 <code>{content}</code> 替换为变量的实际值</li>
+  <li>表示"快速"（fast）——让代码运行更快</li>
+  <li>没有作用，可以去掉</li>
+</ol>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 有任何疑问，随时问你的 AI 教练。<br>
+  不明白为什么 <code>open()</code> 要加 <code>encoding</code>？卡在 API Key 不会配？直接问。
+</p>
+
+<div class="nav-links">
+  <a href="0004-what-is-prompt.html">← 上一课：什么是 Prompt</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>

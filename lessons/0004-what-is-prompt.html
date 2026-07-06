@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0004 · 什么是 Prompt？—— 给 AI 的指令怎么写</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    margin: 2.2rem 0 0.8rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 2px solid var(--border);
+    font-weight: 700;
+  }
+  h3 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; font-weight: 700; }
+  p { margin: 0.8rem 0; }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+    margin: 1.2rem 0;
+  }
+  .card.highlight { background: var(--highlight); border-color: #f59e0b; }
+  .card.tip { background: #eff6ff; border-color: #93c5fd; }
+  code {
+    background: #f1f5f9;
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.9em;
+  }
+  pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0;
+  }
+  .pre-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 1.2rem;
+    margin-bottom: 0.2rem;
+    font-weight: 600;
+  }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .quiz {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin: 1.5rem 0;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  td, th { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; font-size: 0.9rem; }
+  th { background: #f8fafc; font-weight: 700; }
+  .compare-table td:first-child { background: #fef2f2; }
+  .compare-table td:last-child { background: #f0fdf4; }
+  .ref-list { list-style: none; padding: 0; }
+  .ref-list li { margin: 0.4rem 0; }
+  .ref-list li::before { content: "→ "; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<h1>📝 第 4 课 · 什么是 Prompt？</h1>
+<div class="meta">2026-07-02 · 阅读约 4 分钟 · <a href="../reference/glossary.html">术语表</a></div>
+
+<p><strong>你每天都在写 prompt，只是你不知道它叫这个名字。</strong></p>
+
+<div class="card highlight">
+  <strong>🎯 今天学完你能做这件事：</strong><br>
+  在赫默（或其他 AI 工具）里，有意识地写出 <strong>system prompt + user prompt</strong> 的结构，让 AI 的输出质量明显提升。不再是「瞎问瞎答」，而是「精准指挥」。
+</div>
+
+<h2>Prompt 是什么？</h2>
+
+<p><strong>Prompt（提示词）</strong>就是<strong>你给 AI 模型的输入指令</strong>——你说了什么、问了什么、要求了什么，那整段话就是 prompt。</p>
+
+<p>还记得第 3 课 <a href="./0003-hello-world-deepseek-api.html">Hello World 代码</a>吗？</p>
+
+<pre>messages = [
+    {"role": "user", "content": "用一句话介绍你自己"}
+]</pre>
+
+<p>这段代码里的 <code>"用一句话介绍你自己"</code>——这就是一个 prompt。</p>
+
+<div class="card">
+  <strong>🔍 生活中的类比：</strong>你给下属布置任务时说的那段话就是 prompt。说清楚→做好；说模糊→做偏。AI 也一样，而且更加「字面理解」——它不会像人一样猜测你的潜台词。
+</div>
+
+<h2>Prompt 的两个层级：System vs User</h2>
+
+<p>在上面的代码里，<code>messages</code> 是一个列表（list），可以放多条消息。最常见的两种角色：</p>
+
+<table>
+  <tr><th>角色</th><th>作用</th><th>什么时候用</th></tr>
+  <tr>
+    <td><code>system</code></td>
+    <td>给 AI 设定<strong>身份、规则、约束</strong>（一次设定、整个对话生效）</td>
+    <td>对话开始时，设定「AI 的角色」</td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>你的<strong>具体问题/任务</strong>（每次都可以不同）</td>
+    <td>每次提问时</td>
+  </tr>
+</table>
+
+<div class="card tip">
+  <strong>💡 举个例子：</strong>
+  <pre>messages = [
+    {"role": "system", "content": "你是一个耐心的老师，用小学五年级能听懂的话解释概念。"},
+    {"role": "user",    "content": "什么是区块链？"}
+]</pre>
+  加上 system prompt 之后，AI 的回复会明显更简单、更口语化。试试在赫默里也这样用：<br>
+  「你是一个耐心的老师……什么是区块链？」
+</div>
+
+<p><strong>即使不写代码，你在赫默里也能用这个技巧：</strong>在对话开头先打一句「请你扮演一个……然后回答我的问题」，效果等同于 system prompt。</p>
+
+<h2>为什么说「不会 prompt = 不会用 AI」？</h2>
+
+<p>Prompt 的质量，直接决定了 AI 输出的质量。如果把 AI 模型比作一个超级聪明但对背景一无所知的新员工，prompt 就是你给 TA 的<strong>任务说明</strong>——越清楚，结果越好。</p>
+
+<blockquote>
+  <strong>记住这个公式：</strong>好输入 × 好模型 = 好输出。<br>
+  坏输入 × 好模型 = 随机输出。
+</blockquote>
+
+<h2>好 Prompt vs 坏 Prompt</h2>
+
+<table class="compare-table">
+  <tr><th>❌ 模糊指令</th><th>✅ 清晰指令</th></tr>
+  <tr>
+    <td>「帮我写个方案」</td>
+    <td>「帮我写一份 500 字的项目推广方案，目标受众是中小企业老板，语气专业但有温度」</td>
+  </tr>
+  <tr>
+    <td>「这个数据怎么说」</td>
+    <td>「我手上有 3 月份销售额 120 万，比 2 月涨了 15%。请写一段话给老板汇报，突出增长、不提绝对值」</td>
+  </tr>
+  <tr>
+    <td>「翻译这个」</td>
+    <td>「请将以下英文翻译成中文，保持专业术语不变，译文风格：简洁商务」</td>
+  </tr>
+</table>
+
+<h2>写好 Prompt 的三个要素</h2>
+
+<ol>
+  <li><strong>🎯 明确目标</strong> —— 你想要什么结果？「总结这篇文章」vs「用三句话总结核心观点，每句不超过 20 字」</li>
+  <li><strong>📋 提供上下文</strong> —— AI 没有默认背景知识。你给它越多相关背景，答案越准。比如告诉它你的身份、受众、用途</li>
+  <li><strong>📐 指定格式</strong> —— 想要清单、表格、一小段文字、还是 Markdown？直接说出来</li>
+</ol>
+
+<h2>你今天学到的「增量胜利」🥇</h2>
+
+<div class="card highlight">
+  <p><strong>打开赫默，试试这个 prompt 结构：</strong></p>
+  <pre style="margin:0.5rem 0; background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 6px;">你是一个经验丰富的项目助理。
+你用简洁的语言回答，每条不超过 3 句话。
+
+请帮我……
+</pre>
+  <p>先设定身份（system prompt 的效果），再说具体任务——你会发现回复质量明显提高。</p>
+</div>
+
+<h2>❓ 小测</h2>
+
+<div class="quiz">
+  <p><strong>你想让 AI 扮演一个「翻译助手」，只输出中文翻译结果不解释。以下哪段 messages 写法正确？</strong></p>
+  <ol type="A">
+    <li><code>[{"role": "user", "content": "你是一个翻译助手，只输出中文翻译"}]</code></li>
+    <li><code>[{"role": "system", "content": "你是一个翻译助手，只输出中文翻译"}, {"role": "user", "content": "translate: Hello world"}]</code></li>
+    <li><code>[{"role": "assistant", "content": "你是一个翻译助手"}]</code></li>
+    <li><code>[{"role": "prompt", "content": "翻译以下内容"}]</code></li>
+  </ol>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:0.8rem;">（答案见底部）</p>
+</div>
+
+<h2>📖 推荐阅读</h2>
+
+<ul class="ref-list">
+  <li><a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/">Anthropic Prompt Engineering Guide</a>（英文，但可以扔给赫默让它翻译每段 + 举中文例子）</li>
+  <li><a href="https://platform.openai.com/docs/guides/prompt-engineering">OpenAI Prompt Engineering Guide</a>（六条核心原则，普遍适用）</li>
+</ul>
+
+<h2>🔗 关联课程</h2>
+
+<ul class="ref-list">
+  <li>← <a href="./0003-hello-world-deepseek-api.html">第 3 课：用 Python 调 API</a>（prompt 就是 messages 里的 content）</li>
+  <li>→ <a href="./0005-what-is-token.html">第 5 课：什么是 Token？</a>（prompt 按 token 计费——为什么写长 prompt 要花钱）</li>
+</ul>
+
+<p style="margin-top:3rem;color:var(--muted);font-size:0.85rem;">
+  有问题随时找赫默或发微信给我：「第 4 课没懂，关于 system prompt 的例子能再多给几个吗？」<br>
+  <strong>小测答案：B。</strong> system 设定规则，user 给具体任务。A 全是 user，不会生效设定角色的效果；C 的 assistant 是 AI 回复时的角色，不能用来设规则；D 的 "prompt" 角色不存在。
+</p>
+
+</body>
+</html>

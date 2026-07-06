@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>第 4 课 · 什么是 Prompt？</title>
+<style>
+  body {
+    font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2em 1.5em;
+    line-height: 1.7;
+    color: #1a1a2e;
+    background: #fafafa;
+  }
+  h1 { font-size: 1.6em; border-bottom: 2px solid #4f46e5; padding-bottom: .3em; margin-bottom: .8em; }
+  h2 { font-size: 1.2em; margin-top: 1.6em; color: #4f46e5; }
+  code, pre {
+    font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+    font-size: .9em;
+    background: #eef2ff;
+    border-radius: 6px;
+  }
+  pre {
+    padding: 1em;
+    overflow-x: auto;
+    border: 1px solid #c7d2fe;
+    line-height: 1.5;
+  }
+  .note {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    padding: .8em 1em;
+    margin: 1.2em 0;
+    border-radius: 6px;
+  }
+  .tip {
+    background: #dbeafe;
+    border-left: 4px solid #3b82f6;
+    padding: .8em 1em;
+    margin: 1.2em 0;
+    border-radius: 6px;
+  }
+  strong { color: #1e293b; }
+  blockquote {
+    border-left: 3px solid #94a3b8;
+    margin: 1em 0;
+    padding: .3em 1em;
+    color: #475569;
+    background: #f8fafc;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+  }
+  th, td {
+    border: 1px solid #e2e8f0;
+    padding: .5em .8em;
+    text-align: left;
+  }
+  th { background: #eef2ff; color: #4f46e5; }
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 2em 0; }
+  .footer { font-size: .85em; color: #94a3b8; text-align: center; margin-top: 2em; }
+</style>
+</head>
+<body>
+
+<h1>📝 第 4 课 · 什么是 Prompt？</h1>
+<p><em>你每天都在写 Prompt，只是你不知道它叫这个名字。</em></p>
+
+<h2>如果我有任何问题…</h2>
+<p>直接把问题扔给赫默，或者发微信给我。你的教练随时在线。</p>
+
+<h2>Prompt 是什么？</h2>
+<p><strong>Prompt（提示词/提示语）</strong>就是<strong>你给 AI 模型的输入指令</strong>——你说什么、问什么、要求什么，那整段话就是 prompt。</p>
+
+<p>上一课（<a href="0003-hello-world-deepseek-api.html">第 3 课</a>）的代码里，<code>messages</code> 参数里的 <code>"content": "用一句话解释什么是量子计算"</code>——这里面的中文内容，就是一个 prompt。</p>
+
+<div class="note">
+  <strong>生活中的类比：</strong>你给下属布置任务时说的那段话就是 prompt。说清楚→做好；说模糊→做偏。AI 也一样。
+</div>
+
+<h2>Prompt 的两个层级</h2>
+
+<p>在代码里，<code>messages</code> 是一个列表（list），可以放多条消息。最常见的两种角色：</p>
+
+<table>
+  <tr><th>角色</th><th>作用</th><th>类比</th></tr>
+  <tr>
+    <td><code>system</code></td>
+    <td>给 AI 设定身份、规则、约束（只对对话生效一次）</td>
+    <td>「你是我的项目助理，回复不超过 200 字」</td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>你当前的具体问题/任务（每次对话都可以不同）</td>
+    <td>「整理这个会议的要点」</td>
+  </tr>
+</table>
+
+<div class="tip">
+  <strong>💡 举个例子：</strong>
+  <pre>messages = [
+    {"role": "system", "content": "你是一个耐心的老师，用小学五年级能听懂的话解释概念。"},
+    {"role": "user",    "content": "什么是区块链？"}
+]</pre>
+  加上 system prompt 之后，AI 的回复会明显更简单、更口语化。试试看。
+</div>
+
+<h2>一句好 Prompt 的三个要素</h2>
+
+<ol>
+  <li><strong>明确目标</strong>——你想要什么结果？「总结这篇文章」vs「用三句话总结这篇文章的核心观点」</li>
+  <li><strong>提供上下文</strong>——AI 没有默认背景知识。你给它越多相关背景，答案越准</li>
+  <li><strong>指定格式</strong>——想要清单、表格、段落、还是 Markdown？直接说</li>
+</ol>
+
+<h2>坏 Prompt vs 好 Prompt</h2>
+
+<table>
+  <tr><th>❌ 坏 Prompt</th><th>✅ 好 Prompt</th></tr>
+  <tr><td>「帮我写个方案」</td><td>「帮我写一份 500 字的项目推广方案，目标受众是中小企业老板，语气专业但有温度」</td></tr>
+  <tr><td>「这个数据怎么说」</td><td>「我手上有 3 月份销售额 120 万，比 2 月涨了 15%。请写一段话给老板汇报，突出增长、不提绝对值」</td></tr>
+</table>
+
+<h2>你今天学到的「增量胜利」🥇</h2>
+<p><strong>学完这课后，你能做一件以前做不到的事：</strong></p>
+<p>在赫默（或其他 AI 工具）里，有意识地写出 <strong>system prompt + user prompt</strong> 的结构，让 AI 的输出质量明显提升。不再是「瞎问瞎答」，而是「精准指挥」。</p>
+
+<h2>小测验</h2>
+<p>用微信消息中的选择题自测。答错了？问赫默或发消息给我。</p>
+
+<h2>推荐阅读</h2>
+<p><a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/">Anthropic Prompt Engineering Guide</a>（英文，但可以扔给赫默让它帮你翻译每段）</p>
+
+<hr>
+<div class="footer">
+  <p>← <a href="0003-hello-world-deepseek-api.html">上一课：用 Python 调 API</a></p>
+  <p>有任何不懂的，直接问赫默或找我。📩</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0001 · 什么是 AI 模型？</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    margin: 2.2rem 0 0.8rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 2px solid var(--border);
+    font-weight: 700;
+  }
+  p { margin: 0.8rem 0; }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+    margin: 1.2rem 0;
+  }
+  .card.highlight { background: var(--highlight); border-color: #f59e0b; }
+  code {
+    background: #f1f5f9;
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.9em;
+  }
+  pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0;
+  }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .quiz {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin: 1.5rem 0;
+  }
+  .next-link {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 0.5rem 1rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .next-link:hover { text-decoration: none; opacity: 0.9; }
+  .ref-list { list-style: none; padding: 0; }
+  .ref-list li { margin: 0.4rem 0; }
+  .ref-list li::before { content: "→ "; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<h1>📚 第 1 课 · 什么是 AI 模型？</h1>
+<div class="meta">2026-06-22 · 阅读约 5 分钟 · <a href="../reference/glossary.md">术语表</a></div>
+
+<h2>一句话讲清</h2>
+
+<p><strong>AI 模型</strong>是一个被训练来「预测下一个词」的程序。<br>
+你每次和赫默对话，背后就有一个 AI 模型在逐字生成回复。</p>
+
+<div class="card highlight">
+  <strong>对你有什么用？</strong><br>
+  你已经每天都在用 AI 模型了——只是通过赫默这个「外壳」。学会直接调用模型，你就能让 AI 帮你处理文件、批量生成报告、自动回复邮件，而不用手动一条条粘贴。
+</div>
+
+<h2>你平时用赫默，背后发生了什么？</h2>
+
+<p>假设你问赫默：<em>「帮我写一封请假邮件」</em></p>
+
+<ol>
+  <li><strong>你的消息</strong> → 赫默把你的输入打包成 API 请求</li>
+  <li><strong>API 请求</strong> → 发送到 AI 模型服务商（比如 DeepSeek 的服务器）</li>
+  <li><strong>模型推理</strong> → 模型根据你输入的每个字，逐字预测下一个最合适的字</li>
+  <li><strong>生成结果</strong> → 模型生成完回复，通过 API 返回给赫默</li>
+  <li><strong>你看到回复</strong> → 赫默把结果显示给你</li>
+</ol>
+
+<div class="card">
+  <strong>💡 关键洞察：</strong>AI 模型本身只是一段程序 + 一堆参数（数字）。它没有「意识」，只是在做一道超级复杂的「下一个词填空」题。它之所以显得聪明，是因为它看过的文本量远超人类一生能读完的量。
+</div>
+
+<h2>核心概念</h2>
+
+<h3>LLM（大语言模型）</h3>
+<p>Large Language Model。你用的 DeepSeek、ChatGPT、Claude 都是 LLM。特点是参数量极大（几十亿到几千亿），能理解和生成自然语言。</p>
+
+<h3>训练 vs 推理</h3>
+<ul>
+  <li><strong>训练</strong>：给模型喂海量文本，让它学会语言规律（需要几周、几千块 GPU）</li>
+  <li><strong>推理</strong>：训练好后，你每次提问，模型跑一次计算给出答案（几秒内完成）</li>
+</ul>
+
+<h3>上下文窗口</h3>
+<p>模型一次能「看见」的最大文字量。比如 DeepSeek-V3 的上下文窗口是 128K token——约等于一本中等厚度的小说。你发给模型的所有历史对话都在这个窗口里。</p>
+
+<h2>你实际上在用什么模型？</h2>
+
+<p>赫默连接的是各种模型服务商。你用的可能是：</p>
+
+<ul>
+  <li><strong>DeepSeek</strong>：国产模型，性价比极高，中文能力顶流</li>
+  <li><strong>OpenAI（ChatGPT）</strong>：行业标杆，生态最完善</li>
+  <li><strong>Anthropic（Claude）</strong>：长文本能力突出</li>
+</ul>
+
+<p>本课程将以 <strong>DeepSeek</strong> 为主线，因为它是国内最能打的模型，价格低、中文好、API 简单。</p>
+
+<h2>❓ 小测</h2>
+
+<div class="quiz">
+  <p><strong>当你向赫默提问时，以下哪一步是由「AI 模型」完成的？</strong></p>
+  <ol type="A">
+    <li>把你的消息打包成 API 请求格式</li>
+    <li>根据你的输入逐字预测下一个最合适的词</li>
+    <li>在屏幕上显示模型返回的回复文字</li>
+    <li>记录对话历史供下次使用</li>
+  </ol>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:0.8rem;">（答案见底部）</p>
+</div>
+
+<h2>📖 推荐阅读</h2>
+
+<ul class="ref-list">
+  <li><a href="https://api-docs.deepseek.com/">DeepSeek API 文档</a>（官方文档，后续课程会频繁用到）</li>
+  <li><a href="https://www.youtube.com/watch?v=7xTGNNLPyMI">3Blue1Brown: But what is a GPT?</a>（可视化讲解，强烈推荐）</li>
+</ul>
+
+<h2>下一课预告</h2>
+<p>002 · <a href="./0002-what-is-api.html">什么是 API？</a> — 你怎么「叫」AI 干活，而不是手动复制粘贴。</p>
+
+<p style="margin-top:3rem;color:var(--muted);font-size:0.85rem;">
+  有问题随时问赫默：「帮我解释第 1 课里的 ___」<br>
+  答案：B。AI 模型的核心工作就是「预测下一个词」——也就是推理。
+</p>
+
+</body>
+</html>

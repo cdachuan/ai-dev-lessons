@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 6 课 · 什么是 Agent？</title>
+<style>
+  :root {
+    --bg: #fdfcf9;
+    --text: #2c2c2c;
+    --accent: #c44d34;
+    --subtle: #6b6b6b;
+    --card: #f6f3ee;
+    --border: #e0dcd4;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", Georgia, "Times New Roman", serif;
+    background: var(--bg); color: var(--text);
+    max-width: 720px; margin: 0 auto; padding: 48px 24px 72px;
+    line-height: 1.8;
+  }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  h1 span { color: var(--accent); }
+  .meta { color: var(--subtle); font-size: 14px; margin-bottom: 32px; }
+  h2 {
+    font-size: 18px; font-weight: 700; margin: 36px 0 12px;
+    border-bottom: 1px solid var(--border); padding-bottom: 4px;
+  }
+  p { margin-bottom: 14px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 6px; padding: 16px 20px; margin: 16px 0;
+  }
+  .card-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 15px; }
+  th, td { padding: 8px 12px; border: 1px solid var(--border); text-align: left; }
+  th { background: var(--card); font-weight: 700; }
+  code {
+    font-family: "IBM Plex Mono", "Fira Code", monospace;
+    background: #eee7db; padding: 2px 6px; border-radius: 3px; font-size: 14px;
+  }
+  pre {
+    background: #2c2c2c; color: #e8e4d9; padding: 16px 20px;
+    border-radius: 6px; overflow-x: auto; margin: 12px 0; font-size: 14px;
+    line-height: 1.6;
+  }
+  .quiz {
+    background: #fef8f2; border-left: 4px solid var(--accent);
+    padding: 16px 20px; margin: 24px 0; border-radius: 0 6px 6px 0;
+  }
+  .quiz p { margin-bottom: 4px; }
+  .quiz .options { margin-top: 8px; }
+  .quiz .options div { margin: 4px 0; }
+  .quiz .answer { margin-top: 12px; font-size: 14px; color: var(--subtle); display: none; }
+  .quiz .answer.show { display: block; }
+  .footnote {
+    font-size: 13px; color: var(--subtle);
+    border-top: 1px solid var(--border); margin-top: 48px; padding-top: 12px;
+  }
+  .tip { background: #edf4ed; border-left: 4px solid #3a8a3a; padding: 12px 16px; margin: 16px 0; border-radius: 0 6px 6px 0; }
+  .tip-title { font-weight: 700; color: #3a8a3a; font-size: 14px; margin-bottom: 4px; }
+  .flow { text-align: center; margin: 20px 0; }
+  .flow span { display: inline-block; padding: 6px 14px; margin: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; font-size: 14px; }
+  .flow .arrow { border: none; background: none; color: var(--accent); font-size: 18px; padding: 0 4px; }
+</style>
+</head>
+<body>
+
+<h1><span>第 6 课</span> · 什么是 Agent？</h1>
+<p class="meta">2026-06-28 · 阅读时间：5 分钟</p>
+
+<p>你已经和赫默聊了很久了。你有没有想过——当你对赫默说「帮我查一下某某网站」或者「帮我整理这个文件」，赫默是怎么做到的？</p>
+
+<p>一个普通的 LLM（像你第 1 课学到的）只会生成文字。它不能搜索网页、不能读取文件、不能运行代码。但赫默可以。为什么？</p>
+
+<p class="card"><span class="card-title">💡 一句话</span>
+<strong>Agent（智能体、代理）</strong> = LLM（大脑）+ 工具（手脚）+ 自主决策（何时用哪个工具）。</p>
+
+<h2>LLM 与 Agent 的区别</h2>
+
+<table>
+  <tr><th></th><th>普通 LLM</th><th>Agent</th></tr>
+  <tr><td><strong>能力</strong></td><td>只能聊天/生成文字</td><td>能搜索、读文件、跑代码、操作应用</td></tr>
+  <tr><td><strong>决策</strong></td><td>你问什么答什么</td><td>自己判断「是否需要工具」「用哪个工具」</td></tr>
+  <tr><td><strong>流程</strong></td><td>一问一答</td><td>多步循环：想→做→看结果→再想</td></tr>
+  <tr><td><strong>例子</strong></td><td>ChatGPT 纯聊天</td><td>赫默、Claude Code、AutoGPT</td></tr>
+</table>
+
+<h2>Agent 的核心工作流</h2>
+
+<p>Agent 不是一次性回答，而是「循环」工作：</p>
+
+<div class="flow">
+<span>🧠 收到你的问题</span>
+<span class="arrow">→</span>
+<span>🤔 判断需要什么工具</span>
+<span class="arrow">→</span>
+<span>🔧 调用工具</span>
+<span class="arrow">→</span>
+<span>📥 得到结果</span>
+<span class="arrow">→</span>
+<span>🧠 判断够不够</span>
+<span class="arrow">→</span>
+<span>📤 给你最终答案</span>
+</div>
+
+<p>用你熟悉的例子——你在赫默说「帮我翻译这份文件」：</p>
+
+<ol>
+  <li><strong>🧠 判断</strong>：赫默看到你说的是「文件」，决定调用「读文件」工具</li>
+  <li><strong>🔧 调用</strong>：赫默执行读文件操作，拿到文件内容</li>
+  <li><strong>📥 得到结果</strong>：看到了文件里的文字</li>
+  <li><strong>🤔 再判断</strong>：够了吗？还需要更多工具吗？好，直接翻译就够了</li>
+  <li><strong>📤 输出</strong>：把翻译好的内容回复给你</li>
+</ol>
+
+<p>这一切发生在几秒之内，你看到的是最终结果。但背后其实跑了一整个「思考→行动→观察→再思考」的循环。</p>
+
+<h2>为什么这很重要？</h2>
+
+<p>理解 Agent 的原理，你就明白了为什么赫默「不只是个聊天机器人」——它是一个能自主完成任务的系统。这对你的目标（用 AI 解决实际工作问题）至关重要，因为：</p>
+
+<ul>
+  <li>✅ 你可以让 Agent 帮你做<strong>多步骤任务</strong>（比如：读邮件→提取待办→写进表格）</li>
+  <li>✅ 你也可以<strong>自己写一个简单的 Agent</strong>（用你第 3 课学到的方法调 API，再加几行判断逻辑）</li>
+  <li>✅ 你能理解为什么 Agent 有时候会「卡住」或「犯错」（工具返回的结果不如预期 → 决策出错）</li>
+</ul>
+
+<h2>最简单的 Agent 代码</h2>
+
+<p>下面是一个极简版的 Agent 代码，展示了「判断→调用工具→再判断」的模式。你不需要完全看懂每一行，重点看结构：</p>
+
+<pre># 极简 Agent 示例 — 理解即可，不用自己打
+def search_web(query):
+    """假装搜索了一下"""
+    return f"搜索结果：关于「{query}」有很多资料..."
+
+def ask_llm(messages):
+    """假装调用了 LLM"""
+    last = messages[-1]["content"]
+    if "搜索" in last or "查一下" in last:
+        return {"role": "assistant", "content": search_web(last)}
+    return {"role": "assistant", "content": f"你说的是：{last}"}
+
+def simple_agent(user_input):
+    """Agent 主循环"""
+    messages = [{"role": "user", "content": user_input}]
+    
+    # 第 1 步：问 LLM
+    reply = ask_llm(messages)
+    
+    # 第 2 步：如果 LLM 决定用工具
+    if reply["content"].startswith("搜索结果"):
+        # 把工具结果放回对话
+        messages.append(reply)
+        messages.append({
+            "role": "user",
+            "content": "请基于搜索结果回答问题"
+        })
+        # 第 3 步：再次问 LLM
+        final = ask_llm(messages)
+        return final["content"]
+    
+    return reply["content"]
+
+# 用一下
+print(simple_agent("帮我查一下今天天气"))
+# 输出：搜索结果：关于「帮我查一下今天天气」有很多资料...</pre>
+
+<div class="tip">
+  <div class="tip-title">🧑‍🏫 看懂了吗？</div>
+  <p>真正的 Agent（赫默、Claude Code）比这个复杂得多，但核心逻辑一模一样：<strong>收到任务 → 调用工具 → 处理结果 → 再决定</strong>。你看到的「自动读写文件」「搜索网页」都是这个循环在驱动。</p>
+</div>
+
+<h2>三个关键术语</h2>
+
+<table>
+  <tr><th>术语</th><th>意思</th></tr>
+  <tr><td><strong>Agent</strong></td><td>能自主使用工具、规划步骤、执行多步任务的 AI 系统</td></tr>
+  <tr><td><strong>工具（Tool）</strong></td><td>Agent 可以调用的外部能力，比如搜索、读文件、运行代码</td></tr>
+  <tr><td><strong>Agent 循环</strong></td><td>观察→思考→行动→观察→思考→行动…直到完成任务</td></tr>
+</table>
+
+<h2>小节测验</h2>
+
+<div class="quiz">
+  <p><strong>❓ Agent 和普通 LLM 最大的区别是什么？</strong></p>
+  <div class="options">
+    <div>A. Agent 的模型参数更大</div>
+    <div>B. Agent 能自主决定是否调用工具，并多步执行任务</div>
+    <div>C. Agent 只有大公司才能用</div>
+    <div>D. Agent 不需要 prompt</div>
+  </div>
+  <div class="answer">
+    <p>✅ <strong>答案：B</strong>。普通 LLM 只能一问一答；Agent 能自主决定「要不要用工具」「用什么工具」「下一步做什么」，循环执行直到完成任务。</p>
+  </div>
+</div>
+
+<h2>课后</h2>
+
+<p>找一次你使用赫默的场景——比如让赫默「提取这封邮件里的待办事项」——认真观察它的回复。你能不能猜出背后它用了几步 Agent 循环？</p>
+
+<p>有不懂的地方，随时问你的 AI 教练（也就是我）。</p>
+
+<div class="footnote">
+  <p><strong>推荐资源：</strong><br>
+  <a href="https://lilianweng.github.io/posts/2023-06-23-agent/" target="_blank">Lil'Log - LLM Powered Autonomous Agents</a> — Agent 领域最经典的一篇综述，深入但值得读。<br>
+  <a href="https://www.anthropic.com/engineering/claude-think-tool" target="_blank">Anthropic - How Claude uses tools</a> — Agent 背后"思考"过程的技术解释。</p>
+  <p><strong>相关课程：</strong><br>
+  <a href="0001-what-is-ai-model.html">第 1 课 · 什么是 AI 模型？</a> · Agent 的「大脑」部分<br>
+  <a href="0003-hello-world-deepseek-api.html">第 3 课 · Hello World API 调用</a> · Agent 调 API 的基础<br>
+  <a href="0007-what-is-tool-calling.html">下一课 · 什么是 Tool Calling？</a> → Agent 如何「使用工具」</p>
+</div>
+
+<script>
+// 点击显示答案
+document.querySelectorAll('.quiz').forEach(q => {
+  q.addEventListener('click', function() {
+    const a = this.querySelector('.answer');
+    a.classList.toggle('show');
+  });
+});
+</script>
+
+</body>
+</html>
