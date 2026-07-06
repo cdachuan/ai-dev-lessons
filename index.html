@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 应用开发课程</title>
+<style>
+  :root {
+    --bg: #fdfcf9;
+    --text: #2c2c2c;
+    --accent: #c44d34;
+    --subtle: #6b6b6b;
+    --card: #f6f3ee;
+    --border: #e0dcd4;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+    background: var(--bg); color: var(--text);
+    max-width: 720px; margin: 0 auto; padding: 48px 24px;
+    line-height: 1.8;
+  }
+  h1 { font-size: 28px; margin-bottom: 8px; }
+  h1 span { color: var(--accent); }
+  .meta { color: var(--subtle); font-size: 14px; margin-bottom: 32px; }
+  h2 { font-size: 18px; margin: 32px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  ul { list-style: none; padding: 0; }
+  li {
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: background 0.2s;
+  }
+  li:hover { background: #ede9e2; }
+  li a { color: var(--text); text-decoration: none; display: block; }
+  li .num { color: var(--accent); font-weight: 700; margin-right: 8px; }
+  li .status { font-size: 13px; color: var(--subtle); }
+  .done { opacity: 0.6; }
+  .done .num { color: #2b6e4f; }
+</style>
+</head>
+<body>
+<h1>📚 <span>AI 应用开发</span> 课程</h1>
+<p class="meta">从零到能搭建 AI 工具 · 10 课</p>
+
+<h2>课程目录</h2>
+<ul>
+  <li class="done"><a href="lessons/0001-what-is-ai-model.html"><span class="num">01</span> 什么是 AI 模型 <span class="status">✅</span></a></li>
+  <li class="done"><a href="lessons/0002-what-is-api.html"><span class="num">02</span> 什么是 API <span class="status">✅</span></a></li>
+  <li class="done"><a href="lessons/0003-hello-world-deepseek-api.html"><span class="num">03</span> Hello World — 调一次 DeepSeek API <span class="status">✅</span></a></li>
+  <li class="done"><a href="lessons/0004-what-is-prompt.html"><span class="num">04</span> 什么是 Prompt <span class="status">✅</span></a></li>
+  <li class="done"><a href="lessons/0005-read-file-summarize.html"><span class="num">05</span> 动手写读文件总结脚本 <span class="status">✅</span></a></li>
+  <li><a href="lessons/0009-rag-intro.html"><span class="num">09</span> RAG：让 AI 基于你的文档回答 <span class="status">✅</span></a></li>
+  <li><a href="lessons/0010-function-calling.html"><span class="num">10</span> 🔧 Function Calling / Tool Use <span class="status">📖</span></a></li>
+</ul>
+
+<p style="margin-top:32px;font-size:13px;color:var(--subtle);">
+每天一课，每天早上 8 点更新 · 点击课名开始学习
+</p>
+</body>
+</html>
