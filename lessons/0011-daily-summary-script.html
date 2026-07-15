@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0011 · 搭一个日报自动总结脚本</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .step { margin-bottom: 1rem; }
+  .step-num { display: inline-block; background: var(--accent); color: #fff; width: 24px; height: 24px; text-align: center; line-height: 24px; border-radius: 50%; font-size: 0.8rem; font-weight: 700; margin-right: 0.5rem; }
+  .output-sample { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.8rem 1rem; margin: 0.8rem 0; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+</style>
+</head>
+<body>
+
+<h1>📅 搭一个日报自动总结脚本</h1>
+<p class="meta">第 0011 课 · 2026-07-15 · 实践课 <span class="tag">工具篇·始</span></p>
+
+<div class="callout green">
+  <strong>🎯 Phase 2 开张了！</strong>概念学完了（10 课），从今天开始 <strong>搭真工具</strong>。每课产出 1 个可以直接用的脚本。
+</div>
+
+<div class="callout">
+  <strong>🎯 增量胜利：</strong>学完这课，你就能写一个脚本——<strong>把任何日报/周报文件扔给它 → 自动输出结构化摘要</strong>。而且可以每天一键运行。
+</div>
+
+<h2>场景：每天都要写的日报</h2>
+
+<p>作为项目助理，你可能每天要处理这样的文字：</p>
+
+<div class="output-sample">
+今天完成了会议纪要整理，与供应商沟通了发货时间，确认了 A 项目的第三季度预算。下午参加了产品评审会，讨论了新功能的优先级。明天需要跟进合同签署。
+</div>
+
+<p>以前的做法：打开赫默 → 粘贴文字 → 说"帮我总结成日报格式" → 复制出来 → 调整格式。每天重复。</p>
+
+<p>今天的脚本，把这件事变成一行命令：</p>
+
+<pre><code><span style="color:#89b4fa;">$</span> python daily_summary.py daily_note.txt</code></pre>
+
+<h2>和之前的脚本有什么不同？</h2>
+
+<p>第 5 课你已经写过「读文件 → 调 API → 输出」的脚本。今天升级三点：</p>
+
+<table>
+  <tr><th>对比项</th><th>第 5 课</th><th>今天（第 11 课）</th></tr>
+  <tr>
+    <td>文件路径</td>
+    <td>写死在代码里</td>
+    <td><strong>命令行参数</strong> —— 每次可以指定不同文件</td>
+  </tr>
+  <tr>
+    <td>输出格式</td>
+    <td>自由文本</td>
+    <td><strong>结构化输出</strong> —— 按照固定格式（待办/进展/问题）</td>
+  </tr>
+  <tr>
+    <td>用途</td>
+    <td>一次性运行</td>
+    <td><strong>每天重复用</strong> —— 不改代码，只改文件名</td>
+  </tr>
+</table>
+
+<h2>完整脚本</h2>
+
+<p>创建 <code>daily_summary.py</code>，复制以下代码：</p>
+
+<pre><code><span style="color:#89b4fa;">from</span> <span style="color:#89b4fa;">openai</span> <span style="color:#89b4fa;">import</span> <span style="color:#89b4fa;">OpenAI</span>
+<span style="color:#89b4fa;">import</span> <span style="color:#89b4fa;">sys</span>
+
+<span style="color:#a6adc8;"># 1. 配置</span>
+client = OpenAI(
+    api_key=<span style="color:#a6e3a1;">"sk-你的密钥"</span>,      <span style="color:#6c7086;"># ← 改成你的密钥</span>
+    base_url=<span style="color:#a6e3a1;">"https://api.deepseek.com"</span>
+)
+
+<span style="color:#a6adc8;"># 2. 从命令行获取文件名</span>
+<span style="color:#89b4fa;">if</span> <span style="color:#89b4fa;">len</span>(sys.argv) &lt; <span style="color:#fab387;">2</span>:
+    <span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"用法: python daily_summary.py &lt;文件路径&gt;"</span>)
+    sys.exit(<span style="color:#fab387;">1</span>)
+file_path = sys.argv[<span style="color:#fab387;">1</span>]
+
+<span style="color:#a6adc8;"># 3. 读文件</span>
+<span style="color:#89b4fa;">with</span> <span style="color:#89b4fa;">open</span>(file_path, <span style="color:#a6e3a1;">"r"</span>, encoding=<span style="color:#a6e3a1;">"utf-8"</span>) <span style="color:#89b4fa;">as</span> f:
+    content = f.read()
+
+<span style="color:#a6adc8;"># 4. 构造消息 — 这次用了 system prompt</span>
+messages = [
+    {
+        <span style="color:#a6e3a1;">"role"</span>: <span style="color:#a6e3a1;">"system"</span>,
+        <span style="color:#a6e3a1;">"content"</span>: <span style="color:#a6e3a1;">"""你是一个项目助理，帮我把日常工作记录整理成结构化的日报。
+按以下格式输出：
+
+## 今日完成
+- （列出完成事项）
+
+## 明日计划
+- （列出计划事项）
+
+## 待跟进
+- （需要持续跟踪的事项，如有）
+
+要求：简洁，每条一句话，不要说客套话。"""</span>
+    },
+    {
+        <span style="color:#a6e3a1;">"role"</span>: <span style="color:#a6e3a1;">"user"</span>,
+        <span style="color:#a6e3a1;">"content"</span>: <span style="color:#a6e3a1;">f"帮我整理以下工作记录：\n\n{content}"</span>
+    }
+]
+
+<span style="color:#a6adc8;"># 5. 调 API</span>
+response = client.chat.completions.create(
+    model=<span style="color:#a6e3a1;">"deepseek-chat"</span>,
+    messages=messages
+)
+
+<span style="color:#a6adc8;"># 6. 输出</span>
+<span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"\\n"</span> + <span style="color:#a6e3a1;">"="</span> * <span style="color:#fab387;">40</span>)
+<span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"📋 日报摘要"</span>)
+<span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"="</span> * <span style="color:#fab387;">40</span>)
+<span style="color:#89b4fa;">print</span>(response.choices[<span style="color:#fab387;">0</span>].message.content)
+<span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"="</span> * <span style="color:#fab387;">40</span>)
+</code></pre>
+
+<h2>新知识点逐行拆解</h2>
+
+<table>
+  <tr><th>代码</th><th>新在哪儿？</th></tr>
+  <tr>
+    <td><code>import sys</code></td>
+    <td><strong>引入 Python 系统库</strong>。<code>sys.argv</code> 能拿到运行脚本时在命令行输入的参数，比如 <code>python daily_summary.py report.txt</code> 中的 <code>report.txt</code></td>
+  </tr>
+  <tr>
+    <td><code>sys.argv[1]</code></td>
+    <td><strong>取命令行参数</strong>。<code>sys.argv[0]</code> 是脚本名本身，<code>sys.argv[1]</code> 是第一个参数（文件名）</td>
+  </tr>
+  <tr>
+    <td><code>if len(sys.argv) &lt; 2:</code></td>
+    <td><strong>参数校验</strong>——如果用户忘记传文件名，告诉对方怎么用，而不是报个看不懂的错误</td>
+  </tr>
+  <tr>
+    <td><code>"role": "system"</code></td>
+    <td><strong>System Prompt 的应用</strong>。第 7 课的概念今天变成真实代码——设定一个固定角色，每次运行都生效</td>
+  </tr>
+  <tr>
+    <td><code>messages = [ ... ]</code></td>
+    <td><strong>多条消息</strong>。之前只用了 1 条 user 消息，现在是 system + user 两条，模型会先理解角色再执行任务</td>
+  </tr>
+</table>
+
+<h2>试试运行</h2>
+
+<ol>
+  <li>在当前目录下创建 <code>daily_note.txt</code>，写一段你今天的工作记录（随便几句话就行）</li>
+  <li>把脚本里的 <code>api_key</code> 改成你的 DeepSeek API Key</li>
+  <li>在终端运行：</li>
+</ol>
+
+<pre><code><span style="color:#89b4fa;">$</span> python daily_summary.py daily_note.txt
+
+<span style="color:#6c7086;">========================================</span>
+<span style="color:#6c7086;">📋 日报摘要</span>
+<span style="color:#6c7086;">========================================</span>
+
+<span style="color:#a6e3a1;">## 今日完成</span>
+<span style="color:#a6e3a1;">- 完成会议纪要整理</span>
+<span style="color:#a6e3a1;">- 与供应商沟通发货时间，确认 7 月内可交付</span>
+<span style="color:#a6e3a1;">- 确认 A 项目第三季度预算</span>
+<span style="color:#a6e3a1;">- 参加产品评审会，讨论了 3 项新功能优先级</span>
+
+<span style="color:#a6e3a1;">## 明日计划</span>
+<span style="color:#a6e3a1;">- 跟进合同签署</span>
+<span style="color:#a6e3a1;">- 发送会议纪要给参会人</span>
+
+<span style="color:#a6e3a1;">## 待跟进</span>
+<span style="color:#a6e3a1;">- 供应商发货的具体时间节点需要确认</span>
+<span style="color:#a6e3a1;">========================================</span>
+</code></pre>
+
+<h2>一劳永逸的小技巧</h2>
+
+<p>脚本写好后，以后每天只需：</p>
+
+<ol>
+  <li>用记事本写下今天的工作流水账，存成 <code>daily_note.txt</code></li>
+  <li>运行 <code>python daily_summary.py daily_note.txt</code></li>
+  <li>直接复制输出到日报里</li>
+</ol>
+
+<p>整个过程不到 10 秒。比起手动打开赫默、粘贴、等回复、复制、调整格式——省了 90% 的时间。</p>
+
+<div class="callout">
+  <strong>💡 扩展思路：</strong>不改代码，改 <strong>system prompt</strong> 里的模板，就能变成周报、会议纪要、事项清单提取。甚至可以改成两种语言对照输出（英文日报）。这个脚本的核心价值在于——<strong>模板化 + 复用</strong>。
+</div>
+
+<h2>本课学了什么</h2>
+
+<ul>
+  <li>✅ <code>sys.argv</code> 命令行参数：从写死文件路径到灵活指定</li>
+  <li>✅ 实战 System Prompt：设定角色 + 输出模板</li>
+  <li>✅ <code>len(sys.argv)</code> 参数校验：友好提示而不是报错</li>
+  <li>✅ 一个每天都能用的实战脚本</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>运行 <code>python daily_summary.py report.txt</code> 时，<code>sys.argv</code> 的值是什么？</p>
+
+<ol type="A">
+  <li><code>["python", "daily_summary.py", "report.txt"]</code></li>
+  <li><code>["daily_summary.py", "report.txt"]</code></li>
+  <li><code>["report.txt"]</code></li>
+  <li><code>["daily_summary.py"]</code></li>
+</ol>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 有任何疑问，随时问你的 AI 教练。<br>
+  脚本跑不起来？卡在 API Key？System Prompt 不知道怎么改？直接问。
+</p>
+
+<div class="nav-links">
+  <a href="0010-function-calling.html">← 上一课：Function Calling</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>
