@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0014 · 搭一个模板自动填表脚本</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .step { margin-bottom: 1rem; }
+  .step-num { display: inline-block; background: var(--accent); color: #fff; width: 24px; height: 24px; text-align: center; line-height: 24px; border-radius: 50%; font-size: 0.8rem; font-weight: 700; margin-right: 0.5rem; }
+  .output-sample { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.8rem 1rem; margin: 0.8rem 0; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  table.excel-table { font-family: monospace; font-size: 0.85rem; }
+  table.excel-table th { background: #1e1e2e; color: #cdd6f4; }
+  table.excel-table td { background: #fcfcfc; }
+</style>
+</head>
+<body>
+<h1>📝 搭一个模板自动填表脚本</h1>
+<p class="meta">第 0014 课 · 实践课 <span class="tag">工具篇·四</span></p>
+
+<div class="callout green">
+  <strong>🎯 增量胜利：</strong>学完这课，你就能写一个脚本——<strong>准备一份带空格的模板 + 一份数据，AI 自动把数据填进模板，产出规范文档</strong>。业绩责任书、收资表、周报套话，从此一键成稿。
+</div>
+
+<h2>场景：同一个模板，反复填不同数据</h2>
+
+<p>你手上有很多「格式固定、只换数据」的文档。比如一份业绩责任书模板：</p>
+
+<blockquote>
+兹聘任 <strong>{姓名}</strong> 担任 <strong>{部门}</strong> <strong>{职务}</strong>，本年度重点任务为 <strong>{任务}</strong>，考核目标为 <strong>{目标}</strong>。
+</blockquote>
+
+<p>每个人的信息不一样，但模板一模一样。手工填几十份既枯燥又容易填错。今天的脚本帮你自动填。</p>
+
+<h2>做法一：机械替换（占位符 → 数据）</h2>
+
+<p>最直接：模板里挖好 <code>{姓名}</code> 这样的坑，用 Python 的字符串替换填进去。<strong>连 AI 都不用调</strong>。</p>
+
+<pre><code><span style="color:#a6adc8;"># 模板（挖好坑）</span>
+template = <span style="color:#a6e3a1;">"兹聘任 {姓名} 担任 {部门} {职务}，本年度重点任务为 {任务}。"</span>
+
+<span style="color:#a6adc8;"># 数据</span>
+data = {<span style="color:#a6e3a1;">"姓名"</span>: <span style="color:#a6e3a1;">"张三"</span>, <span style="color:#a6e3a1;">"部门"</span>: <span style="color:#a6e3a1;">"计量中心"</span>,
+        <span style="color:#a6e3a1;">"职务"</span>: <span style="color:#a6e3a1;">"主管"</span>, <span style="color:#a6e3a1;">"任务"</span>: <span style="color:#a6e3a1;">"完成智能计量平台验证"</span>}
+
+<span style="color:#a6adc8;"># 一行填充</span>
+result = template.format(**data)
+<span style="color:#89b4fa;">print</span>(result)
+<span style="color:#6c7086;"># → 兹聘任 张三 担任 计量中心 主管，本年度重点任务为 完成智能计量平台验证。</span>
+</code></pre>
+
+<div class="callout">
+  <strong>💡 什么时候用做法一：</strong>模板结构固定、数据字段明确、一一对应时。机械替换又快又准，还不花 API 钱。批量填几十份表首选这个。
+</div>
+
+<h2>做法二：AI 智能填充（数据不规整时）</h2>
+
+<p>但现实往往更乱：数据在一段自然语言里，字段对不上，还要润色。这时让 AI 来填——你给它<strong>模板 + 一堆原始信息</strong>，它自己判断哪块填哪。</p>
+
+<pre><code><span style="color:#89b4fa;">from</span> openai <span style="color:#89b4fa;">import</span> OpenAI
+client = OpenAI(api_key=<span style="color:#a6e3a1;">"sk-你的密钥"</span>, base_url=<span style="color:#a6e3a1;">"https://api.deepseek.com"</span>)
+
+template = <span style="color:#a6e3a1;">"兹聘任 {姓名} 担任 {部门} {职务}，本年度重点任务为 {任务}，考核目标为 {目标}。"</span>
+
+<span style="color:#a6adc8;"># 原始信息：一段乱糟糟的自然语言</span>
+raw_info = <span style="color:#a6e3a1;">"李四，计量中心的技术骨干，今年提为技术专家岗。主要抓电能量预测赛道的数据集建设，年底要完成三大场景数据集，准确率目标定在95%以上。"</span>
+
+messages = [
+    {<span style="color:#a6e3a1;">"role"</span>: <span style="color:#a6e3a1;">"system"</span>, <span style="color:#a6e3a1;">"content"</span>:
+        <span style="color:#a6e3a1;">"你是文档助理。请把用户提供的原始信息，按给定模板填充完整，用词规范、书面化。只输出填好的文档，不要解释。"</span>},
+    {<span style="color:#a6e3a1;">"role"</span>: <span style="color:#a6e3a1;">"user"</span>, <span style="color:#a6e3a1;">"content"</span>:
+        <span style="color:#a6e3a1;">f"模板：\n{template}\n\n原始信息：\n{raw_info}"</span>}
+]
+resp = client.chat.completions.create(model=<span style="color:#a6e3a1;">"deepseek-chat"</span>, messages=messages)
+<span style="color:#89b4fa;">print</span>(resp.choices[<span style="color:#fab387;">0</span>].message.content)
+</code></pre>
+
+<div class="output-sample">兹聘任 李四 担任 计量中心 技术专家岗，本年度重点任务为 牵头电能量预测赛道数据集建设、完成三大场景数据集制作，考核目标为 数据集准确率达到95%以上。</div>
+
+<p>看到没——原始信息里没有明确的「职务=技术专家岗」「目标=95%」这种标签，AI 自己从大白话里<strong>抽取 + 归位 + 书面化</strong>，这是机械替换做不到的。</p>
+
+<h2>怎么选？</h2>
+
+<table>
+  <tr><th>情况</th><th>用哪种</th></tr>
+  <tr><td>数据规整、字段一一对应、量大</td><td>做法一（<code>.format()</code>，免费又快）</td></tr>
+  <tr><td>数据是自然语言、要抽取、要润色</td><td>做法二（AI 填充）</td></tr>
+  <tr><td>又想智能又想省钱</td><td>先用 AI 抽成规整数据，再用做法一批量套</td></tr>
+</table>
+
+<h2>新知识点</h2>
+<table>
+  <tr><th>代码</th><th>说明</th></tr>
+  <tr><td><code>{姓名}</code></td><td>模板里的<strong>占位符</strong>（挖好的坑）</td></tr>
+  <tr><td><code>template.format(**data)</code></td><td><strong>字典填充</strong>。<code>**</code> 把字典拆成 <code>姓名="张三"</code> 这样的参数，自动对号入座</td></tr>
+</table>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ 用占位符 + <code>.format()</code> 做机械填充（免费、精准）</li>
+  <li>✅ 用 AI 从自然语言里抽取信息、填进模板并润色</li>
+  <li>✅ 判断什么场景用哪种：规整用机械、杂乱用 AI</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>你要给 50 个人填格式完全一样的工牌信息，数据已经整理成规整的表格。用哪种做法最合适？</p>
+<ol type="A">
+  <li>做法二 AI 填充，每人调一次 API</li>
+  <li>做法一 <code>.format()</code> 机械替换，循环 50 次，一分钱不花</li>
+  <li>手工一个个填</li>
+  <li>两种都不行</li>
+</ol>
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 有疑问随时问你的 AI 教练。</p>
+
+<div class="nav-links">
+  <a href="0013-multi-source-merge.html">← 上一课：多源信息合并</a>
+  <a href="0015-auto-runner.html">下一课：定时任务脚本 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>

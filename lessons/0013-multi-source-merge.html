@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0013 · 搭一个多源信息合并工具</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .step { margin-bottom: 1rem; }
+  .step-num { display: inline-block; background: var(--accent); color: #fff; width: 24px; height: 24px; text-align: center; line-height: 24px; border-radius: 50%; font-size: 0.8rem; font-weight: 700; margin-right: 0.5rem; }
+  .output-sample { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.8rem 1rem; margin: 0.8rem 0; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  table.excel-table { font-family: monospace; font-size: 0.85rem; }
+  table.excel-table th { background: #1e1e2e; color: #cdd6f4; }
+  table.excel-table td { background: #fcfcfc; }
+</style>
+</head>
+<body>
+<h1>🔗 搭一个多源信息合并工具</h1>
+<p class="meta">第 0013 课 · 实践课 <span class="tag">工具篇·三</span></p>
+
+<div class="callout green">
+  <strong>🎯 增量胜利：</strong>学完这课，你就能写一个脚本——<strong>把散在好几个文件里的信息（Excel 任务表 + 会议纪要 txt + 进度邮件）一次性喂给 AI，合并成一份统一周报</strong>。不用再来回切窗口拼凑了。
+</div>
+
+<h2>场景：信息散落在三个地方</h2>
+
+<p>作为项目助理，一份周报往往要从多个来源攒出来：</p>
+<ul>
+  <li><code>tasks.xlsx</code> —— 任务进度表（谁在做什么、什么状态）</li>
+  <li><code>meeting.txt</code> —— 上周例会的会议纪要</li>
+  <li><code>progress.txt</code> —— 各方发来的进度反馈</li>
+</ul>
+
+<p>以前的做法：三个文件挨个打开 → 复制粘贴 → 自己在脑子里合并 → 手写周报。今天的脚本把这件事变成一行命令：</p>
+
+<pre><code><span style="color:#89b4fa;">$</span> python merge_sources.py 素材文件夹/</code></pre>
+
+<h2>核心思路</h2>
+
+<p>和前两课一样是「读 → 组装 → 调 API」，唯一的新点是：<strong>读的不再是一个文件，而是一整个文件夹里的多个文件，还要按格式分别处理。</strong></p>
+
+<ol>
+  <li><strong>扫描文件夹</strong> → 找出里面所有文件</li>
+  <li><strong>按类型分派读取</strong> → <code>.xlsx</code> 用 openpyxl，<code>.txt</code> 直接读文本</li>
+  <li><strong>合并成一段大文字</strong> → 每个来源打上标题，拼在一起</li>
+  <li><strong>调 API 汇总</strong> → 让 AI 综合所有来源，产出一份周报</li>
+</ol>
+
+<h2>新工具：pathlib 遍历文件夹</h2>
+
+<p><strong>pathlib</strong> 是 Python 自带的库，用来优雅地处理文件路径。核心三招：</p>
+
+<table>
+  <tr><th>代码</th><th>作用</th></tr>
+  <tr><td><code>Path("文件夹")</code></td><td>把一个文件夹变成可操作的对象</td></tr>
+  <tr><td><code>folder.iterdir()</code></td><td>遍历文件夹里的每个文件</td></tr>
+  <tr><td><code>p.suffix</code></td><td>取文件后缀（如 <code>.xlsx</code> / <code>.txt</code>），用来判断类型</td></tr>
+</table>
+
+<h2>完整脚本</h2>
+
+<p>创建 <code>merge_sources.py</code>：</p>
+
+<pre><code><span style="color:#89b4fa;">from</span> openai <span style="color:#89b4fa;">import</span> OpenAI
+<span style="color:#89b4fa;">from</span> openpyxl <span style="color:#89b4fa;">import</span> load_workbook
+<span style="color:#89b4fa;">from</span> pathlib <span style="color:#89b4fa;">import</span> Path
+<span style="color:#89b4fa;">import</span> sys
+
+client = OpenAI(api_key=<span style="color:#a6e3a1;">"sk-你的密钥"</span>, base_url=<span style="color:#a6e3a1;">"https://api.deepseek.com"</span>)
+
+<span style="color:#a6adc8;"># 1. 读 Excel → 转文字</span>
+<span style="color:#89b4fa;">def</span> <span style="color:#f9e2af;">read_excel</span>(path):
+    wb = load_workbook(path)
+    sheet = wb.active
+    lines = []
+    <span style="color:#89b4fa;">for</span> row <span style="color:#89b4fa;">in</span> sheet.iter_rows(values_only=<span style="color:#a6e3a1;">True</span>):
+        <span style="color:#89b4fa;">if</span> <span style="color:#89b4fa;">any</span>(c <span style="color:#89b4fa;">is</span> <span style="color:#89b4fa;">not</span> <span style="color:#89b4fa;">None</span> <span style="color:#89b4fa;">for</span> c <span style="color:#89b4fa;">in</span> row):
+            lines.append(<span style="color:#a6e3a1;">" | "</span>.join(<span style="color:#89b4fa;">str</span>(c) <span style="color:#89b4fa;">if</span> c <span style="color:#89b4fa;">else</span> <span style="color:#a6e3a1;">""</span> <span style="color:#89b4fa;">for</span> c <span style="color:#89b4fa;">in</span> row))
+    <span style="color:#89b4fa;">return</span> <span style="color:#a6e3a1;">"\n"</span>.join(lines)
+
+<span style="color:#a6adc8;"># 2. 读 txt → 转文字</span>
+<span style="color:#89b4fa;">def</span> <span style="color:#f9e2af;">read_text</span>(path):
+    <span style="color:#89b4fa;">return</span> path.read_text(encoding=<span style="color:#a6e3a1;">"utf-8"</span>)
+
+<span style="color:#a6adc8;"># 3. 扫描文件夹，按类型分派</span>
+folder = Path(sys.argv[<span style="color:#fab387;">1</span>])
+merged = <span style="color:#a6e3a1;">""</span>
+<span style="color:#89b4fa;">for</span> p <span style="color:#89b4fa;">in</span> folder.iterdir():
+    <span style="color:#89b4fa;">if</span> p.suffix == <span style="color:#a6e3a1;">".xlsx"</span>:
+        content = read_excel(p)
+    <span style="color:#89b4fa;">elif</span> p.suffix == <span style="color:#a6e3a1;">".txt"</span>:
+        content = read_text(p)
+    <span style="color:#89b4fa;">else</span>:
+        <span style="color:#89b4fa;">continue</span>                       <span style="color:#6c7086;"># 跳过不认识的格式</span>
+    merged += <span style="color:#a6e3a1;">f"\n\n===== 来源：{p.name} =====\n"</span> + content
+
+<span style="color:#a6adc8;"># 4. 调 API 综合汇总</span>
+messages = [
+    {<span style="color:#a6e3a1;">"role"</span>: <span style="color:#a6e3a1;">"system"</span>, <span style="color:#a6e3a1;">"content"</span>:
+        <span style="color:#a6e3a1;">"你是项目助理。下面是来自多个来源的项目信息。请综合所有来源，输出一份本周项目周报，包含：整体进展、风险与问题、下周计划。同一件事在不同来源里出现要合并，不要重复。要求简洁、不客套。"</span>},
+    {<span style="color:#a6e3a1;">"role"</span>: <span style="color:#a6e3a1;">"user"</span>, <span style="color:#a6e3a1;">"content"</span>: <span style="color:#a6e3a1;">f"请综合以下多源信息生成周报：\n{merged}"</span>}
+]
+resp = client.chat.completions.create(model=<span style="color:#a6e3a1;">"deepseek-chat"</span>, messages=messages)
+
+<span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"="</span> * <span style="color:#fab387;">40</span>)
+<span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"📋 本周项目周报（自动合并生成）"</span>)
+<span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"="</span> * <span style="color:#fab387;">40</span>)
+<span style="color:#89b4fa;">print</span>(resp.choices[<span style="color:#fab387;">0</span>].message.content)
+</code></pre>
+
+<h2>新知识点逐行拆解</h2>
+
+<table>
+  <tr><th>代码</th><th>新在哪儿</th></tr>
+  <tr><td><code>def read_excel(path):</code></td><td><strong>自定义函数</strong>。把「读 Excel」这段逻辑打包成一个可复用的函数，主流程调用它就行——代码更清爽</td></tr>
+  <tr><td><code>from pathlib import Path</code></td><td><strong>路径处理库</strong>（自带，不用装）。比手动拼字符串路径更安全</td></tr>
+  <tr><td><code>folder.iterdir()</code></td><td><strong>遍历文件夹</strong>，一个个把里面的文件拿出来</td></tr>
+  <tr><td><code>p.suffix == ".xlsx"</code></td><td><strong>按后缀判断类型</strong>，决定用哪个读取函数</td></tr>
+  <tr><td><code>===== 来源：{p.name} =====</code></td><td><strong>给每段内容打标题</strong>，让 AI 知道信息来自哪，方便它标注和去重</td></tr>
+</table>
+
+<div class="callout">
+  <strong>💡 关键设计：</strong>给每个来源打上「===== 来源：xxx =====」的分隔标题，是这个脚本的灵魂。AI 看到来源标签后，就能判断「这条进度在任务表和邮件里都提到了，合并成一条」，而不是傻乎乎地重复列两遍。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ 用 <code>def</code> 把重复逻辑封装成函数</li>
+  <li>✅ <code>pathlib.Path</code> + <code>iterdir()</code> 遍历文件夹</li>
+  <li>✅ 用 <code>.suffix</code> 按文件类型分派不同读取方式</li>
+  <li>✅ 用「来源标签」组织多源信息，让 AI 智能合并去重</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>脚本里为什么要给每段内容加「===== 来源：文件名 =====」这个标题？</p>
+<ol type="A">
+  <li>纯粹为了好看</li>
+  <li>让 AI 知道信息来自哪个文件，方便标注来源和跨源去重</li>
+  <li>openpyxl 要求必须这样写</li>
+  <li>不加会报错</li>
+</ol>
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 有疑问随时问你的 AI 教练。</p>
+
+<div class="nav-links">
+  <a href="0012-excel-extract-script.html">← 上一课：Excel 数据提取</a>
+  <a href="0014-template-filler.html">下一课：模板自动填表 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>

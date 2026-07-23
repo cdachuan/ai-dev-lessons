@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0015 · 搭一个定时任务脚本</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .step { margin-bottom: 1rem; }
+  .step-num { display: inline-block; background: var(--accent); color: #fff; width: 24px; height: 24px; text-align: center; line-height: 24px; border-radius: 50%; font-size: 0.8rem; font-weight: 700; margin-right: 0.5rem; }
+  .output-sample { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.8rem 1rem; margin: 0.8rem 0; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  table.excel-table { font-family: monospace; font-size: 0.85rem; }
+  table.excel-table th { background: #1e1e2e; color: #cdd6f4; }
+  table.excel-table td { background: #fcfcfc; }
+</style>
+</head>
+<body>
+<h1>⏰ 搭一个定时任务脚本</h1>
+<p class="meta">第 0015 课 · 实践课 <span class="tag">工具篇·五</span></p>
+
+<div class="callout green">
+  <strong>🎯 增量胜利：</strong>学完这课，你就理解<strong>怎么让脚本「自己定时跑」——每天早上 8 点自动生成日报、每周五自动出周报，不用你手动点</strong>。这正是 Hermes 里 cron 任务的原理。
+</div>
+
+<h2>场景：让工具自己按点干活</h2>
+
+<p>前几课的脚本都要你手动敲命令运行。但很多活儿是<strong>周期性</strong>的：</p>
+<ul>
+  <li>每天早上 8 点，把昨天的进度汇总成日报</li>
+  <li>每周五下午，把一周任务表合并成周报</li>
+  <li>每小时检查一次某个文件夹有没有新文件</li>
+</ul>
+
+<p>这些不该靠你记着去点。让操作系统的「定时器」来触发脚本，才是自动化的完整闭环。</p>
+
+<h2>两层概念：脚本 vs 调度器</h2>
+
+<table>
+  <tr><th>角色</th><th>负责什么</th></tr>
+  <tr><td><strong>脚本</strong>（你写的 .py）</td><td>干活——读数据、调 API、生成结果</td></tr>
+  <tr><td><strong>调度器</strong>（系统提供）</td><td>掐点——到时间了，替你把脚本运行一遍</td></tr>
+</table>
+
+<p>你已经在用调度器了——<strong>Hermes 里每天早上 8 点给你推课的那个 cron 任务，就是调度器在掐点触发。</strong></p>
+
+<h2>做法一：脚本自己带定时（schedule 库）</h2>
+
+<p>最简单的入门方式：让脚本自己转着圈等时间到。安装：<code>pip install schedule</code></p>
+
+<pre><code><span style="color:#89b4fa;">import</span> schedule
+<span style="color:#89b4fa;">import</span> time
+
+<span style="color:#89b4fa;">def</span> <span style="color:#f9e2af;">daily_report</span>():
+    <span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"正在生成日报..."</span>)
+    <span style="color:#a6adc8;"># 这里放你前面写的日报脚本逻辑</span>
+
+<span style="color:#a6adc8;"># 每天 08:00 跑一次</span>
+schedule.every().day.at(<span style="color:#a6e3a1;">"08:00"</span>).do(daily_report)
+
+<span style="color:#a6adc8;"># 每周五 17:00 跑一次</span>
+schedule.every().friday.at(<span style="color:#a6e3a1;">"17:00"</span>).do(daily_report)
+
+<span style="color:#a6adc8;"># 保持运行，每 60 秒检查一次「时间到了没」</span>
+<span style="color:#89b4fa;">while</span> <span style="color:#a6e3a1;">True</span>:
+    schedule.run_pending()
+    time.sleep(<span style="color:#fab387;">60</span>)
+</code></pre>
+
+<div class="callout">
+  <strong>⚠️ 局限：</strong>这个 <code>while True</code> 循环得<strong>一直开着</strong>脚本才会触发。关了电脑或关了终端就停了。适合学原理、跑临时任务，不适合真正的长期自动化。
+</div>
+
+<h2>做法二：交给系统调度器（推荐）</h2>
+
+<p>真正的自动化，是把脚本注册给操作系统，由系统在后台掐点跑——你不用一直开着。</p>
+
+<table>
+  <tr><th>系统</th><th>调度器</th></tr>
+  <tr><td>Windows</td><td>任务计划程序（Task Scheduler）</td></tr>
+  <tr><td>Mac / Linux</td><td>cron</td></tr>
+  <tr><td>Hermes</td><td>内置 cron（就是给你推课的那个）</td></tr>
+</table>
+
+<p>以 Windows 为例，在「任务计划程序」里新建任务，设定：</p>
+<ul>
+  <li><strong>触发器</strong>：每天 08:00</li>
+  <li><strong>操作</strong>：运行 <code>python D:\脚本\daily_report.py</code></li>
+</ul>
+
+<p>设好后，哪怕你没开终端，到点系统自己就把脚本跑了。<strong>这才是「设一次，永久自动」。</strong></p>
+
+<div class="callout green">
+  <strong>💡 联系你的日常：</strong>你天天用的 Hermes「每天 8 点推课」「Hindsight 看门狗每小时巡检」，本质就是做法二——脚本 + 系统级调度器。你早就在享受定时任务的成果了，这课只是把幕后原理讲透。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ 区分「脚本干活」和「调度器掐点」两层角色</li>
+  <li>✅ 用 <code>schedule</code> 库让脚本自带定时（学原理用）</li>
+  <li>✅ 用系统调度器（Windows 任务计划 / cron）实现真正的长期自动化</li>
+  <li>✅ 理解 Hermes cron 推课、看门狗巡检的底层原理</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>你想让日报脚本「每天早上 8 点自动跑，哪怕没开终端也能触发」，最合适的做法是？</p>
+<ol type="A">
+  <li><code>schedule</code> 库 + <code>while True</code> 循环，终端一直开着</li>
+  <li>注册到系统调度器（Windows 任务计划 / cron），交给系统后台掐点</li>
+  <li>设个闹钟，响了手动运行</li>
+  <li>让脚本每秒都跑一遍</li>
+</ol>
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 有疑问随时问你的 AI 教练。</p>
+
+<div class="nav-links">
+  <a href="0014-template-filler.html">← 上一课：模板自动填表</a>
+  <a href="0016-toolkit-integration.html">下一课：整合·工具箱 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>
