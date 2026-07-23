@@ -2,7 +2,7 @@
   "meta": {
     "version": 2,
     "created": "2026-07-14",
-    "description": "AI应用开发学习课程表 — Phase 1 概念篇 + Phase 2 工具篇 已全部生成上线",
+    "description": "AI应用开发学习课程表 — 概念篇已学完，工具篇HTML已全部生成备份于GitHub，cron按实际进度逐节推送",
     "status_legend": {
       "pending": "尚未推送",
       "pushed": "已推送，等待用户确认已读",
@@ -80,31 +80,31 @@
       "num": 12,
       "topic": "excel-extract-script",
       "title": "搭一个 Excel 数据提取脚本",
-      "status": "done"
+      "status": "pushed"
     },
     {
       "num": 13,
       "topic": "multi-source-merge",
       "title": "搭一个多源信息合并工具",
-      "status": "pushed"
+      "status": "pending"
     },
     {
       "num": 14,
       "topic": "template-filler",
       "title": "搭一个模板自动填表脚本",
-      "status": "pushed"
+      "status": "pending"
     },
     {
       "num": 15,
       "topic": "auto-runner",
       "title": "搭一个定时任务脚本",
-      "status": "pushed"
+      "status": "pending"
     },
     {
       "num": 16,
       "topic": "toolkit-integration",
       "title": "整合：你的小工具箱",
-      "status": "pushed"
+      "status": "pending"
     }
   ]
 }
