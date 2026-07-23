@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0012 · 搭一个 Excel 数据提取脚本</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .step { margin-bottom: 1rem; }
+  .step-num { display: inline-block; background: var(--accent); color: #fff; width: 24px; height: 24px; text-align: center; line-height: 24px; border-radius: 50%; font-size: 0.8rem; font-weight: 700; margin-right: 0.5rem; }
+  .output-sample { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.8rem 1rem; margin: 0.8rem 0; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  table.excel-table { font-family: monospace; font-size: 0.85rem; }
+  table.excel-table th { background: #1e1e2e; color: #cdd6f4; }
+  table.excel-table td { background: #fcfcfc; }
+</style>
+</head>
+<body>
+
+<h1>📊 搭一个 Excel 数据提取脚本</h1>
+<p class="meta">第 0012 课 · 2026-07-21 · 实践课 <span class="tag">工具篇·二</span></p>
+
+<div class="callout green">
+  <strong>🎯 增量胜利：</strong>学完这课，你就能写一个脚本——<strong>扔一个 Excel 文件进去 → AI 自动读出问题、分析状态、生成摘要</strong>。再也不用手动一条条看了。
+</div>
+
+<h2>场景：项目任务跟踪表</h2>
+
+<p>作为项目助理，你手头可能有一个这样的 Excel 表格（比如叫 <code>project_tasks.xlsx</code>）：</p>
+
+<table class="excel-table">
+  <tr><th>任务名</th><th>负责人</th><th>截止日期</th><th>状态</th></tr>
+  <tr><td>需求文档编写</td><td>张三</td><td>2026-07-25</td><td>进行中</td></tr>
+  <tr><td>UI 设计评审</td><td>李四</td><td>2026-07-20</td><td>已完成</td></tr>
+  <tr><td>后端 API 开发</td><td>王五</td><td>2026-08-01</td><td>未开始</td></tr>
+  <tr><td>测试用例编写</td><td>赵六</td><td>2026-07-28</td><td>进行中</td></tr>
+</table>
+
+<p>你每天可能需要：</p>
+<ul>
+  <li>快速知道「今天有哪些截止的任务？」</li>
+  <li>汇总「每个负责人手上有几件事？状态如何？」</li>
+  <li>找出「哪些任务快要逾期了？」</li>
+</ul>
+
+<p>以前的做法：打开 Excel → 一条条看 → 用自己的脑子汇总 → 打字写汇报。费时间，还容易漏。</p>
+
+<p>今天的脚本，把这件事变成一行命令：</p>
+
+<pre><code><span style="color:#89b4fa;">$</span> python excel_extract.py project_tasks.xlsx</code></pre>
+
+<h2>核心思路</h2>
+
+<p>脚本做的事只有三步，和第 11 课几乎一样，只是「读文件」那块换成了读 Excel：</p>
+
+<ol>
+  <li><strong>读 Excel</strong> → 打开文件，读出每一行数据</li>
+  <li><strong>组装成文字</strong> → 把表格转成 AI 能看懂的自然语言描述</li>
+  <li><strong>调 API 分析</strong> → 让 AI 根据你的要求做汇总</li>
+</ol>
+
+<h2>新工具：openpyxl</h2>
+
+<p><strong>openpyxl</strong> 是 Python 的一个库，专门用来读写 <code>.xlsx</code> 格式的 Excel 文件。</p>
+
+<p>安装：</p>
+<pre><code><span style="color:#89b4fa;">$</span> pip install openpyxl</code></pre>
+
+<p>最核心的三个概念：</p>
+
+<table>
+  <tr><th>概念</th><th>代码</th><th>类比</th></tr>
+  <tr>
+    <td><strong>工作簿</strong></td>
+    <td><code>load_workbook("文件名")</code></td>
+    <td>整本 Excel 文件</td>
+  </tr>
+  <tr>
+    <td><strong>工作表</strong></td>
+    <td><code>workbook.active</code>（默认表）<br><code>workbook["Sheet1"]</code>（按名字取）</td>
+    <td>一个标签页</td>
+  </tr>
+  <tr>
+    <td><strong>行/列</strong></td>
+    <td><code>sheet.iter_rows(min_row=1, values_only=True)</code></td>
+    <td>逐行扫描数据</td>
+  </tr>
+</table>
+
+<h2>完整脚本</h2>
+
+<p>创建 <code>excel_extract.py</code>，复制以下代码：</p>
+
+<pre><code><span style="color:#89b4fa;">from</span> <span style="color:#89b4fa;">openai</span> <span style="color:#89b4fa;">import</span> <span style="color:#89b4fa;">OpenAI</span>
+<span style="color:#89b4fa;">from</span> <span style="color:#89b4fa;">openpyxl</span> <span style="color:#89b4fa;">import</span> <span style="color:#89b4fa;">load_workbook</span>
+<span style="color:#89b4fa;">import</span> <span style="color:#89b4fa;">sys</span>
+
+<span style="color:#a6adc8;"># 1. 配置</span>
+client = OpenAI(
+    api_key=<span style="color:#a6e3a1;">"sk-你的密钥"</span>,      <span style="color:#6c7086;"># ← 改成你的密钥</span>
+    base_url=<span style="color:#a6e3a1;">"https://api.deepseek.com"</span>
+)
+
+<span style="color:#a6adc8;"># 2. 从命令行获取文件名</span>
+<span style="color:#89b4fa;">if</span> <span style="color:#89b4fa;">len</span>(sys.argv) &lt; <span style="color:#fab387;">2</span>:
+    <span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"用法: python excel_extract.py &lt;Excel文件路径&gt;"</span>)
+    sys.exit(<span style="color:#fab387;">1</span>)
+file_path = sys.argv[<span style="color:#fab387;">1</span>]
+
+<span style="color:#a6adc8;"># 3. 读 Excel</span>
+wb = load_workbook(file_path)              <span style="color:#6c7086;"># 打开工作簿</span>
+sheet = wb.active                           <span style="color:#6c7086;"># 默认工作表</span>
+
+<span style="color:#a6adc8;"># 4. 把 Excel 数据组装成文字</span>
+rows_data = []
+<span style="color:#89b4fa;">for</span> row <span style="color:#89b4fa;">in</span> sheet.iter_rows(min_row=<span style="color:#fab387;">1</span>, values_only=<span style="color:#a6e3a1;">True</span>):
+    <span style="color:#a6adc8;"># row 是一个元组，比如 ("需求文档编写", "张三", "2026-07-25", "进行中")</span>
+    <span style="color:#a6adc8;"># 过滤掉全空行</span>
+    <span style="color:#89b4fa;">if</span> <span style="color:#89b4fa;">any</span>(cell <span style="color:#89b4fa;">is</span> <span style="color:#89b4fa;">not</span> <span style="color:#89b4fa;">None</span> <span style="color:#89b4fa;">for</span> cell <span style="color:#89b4fa;">in</span> row):
+        rows_data.append(row)
+
+<span style="color:#a6adc8;"># 5. 把行数据转成可读的文字</span>
+table_text = <span style="color:#a6e3a1;">"以下是一个项目任务表格：\\n\\n"</span>
+<span style="color:#89b4fa;">for</span> row <span style="color:#89b4fa;">in</span> rows_data:
+    <span style="color:#a6adc8;"># 把一行单元格用 | 分隔，拼成一行文字</span>
+    line = <span style="color:#a6e3a1;">" | "</span>.join(<span style="color:#89b4fa;">str</span>(cell) <span style="color:#89b4fa;">if</span> cell <span style="color:#89b4fa;">is</span> <span style="color:#89b4fa;">not</span> <span style="color:#89b4fa;">None</span> <span style="color:#89b4fa;">else</span> <span style="color:#a6e3a1;">""</span> <span style="color:#89b4fa;">for</span> cell <span style="color:#89b4fa;">in</span> row)
+    table_text += line + <span style="color:#a6e3a1;">"\\n"</span>
+
+<span style="color:#a6adc8;"># 6. 调 API — 让 AI 分析表格</span>
+messages = [
+    {
+        <span style="color:#a6e3a1;">"role"</span>: <span style="color:#a6e3a1;">"system"</span>,
+        <span style="color:#a6e3a1;">"content"</span>: <span style="color:#a6e3a1;">"你是一个项目助理，帮我分析项目任务表格。请输出：\\n\\n"
+                     "## 整体概况\\n- 总任务数、已完成/进行中/未开始各多少\\n\\n"
+                     "## 风险提示\\n- 已逾期或即将到期的任务（3天内截止还没完成）\\n\\n"
+                     "## 负责人工作负载\\n- 每人手上有几个任务，状态如何\\n\\n"
+                     "要求：简洁，不客套。\\n"</span>
+    },
+    {
+        <span style="color:#a6e3a1;">"role"</span>: <span style="color:#a6e3a1;">"user"</span>,
+        <span style="color:#a6e3a1;">"content"</span>: <span style="color:#a6e3a1;">f"帮我分析这个项目任务表：\\n\\n{table_text}"</span>
+    }
+]
+
+response = client.chat.completions.create(
+    model=<span style="color:#a6e3a1;">"deepseek-chat"</span>,
+    messages=messages
+)
+
+<span style="color:#a6adc8;"># 7. 输出结果</span>
+<span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"\\\\n"</span> + <span style="color:#a6e3a1;">"="</span> * <span style="color:#fab387;">40</span>)
+<span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"📊 项目任务分析报告"</span>)
+<span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"="</span> * <span style="color:#fab387;">40</span>)
+<span style="color:#89b4fa;">print</span>(response.choices[<span style="color:#fab387;">0</span>].message.content)
+<span style="color:#89b4fa;">print</span>(<span style="color:#a6e3a1;">"="</span> * <span style="color:#fab387;">40</span>)
+</code></pre>
+
+<h2>新知识点逐行拆解</h2>
+
+<table>
+  <tr><th>代码</th><th>新在哪儿？</th></tr>
+  <tr>
+    <td><code>from openpyxl import load_workbook</code></td>
+    <td><strong>引入第三方库</strong>。openpyxl 不是 Python 自带的，需要 <code>pip install openpyxl</code> 安装。和之前 <code>import sys</code>（系统自带）不同</td>
+  </tr>
+  <tr>
+    <td><code>wb = load_workbook(file_path)</code></td>
+    <td><strong>加载 Excel 文件</strong>。wb（workbook 的缩写）就是一个 Python 对象，代表整本 Excel</td>
+  </tr>
+  <tr>
+    <td><code>sheet = wb.active</code></td>
+    <td><strong>获取默认工作表</strong>。一个 Excel 可能有多个 sheet，<code>.active</code> 取你最近打开的那个</td>
+  </tr>
+  <tr>
+    <td><code>for row in sheet.iter_rows(...)</code></td>
+    <td><strong>for 循环遍历每一行</strong>。——之前你见过 <code>for</code> 在小测里，这是第一次在实战里用。它会一行一行读取 Excel 的内容</td>
+  </tr>
+  <tr>
+    <td><code>values_only=True</code></td>
+    <td><strong>只要值，不要格式</strong>。Excel 里的字体、颜色、公式等信息我们不需要，这个参数让 openpyxl 只返回单元格里的值</td>
+  </tr>
+  <tr>
+    <td><code>" | ".join(...)</code></td>
+    <td><strong>拼接文字</strong>。把一行里的多个单元格值用 <code> | </code> 连接起来，变成一段可读的文字</td>
+  </tr>
+</table>
+
+<h2>试试运行</h2>
+
+<ol>
+  <li>先安装 openpyxl：<code>pip install openpyxl</code></li>
+  <li>创建一个测试 Excel 文件 <code>project_tasks.xlsx</code>，第一行为表头（任务名, 负责人, 截止日期, 状态），下面填 3-5 行数据</li>
+  <li>把脚本里的 <code>api_key</code> 改成你的 DeepSeek API Key</li>
+  <li>在终端运行：</li>
+</ol>
+
+<pre><code><span style="color:#89b4fa;">$</span> python excel_extract.py project_tasks.xlsx
+
+<span style="color:#6c7086;">========================================</span>
+<span style="color:#6c7086;">📊 项目任务分析报告</span>
+<span style="color:#6c7086;">========================================</span>
+
+<span style="color:#a6e3a1;">## 整体概况</span>
+<span style="color:#a6e3a1;">- 总任务数：4 个</span>
+<span style="color:#a6e3a1;">- 已完成：1 个 (UI设计评审)</span>
+<span style="color:#a6e3a1;">- 进行中：2 个 (需求文档编写、测试用例编写)</span>
+<span style="color:#a6e3a1;">- 未开始：1 个 (后端API开发)</span>
+
+<span style="color:#a6e3a1;">## 风险提示</span>
+<span style="color:#a6e3a1;">- ⚠️ UI设计评审 于 2026-07-20 截止，已完成 — 需确认是否按时交付</span>
+<span style="color:#a6e3a1;">- ⚠️ 需求文档编写 距截止日期 7-25 仅剩 4 天，当前为"进行中"，需关注进度</span>
+
+<span style="color:#a6e3a1;">## 负责人工作负载</span>
+<span style="color:#a6e3a1;">- 张三：1 个进行中</span>
+<span style="color:#a6e3a1;">- 李四：1 个已完成</span>
+<span style="color:#a6e3a1;">- 王五：1 个未开始</span>
+<span style="color:#a6e3a1;">- 赵六：1 个进行中</span>
+<span style="color:#a6e3a1;">========================================</span>
+</code></pre>
+
+<h2>为什么这个脚本特别实用</h2>
+
+<p>你只需要改 <strong>system prompt 里的模板</strong>，就能做完全不同的事：</p>
+
+<table>
+  <tr><th>换成这个 prompt</th><th>结果</th></tr>
+  <tr>
+    <td><code>"找出所有状态不是已完成的任务，按截止日期排序"</code></td>
+    <td>❗ 逾期预警清单</td>
+  </tr>
+  <tr>
+    <td><code>"按负责人分组，列出每人手头的任务和状态"</code></td>
+    <td>👥 人员负荷表</td>
+  </tr>
+  <tr>
+    <td><code>"把表格转为 Markdown 格式"</code></td>
+    <td>📝 可直接粘贴到飞书/钉钉的表格</td>
+  </tr>
+  <tr>
+    <td><code>"把Excel内容转成日文"</code></td>
+    <td>🌏 跨语言汇报</td>
+  </tr>
+</table>
+
+<div class="callout">
+  <strong>💡 扩展思路：</strong>这个脚本绝不限于任务跟踪表。把你工作中任何 Excel 扔进去——<strong>报销单、会议记录、资源预算表、客户名单</strong>——改一行 system prompt 就能提取你要的内容。脚本本身只需要写一次。
+</div>
+
+<div class="callout green">
+  <strong>📦 常用模板存档：</strong>建议把 excel_extract.py 复制几份，比如 <code>risk_check.py</code>、<code>weekly_report.py</code>，每份只改 system prompt。这样就有一组「Excel 小工具」了。
+</div>
+
+<h2>本课学了什么</h2>
+
+<ul>
+  <li>✅ <code>pip install openpyxl</code> 安装第三方库</li>
+  <li>✅ <code>load_workbook()</code> 加载 Excel 文件</li>
+  <li>✅ <code>sheet.iter_rows()</code> + <code>for</code> 循环遍历每一行</li>
+  <li>✅ <code>" | ".join()</code> 把多个值拼成一段文字</li>
+  <li>✅ 把 Excel 数据 + System Prompt 组合 = 自动分析报告</li>
+  <li>✅ 一个脚本换 prompt = 无限用途</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>以下哪段代码能正确读出 Excel 里每一行的单元格值（不含格式信息）？</p>
+
+<ol type="A">
+  <li><code>for row in sheet.iter_rows(values_only=True):</code></li>
+  <li><code>for row in sheet.read_rows(get_values=True):</code></li>
+  <li><code>for row in sheet.get_all_rows():</code></li>
+  <li><code>for row in sheet.cells():</code></li>
+</ol>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 有任何疑问，随时问你的 AI 教练。<br>
+  <code>pip install</code> 卡住了？Excel 文件路径不对？表头不匹配？直接问。
+</p>
+
+<div class="nav-links">
+  <a href="0011-daily-summary-script.html">← 上一课：日报自动总结</a>
+  <a href="0013-multi-source-merge.html">下一课：多源信息合并 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>

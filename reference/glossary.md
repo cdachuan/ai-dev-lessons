@@ -25,5 +25,11 @@
 | Function Calling | 函数调用 | 让 AI 模型决定调用哪个函数并填入参数的能力 | 0010 |
 | f-string | 格式化字符串 | Python 中用 `f"文本{变量}"` 语法把变量值嵌入到字符串中的写法 | 0008 |
 | open() | — | Python 内置函数，用来打开文件；常用模式 `open("路径", "r", encoding="utf-8")` | 0008 |
+| sys.argv | — | Python 系统参数列表；`sys.argv[0]` 是脚本名，`sys.argv[1]` 是第一个命令行参数，用于让脚本接受外部输入 | 0011 |
+| openpyxl | — | Python 第三方库，专门用来读写 `.xlsx` 格式的 Excel 文件；需先 `pip install openpyxl` 安装 | 0012 |
+| Workbook | 工作簿 | Excel 文件本身，包含一个或多个工作表（sheet），在 openpyxl 中用 `load_workbook("文件名")` 加载 | 0012 |
+| Worksheet | 工作表 | Excel 文件中的一个标签页（默认用 `.active` 获取当前打开的那个） | 0012 |
+| for 循环 | for loop | Python 中「对每个元素做同一件事」的写法；`for row in rows:` 表示「对 rows 里的每一行，执行下面的代码」 | 0012 |
+| join() | 拼接 | Python 字符串方法，`"分隔符".join(列表)` 把列表里的元素用分隔符拼成一个长字符串 | 0012 |
 
 > 创建于 2026-06-22。随课程推进更新。

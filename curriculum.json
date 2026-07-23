@@ -1,8 +1,8 @@
 {
   "meta": {
     "version": 2,
-    "created": "2026-07-03",
-    "description": "AI应用开发学习课程表 — cron推送后需用户确认已读才算过",
+    "created": "2026-07-14",
+    "description": "AI应用开发学习课程表 — Phase 1 概念篇已完成，Phase 2 工具篇待交付",
     "status_legend": {
       "pending": "尚未推送",
       "pushed": "已推送，等待用户确认已读",
@@ -19,6 +19,12 @@
     {"num": 7, "topic": "system-prompt-role", "title": "System Prompt 与角色设定", "status": "done"},
     {"num": 8, "topic": "temperature-params", "title": "Temperature 与参数控制", "status": "done"},
     {"num": 9, "topic": "rag-intro", "title": "RAG：让 AI 基于你的文档回答", "status": "done"},
-    {"num": 10, "topic": "function-calling", "title": "Function Calling / Tool Use", "status": "pending"}
+    {"num": 10, "topic": "function-calling", "title": "Function Calling / Tool Use", "status": "done"},
+    {"num": 11, "topic": "daily-summary-script", "title": "搭一个日报自动总结脚本", "status": "done"},
+    {"num": 12, "topic": "excel-extract-script", "title": "搭一个 Excel 数据提取脚本", "status": "pushed"},
+    {"num": 13, "topic": "multi-source-merge", "title": "搭一个多源信息合并工具", "status": "pending"},
+    {"num": 14, "topic": "template-filler", "title": "搭一个模板自动填表脚本", "status": "pending"},
+    {"num": 15, "topic": "auto-runner", "title": "搭一个定时任务脚本", "status": "pending"},
+    {"num": 16, "topic": "toolkit-integration", "title": "整合：你的小工具箱", "status": "pending"}
   ]
 }
