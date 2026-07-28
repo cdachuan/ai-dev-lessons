@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>进阶 01 · /steer 中途纠偏</title>
+<style>
+  :root {
+    --text: #1a1a1a; --muted: #555; --accent: #2563eb; --bg: #fafafa;
+    --card-bg: #fff; --border: #e5e5e5; --highlight: #fef3c7;
+    --code-bg: #f4f4f5; --green: #16a34a; --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8; color: var(--text); background: var(--bg);
+    max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 { font-size: 1.25rem; font-weight: 700; margin-top: 2.2rem; margin-bottom: 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.85em; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; }
+  pre { background: #1e1e2e; color: #cdd6f4; padding: 1rem 1.2rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; line-height: 1.6; margin: 1rem 0 1.5rem; }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout { background: var(--highlight); border-left: 4px solid #f59e0b; padding: 0.8rem 1rem; margin: 1.2rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  blockquote { border-left: 3px solid var(--accent); padding-left: 1rem; color: var(--muted); margin: 1rem 0; font-style: italic; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.2rem 0; }
+  .answer { color: var(--muted); font-size: 0.85rem; margin-top: 1rem; }
+  @media print {
+    body { padding: 24px 36px; max-width: none; background: white; color: black; }
+    pre, table, .callout, .quiz, .nav-links { page-break-inside: avoid; }
+    h1, h2 { page-break-after: avoid; }
+    a { color: black; text-decoration: underline; }
+  }
+</style>
+</head>
+<body>
+<h1>🎯 /steer——不打断任务，中途悄悄纠偏</h1>
+<p class="meta">进阶第 01 课 <span class="tag">Hermes</span></p>
+
+<div class="callout green">
+  <strong>今日一句话：</strong>AI 正在干活，你发现方向有点歪——别急着打断重来，用 <code>/steer</code> 塞一句话进去，它做完手头这步就顺势拐弯。
+</div>
+
+<h2>先说个你一定遇过的场景</h2>
+<p>你让 AI 整理一份材料，它跑到一半，你突然发现"哎，我要的是表格不是段落"。老办法是<strong>打断它、重新说一遍</strong>——前面的活白干了，还得等它从头再来。</p>
+
+<h2>/steer 是什么</h2>
+<p>把它想成<strong>开车时坐在副驾轻声提醒</strong>：不用让司机急刹停车，你说一句"下个路口右拐"，他开完当前这段路自然就拐了。</p>
+<p><code>/steer</code> 就是这个"轻声提醒"——你输入的话会在 AI <strong>做完当前这一步之后</strong>插进去，任务不中断、前面的成果不作废，方向却拐过来了。</p>
+
+<pre><code><span style="color:#a6adc8"># AI 正在整理材料时，你直接输入：</span>
+/steer 改成表格形式，每行一个要点
+
+<span style="color:#a6adc8"># 对比一下三个"中途插话"命令的区别：</span>
+/steer   → 做完当前步骤后插入，<span style="color:#a6e3a1">不打断</span>
+/queue   → 排到下一轮再处理，<span style="color:#a6e3a1">最不急</span>
+直接打断 → 立刻停下，<span style="color:#f38ba8">前面的活可能白做</span>
+</code></pre>
+
+<h2>什么时候用它最爽</h2>
+<table>
+  <tr><th>场景</th><th>你说的话</th></tr>
+  <tr><td>长任务跑偏了</td><td><code>/steer 回到原始需求，别自己加戏</code></td></tr>
+  <tr><td>批量处理中途补约束</td><td><code>/steer 后面每条都保留原始编号</code></td></tr>
+  <tr><td>想换个方向但不重启</td><td><code>/steer 风格再正式一点</code></td></tr>
+</table>
+
+<div class="callout">
+  <strong>💡 一个心法：</strong>看到 AI 方向不对，第一反应别是"停！"，而是"我能不能一句话把它拐回来"。<code>/steer</code> 让纠偏的成本从"重来一遍"降到"说句话"。
+</div>
+
+<h2>🤔 今日练习题</h2>
+<div class="quiz">
+  <p>AI 正在帮你写一份 5 页的报告，写到第 3 页你发现语气太随意了，想让它后面正式一点。下面哪种做法最省事、且不浪费前面已写的内容？</p>
+  <ol type="A">
+    <li>直接打断，重新下一遍指令</li>
+    <li>用 <code>/steer 后面的内容语气正式一些</code></li>
+    <li>等它全写完再让它整篇重写</li>
+    <li>关掉会话重新开始</li>
+  </ol>
+  <p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 把你的答案回给我，我来判对错、讲清楚为什么。</p>
+</div>
+
+<div class="nav-links">
+  <a href="../../index.html">🏠 课程首页</a>
+</div>
+
+</body>
+</html>
