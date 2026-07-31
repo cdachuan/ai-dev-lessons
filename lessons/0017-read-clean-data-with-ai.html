@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0017 · 用 AI 写代码：读取和清洗业务数据</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+</style>
+</head>
+<body>
+<h1>🔌 用 AI 写代码：读取和清洗业务数据</h1>
+<p class="meta">第 0017-0018 课 · 应用篇·一 <span class="tag">实践课</span></p>
+
+<div class="callout green">
+  <strong>🚀 Phase 3 开始！</strong>Phase 2 你搭了5个工具，骨架都是「读入 → 组装 → 调用」。Phase 3 更进一步：<strong>让 AI 直接帮你写数据分析代码，你负责指挥和验收</strong>。
+</div>
+
+<h2>核心技能：AI 辅助编程四步循环</h2>
+
+<p>你已经会 pandas 基础（groupby、筛选、merge 都能秒答）。现在学一个更高效的用法：<strong>让 AI 帮你写代码，你负责审查和验收</strong>。</p>
+
+<table>
+  <tr><th>步骤</th><th>你做什么</th><th>AI 做什么</th></tr>
+  <tr><td>① 描述</td><td>说清数据格式 + 目标</td><td>—</td></tr>
+  <tr><td>② 生成</td><td>—</td><td>产出 pandas 代码</td></tr>
+  <tr><td>③ 验证</td><td>跑代码，检查输出</td><td>—</td></tr>
+  <tr><td>④ 迭代</td><td>指出问题</td><td>修改代码</td></tr>
+</table>
+
+<p>这个循环会贯穿 Phase 3 所有课程。<strong>你不需要记住每个 pandas 函数，但必须学会怎么描述需求、怎么验收结果</strong>。</p>
+
+<h2>第一步：读取业务数据</h2>
+
+<p>假设你拿到一份电表日抄数据 CSV，列长这样：</p>
+
+<pre><code>台区编号, 电表号, 抄表日期, 读数(kWh), 电压(V), 电流(A)
+T001, M10023, 2026-07-01, 15320.5, 220.1, 5.2
+T001, M10023, 2026-07-02, , 219.8, 5.1    <span style="color:#a6adc8"># ← 读数缺失</span>
+T002, M10045, 2026-07-01, 8920.0, 221.0, 3.8</code></pre>
+
+<p>你跟 AI 说：</p>
+
+<blockquote>"我有一个 CSV 文件，列是：台区编号、电表号、抄表日期、读数(kWh)、电压(V)、电流(A)。帮我写 pandas 代码读进来，看看数据基本情况。"</blockquote>
+
+<p>AI 会生成类似代码：</p>
+
+<pre><code><span style="color:#a6adc8"># 读取</span>
+df = pd.read_csv("电表数据.csv", encoding="utf-8")
+
+<span style="color:#a6adc8"># 三板斧检查</span>
+print(df.head())      <span style="color:#a6adc8"># 看前5行长什么样</span>
+print(df.info())      <span style="color:#a6adc8"># 看列名、类型、缺失情况</span>
+print(df.shape)       <span style="color:#a6adc8"># 看多少行多少列</span></code></pre>
+
+<h2>怎么让 AI 写出好代码</h2>
+
+<p>关键在<strong>给足上下文</strong>。三样东西必须给：</p>
+
+<ol>
+  <li><strong>数据格式</strong>：CSV 还是 Excel？编码是 utf-8 还是 gbk？</li>
+  <li><strong>样本数据</strong>：贴 2-3 行真实数据给 AI 看（让它知道列名和格式）</li>
+  <li><strong>你的目标</strong>：读出来看看？算汇总？筛选异常？</li>
+</ol>
+
+<div class="callout">
+  <strong>💡 常见坑：</strong>如果你只说"帮我读 CSV"，AI 不知道你的编码格式（中文 Windows 默认 gbk），不知道列名，生成的代码可能跑不通。<strong>多说两句，省十次调试</strong>。
+</div>
+
+<h2>第二步：清洗脏数据</h2>
+
+<p>真实数据总有毛病。告诉 AI 具体问题，让它写清洗代码：</p>
+
+<table>
+  <tr><th>问题</th><th>你怎么描述</th><th>AI 会用的方法</th></tr>
+  <tr><td>有缺失值</td><td>"读数列有空值"</td><td><code>df.dropna()</code> 删掉 / <code>df.fillna(0)</code> 填充</td></tr>
+  <tr><td>日期是字符串</td><td>"抄表日期是文本不是日期"</td><td><code>pd.to_datetime(df['抄表日期'])</code></td></tr>
+  <tr><td>有重复行</td><td>"可能有重复抄表记录"</td><td><code>df.drop_duplicates()</code></td></tr>
+  <tr><td>数字是文本</td><td>"读数被读成了字符串"</td><td><code>df['读数'].astype(float)</code></td></tr>
+</table>
+
+<p>你不需要记住这些函数名——<strong>你只需要能用大白话描述问题，AI 就知道该用哪个</strong>。</p>
+
+<h2>最关键的一步：验收</h2>
+
+<p>AI 写的代码<strong>不能盲信</strong>。每段代码跑完后，检查三件事：</p>
+
+<div class="callout green">
+  <strong>验收三问：</strong>
+  <ol style="margin-bottom:0;">
+    <li><strong>数据量对吗？</strong> — <code>df.shape</code> 行数和预期差不多？</li>
+    <li><strong>数据值对吗？</strong> — <code>df.head()</code> 数值合不合理？</li>
+    <li><strong>类型对吗？</strong> — <code>df.info()</code> 日期是 datetime、数字是 float？</li>
+  </ol>
+</div>
+
+<p>不确定某行代码什么意思？直接问 AI：<strong>"第3行代码是什么意思？为什么要这么写？"</strong> 如果 AI 解释不清，那行代码可能有问题。</p>
+
+<h2>完整示例：从脏数据到干净数据</h2>
+
+<pre><code><span style="color:#a6adc8"># 你跟 AI 说：</span>
+<span style="color:#a6adc8"># "我有一份电表抄表数据 CSV，编码可能是 gbk。</span>
+<span style="color:#a6adc8">#  列：台区编号、电表号、抄表日期、读数、电压、电流。</span>
+<span style="color:#a6adc8">#  问题：读数有空值，日期是文本，可能有重复行。</span>
+<span style="color:#a6adc8">#  帮我读取并清洗，输出清洗前后的行数对比。"</span>
+
+<span style="color:#a6adc8"># AI 生成的代码：</span>
+df = pd.read_csv("电表数据.csv", encoding="gbk")
+print(f"原始数据：{df.shape[0]} 行")
+
+df = df.drop_duplicates()                            <span style="color:#a6adc8"># 去重</span>
+df['抄表日期'] = pd.to_datetime(df['抄表日期'])         <span style="color:#a6adc8"># 日期转类型</span>
+df['读数'] = pd.to_numeric(df['读数'], errors='coerce') <span style="color:#a6adc8"># 数字转类型</span>
+df = df.dropna(subset=['读数'])                       <span style="color:#a6adc8"># 删掉读数为空的行</span>
+
+print(f"清洗后：{df.shape[0]} 行")
+print(df.head())</code></pre>
+
+<h2>Phase 3 的核心转变</h2>
+
+<p>Phase 2 你亲手写代码，Phase 3 你<strong>指挥 AI 写代码</strong>。你的角色从「码农」变成「技术评审」：</p>
+
+<ul>
+  <li>你不需要记住 <code>pd.to_numeric()</code> 怎么拼</li>
+  <li>但你需要知道<strong>清洗后该检查什么</strong></li>
+  <li>你需要能<strong>看懂 AI 写的代码</strong>，判断对不对</li>
+  <li>你需要能用<strong>精准的语言描述问题</strong>，让 AI 一次写对</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>你让 AI 写了一段读取 CSV 的代码，运行后第一步该做什么？</p>
+
+<ol type="A">
+  <li>直接信任，继续往下写</li>
+  <li>跑 <code>.head()</code> 和 <code>.info()</code> 检查数据读对没有</li>
+  <li>把代码背下来</li>
+  <li>关掉电脑回家</li>
+</ol>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 学完有任何想动手做的数据分析任务，随时找你的 AI 教练一起搭。</p>
+
+<h2>推荐阅读</h2>
+
+<p>📊 <a href="https://pandas.pydata.org/docs/getting_started/intro_tutorials/">pandas 官方入门教程</a> — 10 分钟过一遍 read_csv / 清洗的基础语法，不用背，眼熟就行</p>
+
+<div class="nav-links">
+  <a href="0016-toolkit-integration.html">← 上一课：整合工具箱</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>
