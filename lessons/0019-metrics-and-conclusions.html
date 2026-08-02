@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0019 · 算指标+下结论：让 AI 帮你分析数据</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .tag.red { background: #fee2e2; color: #991b1b; }
+</style>
+</head>
+<body>
+<h1>📊 算指标+下结论：让 AI 帮你分析数据</h1>
+<p class="meta">第 0019 课 · 应用篇·二 <span class="tag red">P3 难点课</span></p>
+
+<div class="callout">
+  <strong>⚠️ 这是 Phase 3 的核心难点。</strong>上一课你学会了让 AI 帮你读写代码。今天更进一步：让 AI 帮你<strong>算指标、下结论</strong>。这不是 pandas 的问题，是<strong>prompt 设计</strong>的问题。
+</div>
+
+<h2>一个直觉：算指标 ≠ 下结论</h2>
+
+<p>很多人把这两件事混在一起。其实它们是完全不同的两步：</p>
+
+<table>
+  <tr><th>步骤</th><th>做什么</th><th>谁来做</th><th>产出</th></tr>
+  <tr><td>① 算指标</td><td>从原始数据算出汇总数字</td><td>pandas 代码（AI 帮你写）</td><td>一张表 / 几个数字</td></tr>
+  <tr><td>② 下结论</td><td>基于数字判断「好不好、正不正常、怎么办」</td><td>AI 推理</td><td>一段话</td></tr>
+</table>
+
+<p><strong>混淆它们的后果</strong>：你把原始数据一股脑丢给 AI 说「分析一下」，AI 会瞎猜指标，结论不可靠。<strong>先算清楚，再让它判断</strong>。</p>
+
+<h2>为什么要拆成两步</h2>
+
+<p>这跟你在第 7 课学的 System Prompt 有关。AI 的<strong>推理能力</strong>很强，但它的<strong>计算能力</strong>其实不靠谱——它不擅长心算大表格。</p>
+
+<div class="callout green">
+  <strong>核心原则：</strong>让 AI 做<strong>它擅长的</strong>（理解语义、下判断、写文字），别让它做<strong>它不擅长的</strong>（精确算数）。
+</div>
+
+<p>所以正确做法是：用 pandas 把数算准了，把<strong>算好的数字</strong>喂给 AI，让它下结论。</p>
+
+<h2>实操：两步走分析法</h2>
+
+<h3>第一步：算指标（让 AI 帮你写 pandas）</h3>
+
+<p>假设你有一份台区日电量数据，你想知道<strong>哪个台区用电异常</strong>。你跟 AI 说：</p>
+
+<blockquote>"我有台区日电量数据，列：台区编号、日期、日电量(kWh)。帮我写 pandas 代码，算出每个台区的：平均日电量、最大日电量、最小日电量、以及最大最小之差（波动幅度）。按波动幅度从大到小排序。"</blockquote>
+
+<pre><code><span style="color:#a6adc8"># AI 生成的代码</span>
+result = df.groupby('台区编号')['日电量'].agg(
+    平均日电量='mean',
+    最大日电量='max',
+    最小日电量='min',
+)
+result['波动幅度'] = result['最大日电量'] - result['最小日电量']
+result = result.sort_values('波动幅度', ascending=False)
+print(result.head(10))</code></pre>
+
+<p>这一步产出的<strong>是一张表</strong>——具体的、准确的数字。这不是结论，是结论的<strong>原料</strong>。</p>
+
+<h3>第二步：下结论（让 AI 推理）</h3>
+
+<p>现在把算好的结果<strong>作为文本</strong>喂给 AI，让它判断。注意：这里换一个 prompt，不说「分析数据」，而是说具体要什么判断。</p>
+
+<blockquote>"以下是10个台区的日电量统计，按波动幅度排序：<br>
+台区T07，平均320kWh，最大680，最小80，波动600<br>
+台区T03，平均150kWh，最大280，最小90，波动190<br>
+...<br>
+请判断：哪几个台区可能存在异常？给出理由和排查建议。"</blockquote>
+
+<p>AI 会基于<strong>你算好的准确数字</strong>来推理，结论靠谱得多。</p>
+
+<h2>关键技能：怎么描述「你要什么结论」</h2>
+
+<p>下结论这步，<strong>prompt 的描述方式</strong>决定结论质量。三个要点：</p>
+
+<ol>
+  <li><strong>给 AI 一个角色</strong>：「你是电力计量分析师」比「请分析」效果好——角色决定视角</li>
+  <li><strong>明确判断标准</strong>：「波动幅度超过平均值的2倍算异常」比「找异常」好——标准要量化</li>
+  <li><strong>限定输出格式</strong>：「分三部分：异常台区列表 / 每个的理由 / 排查建议」——格式让结论可执行</li>
+</ol>
+
+<div class="callout">
+  <strong>💡 判断标准是灵魂。</strong>如果你不给标准，AI 会自己编一个——你可能不同意。给标准 = 你掌控判断逻辑，AI 负责执行。
+</div>
+
+<h2>怎么验收 AI 的结论</h2>
+
+<p>AI 下的结论<strong>更难验收</strong>，因为它是「话」不是「数字」。三个验收角度：</p>
+
+<div class="callout green">
+  <strong>结论验收三问：</strong>
+  <ol style="margin-bottom:0;">
+    <li><strong>数字对得上吗？</strong> - AI 说的数字，跟 pandas 算出来的一致？</li>
+    <li><strong>逻辑通吗？</strong> - 「因为波动大，所以异常」——这个因果成立吗？</li>
+    <li><strong>建议可行吗？</strong> - 它给的排查建议，你真能照着做吗？</li>
+  </ol>
+</div>
+
+<p>如果数字对不上，说明 AI 算错了（它确实会算错）——回到第一步，把数算准再喂给它。如果逻辑不通，追问 AI「为什么这么判断」，它会暴露自己的推理过程，你能看到哪里跑偏了。</p>
+
+<h2>完整示例：台区用电异常分析</h2>
+
+<pre><code><span style="color:#a6adc8"># === 第一步：算指标 ===</span>
+<span style="color:#a6adc8"># 你跟 AI 说："帮我算每个台区的日电量波动"</span>
+<span style="color:#a6adc8"># AI 写出 pandas 代码，你跑出结果：</span>
+
+result = df.groupby('台区编号')['日电量'].agg(['mean','max','min'])
+result['波动'] = result['max'] - result['min']
+top10 = result.sort_values('波动', ascending=False).head(10)
+
+<span style="color:#a6adc8"># 把结果转成文本</span>
+data_text = top10.to_string()
+
+<span style="color:#a6adc8"># === 第二步：下结论 ===</span>
+<span style="color:#a6adc8"># 把 data_text 喂给 AI</span>
+messages = [
+    {"role": "system", "content": "你是电力计量分析师。根据数据判断台区用电是否异常。判断标准：波动幅度超过该台区平均日电量的2倍视为异常。"},
+    {"role": "user", "content": f"以下是台区日电量统计：\n{data_text}\n\n请判断哪些台区异常，给出理由和排查建议。"}
+]
+<span style="color:#a6adc8"># 调 API，得到结论</span></code></pre>
+
+<h2>Phase 3 的认知升级</h2>
+
+<p>上一课你学会了「让 AI 写代码」。这课你学到的是更高级的分工：</p>
+
+<ul>
+  <li><strong>算数</strong>交给 pandas（AI 帮你写代码）</li>
+  <li><strong>判断</strong>交给 AI 推理（你负责给标准和验收）</li>
+  <li>你的核心价值是<strong>设计判断标准</strong>和<strong>验收结论质量</strong></li>
+</ul>
+
+<p>这个分工模式，是你以后做任何 AI 数据分析项目的骨架。</p>
+
+<h2>🤔 小测</h2>
+
+<p>你有一份台区日电量数据，想让 AI 帮你找「用电异常的台区」。下面哪种做法结论最可靠？</p>
+
+<ol type="A">
+  <li>把原始 CSV 直接丢给 AI，说「帮我找异常」</li>
+  <li>先用 pandas 算出每个台区的波动指标，再把结果喂给 AI 判断</li>
+  <li>让 AI 自己写 pandas 算指标，再自己下结论，全程不验收</li>
+  <li>只看 AI 下的结论，不关心它怎么算的</li>
+</ol>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 学完有任何想动手做的数据分析任务，随时找你的 AI 教练一起搭。</p>
+
+<h2>推荐阅读</h2>
+
+<p>📝 <a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-prompts-effectively">Anthropic Prompt Engineering 指南</a> - 怎么写好 prompt 让 AI 输出可靠结论，官方最佳实践</p>
+
+<div class="nav-links">
+  <a href="0017-read-clean-data-with-ai.html">← 上一课：读取和清洗数据</a>
+  <a href="0020-visualize-data.html">下一课：可视化数据 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>

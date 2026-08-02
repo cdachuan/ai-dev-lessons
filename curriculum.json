@@ -86,25 +86,60 @@
       "num": 13,
       "topic": "multi-source-merge",
       "title": "搭一个多源信息合并工具",
-      "status": "pending"
+      "status": "done"
     },
     {
       "num": 14,
       "topic": "template-filler",
       "title": "搭一个模板自动填表脚本",
-      "status": "pending"
+      "status": "done"
     },
     {
       "num": 15,
       "topic": "auto-runner",
       "title": "搭一个定时任务脚本",
-      "status": "pending"
+      "status": "done"
     },
     {
       "num": 16,
       "topic": "toolkit-integration",
       "title": "整合：你的小工具箱",
-      "status": "pending"
+      "status": "done"
+    },
+    {
+      "num": 17,
+      "topic": "read-clean-data-with-ai",
+      "title": "用 AI 写代码：读取和清洗业务数据",
+      "status": "done",
+      "note": "17+18 合并推送，pandas 基础已过关"
+    },
+    {
+      "num": 18,
+      "topic": "read-clean-data-with-ai",
+      "title": "（并入17）清洗脏数据",
+      "status": "done",
+      "note": "与17合并，内容在同一课"
+    },
+    {
+      "num": 19,
+      "topic": "metrics-and-conclusions",
+      "title": "算指标+下结论：让 AI 帮你分析数据",
+      "status": "pushed",
+      "note": "P3 真正难点，prompt 设计+AI 推理"
+    },
+    {
+      "num": 20,
+      "topic": "visualize-data",
+      "title": "画图：用 matplotlib 可视化数据",
+      "status": "pending",
+      "note": "matplotlib 用户没练过，补上"
+    },
+    {
+      "num": 21,
+      "topic": "p3-integration",
+      "title": "整合：搭一个完整的数据分析流水线",
+      "status": "pending",
+      "note": "组装课"
     }
   ]
 }
