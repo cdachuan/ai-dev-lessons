@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0020 · 画图：用 matplotlib 可视化数据</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .chart-demo { text-align: center; margin: 1.5rem 0; }
+  .chart-demo svg { max-width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<h1>📈 画图：用 matplotlib 可视化数据</h1>
+<p class="meta">第 0020 课 · 应用篇·三 <span class="tag">实践课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>学会用 matplotlib 把 pandas 算好的数字变成图。上一课你学会了「算指标 + 下结论」，今天加一步：<strong>把结论画出来</strong>。
+</div>
+
+<h2>为什么要画图</h2>
+
+<p>上一课你算出了台区用电波动指标，用 AI 下了结论。但结论是这样的：</p>
+
+<pre><code>台区T07，波动600kWh
+台区T03，波动190kWh
+台区T12，波动85kWh
+...</code></pre>
+
+<p>你自己能看懂，但给领导看呢？给同事看呢？<strong>一张图胜过十行数字</strong>——领导看 3 秒图就能抓住重点，看 3 分钟表格可能还没找到关键信息。</p>
+
+<div class="callout">
+  <strong>📊 matplotlib</strong> 是 Python 最经典的画图库。几乎所有数据分析的图都靠它。你不需要记住所有参数，只需要知道<strong>画什么图、怎么让 AI 帮你写代码</strong>。
+</div>
+
+<h2>最简单的图：3 行代码</h2>
+
+<pre><code><span style="color:#a6adc8"># 安装（如果还没装）：pip install matplotlib</span>
+<span style="color:#cdd6f4">import</span> matplotlib.pyplot <span style="color:#cdd6f4">as</span> plt
+
+plt.plot([<span style="color:#fab387">1</span>, <span style="color:#fab387">3</span>, <span style="color:#fab387">2</span>, <span style="color:#fab387">5</span>, <span style="color:#fab387">4</span>])
+plt.show()</code></pre>
+
+<p>就这？就这。<code>plt.plot()</code> 画线，<code>plt.show()</code> 弹出窗口显示。<strong>这就是 matplotlib 的核心模式：画 → 显示</strong>。</p>
+
+<h2>三种最常用的图</h2>
+
+<p>数据分析中 90% 的场景，用这三种图就够了：</p>
+
+<table>
+  <tr><th>图类型</th><th>函数</th><th>什么时候用</th><th>举例</th></tr>
+  <tr><td>折线图</td><td><code>plt.plot()</code></td><td>看<strong>趋势</strong>（随时间变化）</td><td>台区日用电量的变化曲线</td></tr>
+  <tr><td>柱状图</td><td><code>plt.bar()</code></td><td>比<strong>大小</strong>（不同类别之间）</td><td>各台区波动幅度对比</td></tr>
+  <tr><td>直方图</td><td><code>plt.hist()</code></td><td>看<strong>分布</strong>（数据集中在哪）</td><td>所有台区平均电量的分布</td></tr>
+</table>
+
+<div class="callout green">
+  <strong>💡 选图口诀：</strong>看趋势用线，比大小用柱，看分布用直方。记不住没关系，跟 AI 说你想看什么，它会帮你选。
+</div>
+
+<h2>中文标签的坑</h2>
+
+<p>matplotlib 默认不支持中文，标题和坐标轴写了中文会显示成方框 <code>□□□</code>。加上这两行就行：</p>
+
+<pre><code>plt.rcParams[<span style="color:#a6e3a1">'font.sans-serif'</span>] = [<span style="color:#a6e3a1">'SimHei'</span>]        <span style="color:#a6adc8"># Windows 用黑体</span>
+plt.rcParams[<span style="color:#a6e3a1">'axes.unicode_minus'</span>] = <span style="color:#fab387">False</span>  <span style="color:#a6adc8"># 修复负号显示</span></code></pre>
+
+<p><strong>每次画图前加上这两行</strong>，或者让 AI 帮你加。这是新手最常踩的坑，没有之一。</p>
+
+<h2>让 AI 帮你画图</h2>
+
+<p>延续上一课的模式：<strong>你描述需求，AI 写代码</strong>。你跟 AI 说：</p>
+
+<blockquote>"我用 pandas 算出了 10 个台区的用电波动幅度，存在 result 这个 DataFrame 里，索引是台区编号，列名是'波动幅度'。帮我画柱状图，从大到小排列，加上标题和坐标轴标签。"</blockquote>
+
+<p>AI 会生成完整代码，你跑一下就能看到图。</p>
+
+<h2>完整示例：台区用电波动可视化</h2>
+
+<p>把上一课的<strong>算好的数字</strong>，变成一张能放进报告的图：</p>
+
+<pre><code><span style="color:#cdd6f4">import</span> matplotlib.pyplot <span style="color:#cdd6f4">as</span> plt
+
+<span style="color:#a6adc8"># ① 解决中文显示（必加）</span>
+plt.rcParams[<span style="color:#a6e3a1">'font.sans-serif'</span>] = [<span style="color:#a6e3a1">'SimHei'</span>]
+plt.rcParams[<span style="color:#a6e3a1">'axes.unicode_minus'</span>] = <span style="color:#fab387">False</span>
+
+<span style="color:#a6adc8"># ② 取波动最大的 10 个台区（假设 result 是上一课算好的）</span>
+top10 = result.sort_values(<span style="color:#a6e3a1">'波动幅度'</span>, ascending=<span style="color:#fab387">False</span>).head(<span style="color:#fab387">10</span>)
+
+<span style="color:#a6adc8"># ③ 画柱状图</span>
+plt.figure(figsize=(<span style="color:#fab387">10</span>, <span style="color:#fab387">5</span>))              <span style="color:#a6adc8"># 图的大小</span>
+plt.bar(top10.index, top10[<span style="color:#a6e3a1">'波动幅度'</span>])    <span style="color:#a6adc8"># 画柱子</span>
+plt.title(<span style="color:#a6e3a1">'台区用电波动幅度 Top 10'</span>)       <span style="color:#a6adc8"># 标题</span>
+plt.xlabel(<span style="color:#a6e3a1">'台区编号'</span>)                   <span style="color:#a6adc8"># X轴标签</span>
+plt.ylabel(<span style="color:#a6e3a1">'波动幅度 (kWh)'</span>)             <span style="color:#a6adc8"># Y轴标签</span>
+plt.xticks(rotation=<span style="color:#fab387">45</span>)                      <span style="color:#a6adc8"># X轴标签转45度</span>
+
+<span style="color:#a6adc8"># ④ 保存图片（必须在 show 之前！）</span>
+plt.tight_layout()                          <span style="color:#a6adc8"># 自动调整布局</span>
+plt.savefig(<span style="color:#a6e3a1">'台区波动.png'</span>, dpi=<span style="color:#fab387">150</span>)     <span style="color:#a6adc8"># 存成图片</span>
+plt.show()</code></pre>
+
+<div class="callout">
+  <strong>⚠️ 最常见的坑：</strong><code>plt.savefig()</code> 必须在 <code>plt.show()</code> <strong>之前</strong>调用。因为 <code>show()</code> 会清空画布，之后再 <code>savefig</code> 存出来的是空白图。
+</div>
+
+<h2>保存图片</h2>
+
+<p><code>plt.savefig('文件名.png')</code> 把图存成文件，可以插到报告、PPT、邮件里。<code>dpi=150</code> 控制清晰度（150 够用，300 印刷级）。</p>
+
+<h2>三步走：算 → 判 → 画</h2>
+
+<p>上一课你学了两步走：<strong>pandas 算指标 → AI 下结论</strong>。今天加上第三步，变成完整的数据分析流水线：</p>
+
+<table>
+  <tr><th>步骤</th><th>做什么</th><th>用什么</th><th>产出</th></tr>
+  <tr><td>① 算</td><td>从原始数据算出指标</td><td>pandas（AI 帮你写）</td><td>一张表 / 几个数字</td></tr>
+  <tr><td>② 判</td><td>基于数字判断异常/趋势</td><td>AI 推理</td><td>一段结论文字</td></tr>
+  <tr><td>③ 画</td><td>把数字变成直观的图</td><td>matplotlib（AI 帮你写）</td><td>一张图</td></tr>
+</table>
+
+<p>三步走是<strong>以后所有 AI 数据分析项目的骨架</strong>——算清楚、判明白、画好看。</p>
+
+<h2>🤔 小测</h2>
+
+<p>你用 pandas 算出了 10 个台区的用电波动幅度，想让领导一眼看出哪个台区波动最大。用哪种图最合适？</p>
+
+<ol type="A">
+  <li>柱状图，比大小最直观</li>
+  <li>折线图，看趋势最清楚</li>
+  <li>饼图，看占比最合适</li>
+  <li>散点图，看关系最直接</li>
+</ol>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 画图过程中遇到任何问题（中文乱码、图丑、报错），随时找你的 AI 教练。</p>
+
+<h2>推荐阅读</h2>
+
+<p>📊 <a href="https://matplotlib.org/stable/tutorials/pyplot.html">matplotlib 官方 pyplot 教程</a> — 5 分钟过一遍最基本的画图语法，不用背，眼熟就行</p>
+
+<div class="nav-links">
+  <a href="0019-metrics-and-conclusions.html">← 上一课：算指标+下结论</a>
+  <a href="0021-p3-integration.html">下一课：整合数据分析流水线 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>

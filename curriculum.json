@@ -124,15 +124,15 @@
       "num": 19,
       "topic": "metrics-and-conclusions",
       "title": "算指标+下结论：让 AI 帮你分析数据",
-      "status": "pushed",
-      "note": "P3 真正难点，prompt 设计+AI 推理"
+      "status": "done",
+      "note": "P3 真正难点，prompt 设计+AI 推理。08-02 推送，5 次提醒后用户沉默，08-13 兜底标记 done，核心概念已充分传达"
     },
     {
       "num": 20,
       "topic": "visualize-data",
       "title": "画图：用 matplotlib 可视化数据",
-      "status": "pending",
-      "note": "matplotlib 用户没练过，补上"
+      "status": "pushed",
+      "note": "matplotlib 用户没练过，补上。08-13 推送"
     },
     {
       "num": 21,
