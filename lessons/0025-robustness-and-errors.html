@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0025 · 让工具可靠：错误处理与鲁棒性</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .chart-demo { text-align: center; margin: 1.5rem 0; }
+  .chart-demo svg { max-width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<h1>🛡️ 让工具可靠：错误处理与鲁棒性</h1>
+<p class="meta">第 0025 课 · 应用篇·五 <span class="tag">实践课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>学会用 <code>try/except</code> 捕获常见错误，给脚本加上重试和日志，让它从「demo 能跑」升级成「工具能用」。
+</div>
+
+<h2>demo 能跑 ≠ 工具能用</h2>
+
+<p>你写过几个脚本了，demo 都能跑通，很开心。但真到同事手里用的时候：</p>
+
+<ul>
+  <li>文件路径写错了，<code>pd.read_csv()</code> 直接崩</li>
+  <li>调 DeepSeek API，网络抖了一下，脚本挂了</li>
+  <li>CSV 里某列名带了空格 <code>"用电量 "</code>，<code>groupby('用电量')</code> 报 KeyError</li>
+</ul>
+
+<p><strong>这些不是 bug，是真实世界</strong>。你的脚本必须能应对这些情况，否则只是一个 demo。</p>
+
+<h2>try/except：最简单的错误捕获</h2>
+
+<p>核心思路：<strong>try 里面放可能出错的代码，except 里面放出错后怎么办</strong>。</p>
+
+<pre><code><span style="color:#cdd6f4">try</span>:
+    df = pd.read_csv(<span style="color:#a6e3a1">'data.csv'</span>)
+    print(<span style="color:#a6e3a1">f"读入 {len(df)} 行"</span>)
+<span style="color:#cdd6f4">except</span> FileNotFoundError:
+    print(<span style="color:#a6e3a1">"⚠️ 文件不存在，请检查路径"</span>)
+<span style="color:#cdd6f4">except</span> Exception <span style="color:#cdd6f4">as</span> e:
+    print(<span style="color:#a6e3a1">f"⚠️ 其他错误: {e}"</span>)</code></pre>
+
+<p>没有 <code>try/except</code> 时，程序一报错就退出。加了之后，出错也不崩，而是走你写的处理逻辑。</p>
+
+<div class="callout">
+  <strong>⚠️ 注意：</strong><code>except Exception</code> 是兜底，能接住所有普通错误。但别滥用它——能精确捕获的就用精确类型（如 <code>FileNotFoundError</code>），<code>Exception</code> 只放在最后一道防线。
+</div>
+
+<h2>三种最常见的错误</h2>
+
+<table>
+  <tr><th>类型</th><th>典型场景</th><th>怎么处理</th></tr>
+  <tr><td>文件错误</td><td>路径不对、文件被占用</td><td>提示用户检查路径</td></tr>
+  <tr><td>API 错误</td><td>超时、限流、返回报错</td><td>重试或降级</td></tr>
+  <tr><td>数据错误</td><td>列名不匹配、缺失值</td><td>先清洗再算</td></tr>
+</table>
+
+<h3>① 文件错误</h3>
+
+<pre><code><span style="color:#cdd6f4">try</span>:
+    df = pd.read_csv(<span style="color:#a6e3a1">'台区数据.csv'</span>)
+<span style="color:#cdd6f4">except</span> FileNotFoundError:
+    print(<span style="color:#a6e3a1">"❌ 找不到台区数据.csv，请确认文件路径"</span>)
+    <span style="color:#cdd6f4">raise</span>  <span style="color:#a6adc8"># 重新抛出，让调用者知道</span></code></pre>
+
+<h3>② API 错误（重试一次）</h3>
+
+<pre><code><span style="color:#cdd6f4">import</span> requests
+
+<span style="color:#cdd6f4">for</span> attempt <span style="color:#cdd6f4">in</span> <span style="color:#fab387">range</span>(<span style="color:#fab387">3</span>):
+    <span style="color:#cdd6f4">try</span>:
+        resp = requests.post(url, json=payload, timeout=<span style="color:#fab387">30</span>)
+        resp.raise_for_status()
+        <span style="color:#cdd6f4">break</span>  <span style="color:#a6adc8"># 成功就跳出</span>
+    <span style="color:#cdd6f4">except</span> Exception <span style="color:#cdd6f4">as</span> e:
+        print(<span style="color:#a6e3a1">f"第{attempt+1}次失败: {e}"</span>)
+        <span style="color:#cdd6f4">if</span> attempt == <span style="color:#fab387">2</span>:
+            print(<span style="color:#a6e3a1">"❌ 3次重试均失败，跳过此请求"</span>)</code></pre>
+
+<h3>③ 数据错误（先清洗再算）</h3>
+
+<pre><code><span style="color:#a6adc8"># 缺失值会导致 groupby 报错，先填 0</span>
+df[<span style="color:#a6e3a1">'用电量'</span>] = df[<span style="color:#a6e3a1">'用电量'</span>].fillna(<span style="color:#fab387">0</span>)
+
+<span style="color:#a6adc8"># 列名可能有空格，统一清洗</span>
+df.columns = df.columns.str.strip()
+
+result = df.groupby(<span style="color:#a6e3a1">'台区'</span>)[<span style="color:#a6e3a1">'用电量'</span>].sum()</code></pre>
+
+<div class="callout green">
+  <strong>💡 实用技巧：</strong>列名加 <code>.str.strip()</code> 去掉首尾空格，能解决一大半「列名明明看着对却报 KeyError」的问题。
+</div>
+
+<h2>重试机制</h2>
+
+<p>API 调用不稳定是常态。一个好习惯：<strong>失败后等几秒再试，最多重试 3 次</strong>。</p>
+
+<pre><code><span style="color:#cdd6f4">import</span> time
+
+<span style="color:#cdd6f4">def</span> <span style="color:#f9e2af">call_api</span>(url, payload, max_retries=<span style="color:#fab387">3</span>):
+    <span style="color:#cdd6f4">for</span> i <span style="color:#cdd6f4">in</span> <span style="color:#fab387">range</span>(max_retries):
+        <span style="color:#cdd6f4">try</span>:
+            resp = requests.post(url, json=payload, timeout=<span style="color:#fab387">30</span>)
+            resp.raise_for_status()
+            <span style="color:#cdd6f4">return</span> resp.json()
+        <span style="color:#cdd6f4">except</span> Exception <span style="color:#cdd6f4">as</span> e:
+            print(<span style="color:#a6e3a1">f"第{i+1}次失败: {e}"</span>)
+            <span style="color:#cdd6f4">if</span> i < max_retries - <span style="color:#fab387">1</span>:
+                time.sleep(<span style="color:#fab387">3</span>)  <span style="color:#a6adc8"># 等3秒再试</span>
+    <span style="color:#cdd6f4">return</span> <span style="color:#fab387">None</span>  <span style="color:#a6adc8"># 全部失败返回None</span></code></pre>
+
+<p>3 次都失败返回 <code>None</code>，调用方自己决定是跳过还是报错。<strong>重试不是万能的</strong>，但能把网络抖动这种临时问题挡掉。</p>
+
+<h2>日志：加个时间戳</h2>
+
+<p>脚本出错后，你第一个问题永远是：<strong>跑到哪一步挂的？</strong> <code>print</code> 加上时间戳就行：</p>
+
+<pre><code><span style="color:#cdd6f4">from</span> datetime <span style="color:#cdd6f4">import</span> datetime
+
+<span style="color:#cdd6f4">def</span> <span style="color:#f9e2af">log</span>(msg):
+    ts = datetime.now().strftime(<span style="color:#a6e3a1">'%H:%M:%S'</span>)
+    print(<span style="color:#a6e3a1">f"[{ts}] {msg}"</span>)
+
+log(<span style="color:#a6e3a1">"开始读取数据..."</span>)
+log(<span style="color:#a6e3a1">"数据清洗完成，共 1200 行"</span>)
+log(<span style="color:#a6e3a1">"调用API分析..."</span>)
+<span style="color:#a6adc8"># [14:32:01] 开始读取数据...</span>
+<span style="color:#a6adc8"># [14:32:03] 数据清洗完成，共 1200 行</span>
+<span style="color:#a6adc8"># [14:32:05] 调用API分析...</span></code></pre>
+
+<p>看出错日志，一眼就知道挂在哪一步，不用从头猜。<strong>关键节点都要打日志</strong>：读数据、清洗、调API、出结果。</p>
+
+<h2>关键认知：不是写了 try/except 就够了</h2>
+
+<div class="callout">
+  <strong>核心区别：</strong>新手以为 <code>try/except</code> 是「加上了就安全了」。老手知道：<strong>每种错误该怎么处理，才是真正要想的事</strong>。
+</div>
+
+<table>
+  <tr><th>错误类型</th><th>糟糕的处理</th><th>好的处理</th></tr>
+  <tr><td>文件不存在</td><td>静默跳过</td><td>提示用户检查路径，明确退出</td></tr>
+  <tr><td>API 超时</td><td>直接放弃</td><td>重试 3 次，仍失败则降级或报错</td></tr>
+  <tr><td>列名不匹配</td><td>except 掉就行</td><td>先 strip 清洗，打印实际列名排查</td></tr>
+  <tr><td>缺失值报错</td><td>except 后返回空</td><td>先 fillna 再算，结果有保障</td></tr>
+</table>
+
+<p><strong>问自己三个问题</strong>：这个错误会发生吗？发生了用户能看懂吗？发生后程序还能继续吗？想清楚这三件事，比堆 10 个 <code>try/except</code> 更有用。</p>
+
+<h2>完整示例：给分析流水线加错误处理</h2>
+
+<p>回顾第 21 课的流水线：读数据 → 清洗 → 调AI分析 → 输出结果。加上错误处理后，它从 demo 变成了可靠工具：</p>
+
+<pre><code><span style="color:#cdd6f4">from</span> datetime <span style="color:#cdd6f4">import</span> datetime
+<span style="color:#cdd6f4">import</span> time, requests, pandas <span style="color:#cdd6f4">as</span> pd
+
+<span style="color:#cdd6f4">def</span> <span style="color:#f9e2af">log</span>(msg):
+    print(<span style="color:#a6e3a1">f"[{datetime.now():%H:%M:%S}] {msg}"</span>)
+
+<span style="color:#cdd6f4">def</span> <span style="color:#f9e2af">call_api</span>(payload, retries=<span style="color:#fab387">3</span>):
+    <span style="color:#cdd6f4">for</span> i <span style="color:#cdd6f4">in</span> <span style="color:#fab387">range</span>(retries):
+        <span style="color:#cdd6f4">try</span>:
+            r = requests.post(URL, json=payload, timeout=<span style="color:#fab387">30</span>)
+            r.raise_for_status()
+            <span style="color:#cdd6f4">return</span> r.json()
+        <span style="color:#cdd6f4">except</span> Exception <span style="color:#cdd6f4">as</span> e:
+            log(<span style="color:#a6e3a1">f"API第{i+1}次失败: {e}"</span>)
+            <span style="color:#cdd6f4">if</span> i < retries - <span style="color:#fab387">1</span>: time.sleep(<span style="color:#fab387">3</span>)
+    <span style="color:#cdd6f4">return</span> <span style="color:#fab387">None</span>
+
+<span style="color:#a6adc8"># ---- 主流程 ----</span>
+log(<span style="color:#a6e3a1">"① 读取数据"</span>)
+<span style="color:#cdd6f4">try</span>:
+    df = pd.read_csv(<span style="color:#a6e3a1">'台区数据.csv'</span>)
+<span style="color:#cdd6f4">except</span> FileNotFoundError:
+    log(<span style="color:#a6e3a1">"❌ 文件不存在，请检查路径"</span>)
+    <span style="color:#cdd6f4">raise</span>
+
+log(<span style="color:#a6e3a1">"② 清洗数据"</span>)
+df.columns = df.columns.str.strip()
+df[<span style="color:#a6e3a1">'用电量'</span>] = df[<span style="color:#a6e3a1">'用电量'</span>].fillna(<span style="color:#fab387">0</span>)
+
+log(<span style="color:#a6e3a1">"③ 调用AI分析"</span>)
+result = call_api({<span style="color:#a6e3a1">'data'</span>: df.head(<span style="color:#fab387">20</span>).to_dict()})
+<span style="color:#cdd6f4">if</span> result <span style="color:#cdd6f4">is</span> <span style="color:#fab387">None</span>:
+    log(<span style="color:#a6e3a1">"⚠️ API不可用，跳过AI分析"</span>)
+<span style="color:#cdd6f4">else</span>:
+    log(<span style="color:#a6e3a1">f"✅ 分析完成: {result['summary']}"</span>)</code></pre>
+
+<p>对比第 21 课的版本：同样的流程，但现在<strong>文件不存在会提示、API 失败会重试、列名有空格会清洗、每步都有日志</strong>。这就是从 demo 到工具的距离。</p>
+
+<h2>🤔 小测</h2>
+
+<p>你的分析脚本突然报错 <code>KeyError: '用电量'</code>，最可能的原因是什么？</p>
+
+<ol type="A">
+  <li>Python 版本太低</li>
+  <li>CSV 文件里这列的名字不是「用电量」，可能是「电量」或有空格</li>
+  <li>pandas 没装</li>
+  <li>电脑内存不够</li>
+</ol>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 脚本报错不可怕，可怕的是不知道为什么报错。遇到报错先看错误类型和行号，90% 的问题能自己解决。</p>
+
+<h2>推荐阅读</h2>
+
+<p>📘 <a href="https://docs.python.org/zh-cn/3/tutorial/errors.html">Python 官方教程 · 错误和异常</a> - 5 分钟过一遍 try/except 的基本语法，不用全记住，知道有哪几种就行</p>
+
+<div class="nav-links">
+  <a href="0024-design-ai-workflow.html">← 上一课：设计AI工作流</a>
+  <a href="0026-capstone-project.html">下一课：毕业项目 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>

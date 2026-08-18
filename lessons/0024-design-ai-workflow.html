@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0024 · 设计 AI 工作流：从需求到方案</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .chart-demo { text-align: center; margin: 1.5rem 0; }
+  .chart-demo svg { max-width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<h1>🧩 设计 AI 工作流：从需求到方案</h1>
+<p class="meta">第 0024 课 · 总结篇·一 <span class="tag">概念课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>学会拿到一个工作问题后，先判断该用什么 AI 方案，而不是上来就写代码。掌握三条路线的区别，学会用决策树选路线。
+</div>
+
+<h2>先想清楚，再动手</h2>
+
+<p>前面 23 课你学了很多工具：Python 脚本、pandas 数据分析、matplotlib 画图、Coze 工作流、智能体……但工作中真正的问题不是「会不会用工具」，而是<strong>「这个任务到底该用哪种工具」</strong>。</p>
+
+<p>举个真实的场景：同事跑来找你——</p>
+
+<blockquote>"帮我做个 AI，能自动分析台区数据，还能回答问题。"</blockquote>
+
+<p>你脑子里该浮现的第一个问题不是「用什么模型」，而是<strong>「这个需求拆开来看，到底有几件事？每件事适合哪种方案？」</strong></p>
+
+<div class="callout">
+  <strong>🔑 核心认知：</strong>先画流程，再写代码。就像写作文先列提纲——提纲列好了，正文自然顺。跳过提纲直接写，大概率写着写着就乱。
+</div>
+
+<h2>三条路线：脚本 → 工作流 → Agent</h2>
+
+<p>AI 解决工作问题，万变不离其宗，就三条路线：</p>
+
+<table>
+  <tr><th>路线</th><th>特点</th><th>适合什么任务</th><th>你学过的例子</th></tr>
+  <tr>
+    <td><strong>脚本</strong></td>
+    <td>固定流程，跑一遍出结果</td>
+    <td>步骤固定、规则明确</td>
+    <td>pandas 算指标 + matplotlib 画图</td>
+  </tr>
+  <tr>
+    <td><strong>工作流</strong></td>
+    <td>多步骤编排，每步有明确职责</td>
+    <td>步骤多、每步逻辑不同、需要串联</td>
+    <td>Coze 工作流：意图识别 → 查数据 → 组织回答</td>
+  </tr>
+  <tr>
+    <td><strong>Agent</strong></td>
+    <td>自主决策，根据情况选择行动</td>
+    <td>需要灵活判断、路径不固定</td>
+    <td>Hermes 智能体：根据任务自动选工具</td>
+  </tr>
+</table>
+
+<h3>怎么理解三者的区别</h3>
+
+<p>用一个比喻来记：</p>
+
+<ul>
+  <li><strong>脚本</strong> = 食谱 —— 按步骤做，每一步写死了，照做就行</li>
+  <li><strong>工作流</strong> = 流水线 —— 分了工，每站干自己的事，上一站的输出是下一站的输入</li>
+  <li><strong>Agent</strong> = 厨师 —— 给他食材和目标，他自己决定先切还是先炒，遇到问题自己调整</li>
+</ul>
+
+<p>食谱最省心但最死板，厨师最灵活但最难控制，流水线居中。<strong>越灵活的方案，开发和维护成本越高</strong>——别为了「灵活」而灵活。</p>
+
+<h2>决策树：三个问题选路线</h2>
+
+<p>拿到一个任务，问自己三个问题，答案就出来了：</p>
+
+<pre><code>任务固定吗？
+├─ 是 ──→ 步骤多吗？
+│        ├─ 不多（1~3步）──→ 【脚本】
+│        └─ 多（4步以上）──→ 【工作流】
+└─ 否 ──→ 需要灵活判断吗？
+          ├─ 不太需要，只是分支多 ──→ 【工作流】
+          └─ 需要，路径不可预测 ──→ 【Agent】</code></pre>
+
+<div class="callout green">
+  <strong>💡 三问口诀：</strong>固定吗？步骤多吗？需要判断吗？——三问答完，路线自现。
+</div>
+
+<h2>三个真实场景：走一遍决策树</h2>
+
+<h3>场景 A：每月生成台区用电分析报告</h3>
+
+<p><strong>需求：</strong>每个月固定从系统导出台区用电数据，算出波动指标，判断哪些台区异常，画图，生成一段分析文字。</p>
+
+<p><strong>走决策树：</strong></p>
+<ul>
+  <li>任务固定吗？→ <strong>是</strong>，每个月都一样</li>
+  <li>步骤多吗？→ <strong>不多</strong>，就是「算 → 判 → 画」三步</li>
+  <li>→ <strong>选脚本</strong></li>
+</ul>
+
+<p><strong>架构图：</strong></p>
+
+<table>
+  <tr><th>阶段</th><th>输入</th><th>处理</th><th>输出</th></tr>
+  <tr><td>① 算</td><td>月度用电 CSV</td><td>pandas 算波动指标</td><td>指标表</td></tr>
+  <tr><td>② 判</td><td>指标表</td><td>AI 判断哪些台区异常</td><td>结论文字</td></tr>
+  <tr><td>③ 画</td><td>指标表</td><td>matplotlib 画柱状图</td><td>波动图 PNG</td></tr>
+  <tr><td>④ 合</td><td>结论 + 图</td><td>拼成报告</td><td>月度报告</td></tr>
+</table>
+
+<p>流程写死，每月跑一次，稳定输出。<strong>没必要上工作流或 Agent——杀鸡不用牛刀。</strong></p>
+
+<h3>场景 B：选手提问自动回答（大赛）</h3>
+
+<p><strong>需求：</strong>大赛中选手在系统里提问，可能是查规则、查数据、查赛程，需要 AI 自动识别问题类型并给出准确回答。</p>
+
+<p><strong>走决策树：</strong></p>
+<ul>
+  <li>任务固定吗？→ <strong>不完全固定</strong>，问题类型不同</li>
+  <li>需要灵活判断吗？→ <strong>不太需要</strong>，问题类型有限，可枚举</li>
+  <li>→ <strong>选工作流</strong></li>
+</ul>
+
+<p><strong>架构图：</strong></p>
+
+<table>
+  <tr><th>阶段</th><th>输入</th><th>处理</th><th>输出</th></tr>
+  <tr><td>① 识别</td><td>选手问题</td><td>LLM 判断意图（规则/数据/赛程）</td><td>意图标签</td></tr>
+  <tr><td>② 查询</td><td>意图标签</td><td>根据意图查对应知识库/数据库</td><td>原始素材</td></tr>
+  <tr><td>③ 组织</td><td>原始素材 + 原问题</td><td>LLM 组织成自然语言回答</td><td>回答文本</td></tr>
+</table>
+
+<p>每一步职责清晰，上一步的输出喂给下一步。<strong>这就是你在 Coze 里搭过的东西。</strong>如果用脚本写，判断逻辑会越堆越乱；用 Agent 又太重——问题类型就那几种，不需要自主决策。</p>
+
+<h3>场景 C：分析哪些台区需要重点检查</h3>
+
+<p><strong>需求：</strong>领导说"看看哪些台区该重点检查一下"。这个任务没有固定标准——要综合考虑用电波动、线损率、历史投诉、设备年限、最近天气……而且每个月权重可能都不一样。</p>
+
+<p><strong>走决策树：</strong></p>
+<ul>
+  <li>任务固定吗？→ <strong>不固定</strong>，考虑因素多变</li>
+  <li>需要灵活判断吗？→ <strong>需要</strong>，路径不可预测</li>
+  <li>→ <strong>选 Agent</strong></li>
+</ul>
+
+<p><strong>架构图：</strong></p>
+
+<table>
+  <tr><th>阶段</th><th>处理</th><th>说明</th></tr>
+  <tr><td>输入</td><td>自然语言指令 + 台区数据</td><td>"帮我看看哪些台区要重点检查"</td></tr>
+  <tr><td>思考</td><td>Agent 自主决定查什么</td><td>可能查波动，也可能查投诉，取决于上下文</td></tr>
+  <tr><td>行动</td><td>调用工具（算指标/查记录/画图）</td><td>自己决定先做什么、再做什么</td></tr>
+  <tr><td>输出</td><td>分析报告 + 建议清单</td><td>综合判断后的结论</td></tr>
+</table>
+
+<p>这种任务如果硬写成脚本，你得把所有可能的组合都列出来，维护噩梦。如果用工作流，分支太多，画到最后变成蜘蛛网。<strong>Agent 的价值就是「你自己看着办」</strong>——给它工具和目标，让它自己决定路径。</p>
+
+<h2>三条路线对比总结</h2>
+
+<table>
+  <tr><th>维度</th><th>脚本</th><th>工作流</th><th>Agent</th></tr>
+  <tr><td>灵活性</td><td>低（固定流程）</td><td>中（分支可控）</td><td>高（自主决策）</td></tr>
+  <tr><td>开发成本</td><td>低</td><td>中</td><td>高</td></tr>
+  <tr><td>维护成本</td><td>低</td><td>中</td><td>高（行为不完全可控）</td></tr>
+  <tr><td>适合场景</td><td>每月固定报告</td><td>大赛问答系统</td><td>综合分析判断</td></tr>
+  <tr><td>典型工具</td><td>Python + pandas</td><td>Coze 工作流</td><td>Hermes / Coze Agent</td></tr>
+</table>
+
+<div class="callout">
+  <strong>⚠️ 常见误区：</strong>不是越灵活越好。<strong>能用脚本就别用工作流，能用工流就别上 Agent。</strong>过度设计 = 自己给自己挖坑。简单方案能解决问题，就是好方案。
+</div>
+
+<h2>先画流程，再写代码</h2>
+
+<p>这三个字说起来简单，但 80% 的人做不到。大多数人拿到需求的第一反应是「打开 Coze 拖一个节点」或者「让 AI 帮我写代码」。</p>
+
+<p><strong>正确的做法是：先拿出一张纸（或打开一个空白文档），用文字画出流程。</strong></p>
+
+<ol>
+  <li><strong>写输入：</strong>这个任务的数据/信息从哪来？</li>
+  <li><strong>写处理：</strong>需要经过哪几步？每步做什么？</li>
+  <li><strong>写输出：</strong>最终产出是什么？给谁看？</li>
+  <li><strong>标路线：</strong>根据决策树，这条流程选脚本、工作流还是 Agent？</li>
+  <li><strong>再动手：</strong>流程清楚了，再打开工具开始搭。</li>
+</ol>
+
+<div class="callout green">
+  <strong>💡 像写作文先列提纲：</strong>你不会提笔就写一篇 3000 字的文章——先列提纲：开头写什么、中间几个论点、结尾怎么收。AI 方案设计同理：先画流程（输入 → 处理 → 输出），再写代码。提纲五分钟，省你五小时。
+</div>
+
+<h2>🤔 小测</h2>
+
+<p>你的同事说「帮我做一个能自动回复群里消息的 AI」，你应该先问什么？</p>
+
+<ol type="A">
+  <li>用什么模型</li>
+  <li>消息类型有哪些？回复需要查数据吗？有固定模板吗？</li>
+  <li>用 Python 还是 Java</li>
+  <li>预算多少</li>
+</ol>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 选路线不是技术问题，是思维问题。先想清楚要做什么，再决定怎么做。</p>
+
+<div class="nav-links">
+  <a href="0023-tool-ecosystem.html">← 上一课：工具生态全景</a>
+  <a href="0025-robustness-and-errors.html">下一课：健壮性与错误处理 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>

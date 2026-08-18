@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0021 · 整合：搭一个完整的数据分析流水线</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .chart-demo { text-align: center; margin: 1.5rem 0; }
+  .chart-demo svg { max-width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<h1>🔧 整合：搭一个完整的数据分析流水线</h1>
+<p class="meta">第 0021 课 · 应用篇·三 <span class="tag">实践课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>把前三课学的「算 → 判 → 画」三步组装成一个完整可运行的 Python 脚本。学完这课，你能用一个脚本自动生成台区用电月度分析报告。
+</div>
+
+<h2>回顾：三步走骨架</h2>
+
+<p>前三课你分别学了三块技能：</p>
+
+<table>
+  <tr><th>步骤</th><th>做什么</th><th>用什么</th><th>产出</th></tr>
+  <tr><td>① 算</td><td>从原始数据算出指标</td><td>pandas groupby + agg</td><td>一张结果表</td></tr>
+  <tr><td>② 判</td><td>把数字喂给 AI，让它下结论</td><td>DeepSeek API</td><td>一段结论文字</td></tr>
+  <tr><td>③ 画</td><td>把数字变成直观的图</td><td>matplotlib</td><td>一张图片文件</td></tr>
+</table>
+
+<p>之前三课每课只练一步，今天把三步<strong>串成一条流水线</strong>。这就是 Phase 3 的收尾任务。</p>
+
+<h2>核心认知：数据在步骤间流转</h2>
+
+<div class="callout">
+  <strong>🔑 关键认知：</strong>整合不是把三段代码拼在一起，而是让<strong>数据在步骤之间流转</strong>。前一步的输出，是后一步的输入。
+</div>
+
+<p>流水线的数据流向：</p>
+
+<pre><code>原始数据(df)
+    │
+    ▼ pandas groupby + agg
+结果表(result)
+    │
+    ├──► 数字 → AI 推理 → 结论文字
+    │
+    └──► 数字 → matplotlib → 图片文件</code></pre>
+
+<p>注意：<strong>result 这张中间表是枢纽</strong>。它既被 AI 拿去下结论，又被 matplotlib 拿去画图。不是各算各的，而是从同一份结果出发。</p>
+
+<h2>脚本结构：三个区块</h2>
+
+<p>一个完整的数据分析脚本，结构永远是这三块：</p>
+
+<pre><code><span style="color:#a6adc8"># ━━━ ① import 区：所有库在这里集中导入 ━━━</span>
+<span style="color:#cdd6f4\">import</span> pandas <span style="color:#cdd6f4\">as</span> pd
+<span style="color:#cdd6f4\">import</span> matplotlib.pyplot <span style="color:#cdd6f4\">as</span> plt
+<span style="color:#cdd6f4\">from</span> openai <span style="color:#cdd6f4\">import</span> OpenAI
+
+<span style="color:#a6adc8"># ━━━ ② 函数定义：核心逻辑包成一个函数 ━━━</span>
+<span style="color:#cdd6f4\">def</span> analyze_and_report(df):
+    <span style="color:#a6adc8"># 算 → 判 → 画 全在这里</span>
+    ...
+
+<span style="color:#a6adc8"># ━━━ ③ 主程序：读数据、调函数、出结果 ━━━</span>
+df = pd.read_csv(<span style="color:#a6e3a1">'台区用电.csv'</span>)
+analyze_and_report(df)</code></pre>
+
+<p>为什么要包成一个函数 <code>analyze_and_report(df)</code>？因为这样<strong>输入变了，逻辑不用改</strong>。今天分析台区用电，明天换个 CSV 分析别的，函数内部的算→判→画流程是通用的。</p>
+
+<h2>完整示例：台区用电月度分析报告生成器</h2>
+
+<p>下面是一个完整可跑的脚本，大约 45 行。它从 CSV 读取台区用电数据，算出每个台区的月度用电波动，让 AI 下结论，画出柱状图，最后把结论存成文本文件、图存成图片文件——<strong>一份报告就出来了</strong>。</p>
+
+<pre><code><span style="color:#a6adc8"># pip install pandas matplotlib openai</span>
+<span style="color:#cdd6f4">import</span> pandas <span style="color:#cdd6f4">as</span> pd
+<span style="color:#cdd6f4">import</span> matplotlib.pyplot <span style="color:#cdd6f4">as</span> plt
+<span style="color:#cdd6f4">from</span> openai <span style="color:#cdd6f4">import</span> OpenAI
+
+client = OpenAI(api_key=<span style="color:#a6e3a1">"你的API密钥"</span>, base_url=<span style="color:#a6e3a1">"https://api.deepseek.com"</span>)
+
+plt.rcParams[<span style="color:#a6e3a1">'font.sans-serif'</span>] = [<span style="color:#a6e3a1">'SimHei'</span>]
+plt.rcParams[<span style="color:#a6e3a1">'axes.unicode_minus'</span>] = <span style="color:#fab387">False</span>
+
+<span style="color:#cdd6f4">def</span> analyze_and_report(df):
+    <span style="color:#a6adc8"># ① 算：每个台区的月度用电波动幅度（最大-最小）</span>
+    result = df.groupby(<span style="color:#a6e3a1">'台区编号'</span>)[<span style="color:#a6e3a1">'用电量'</span>].agg([<span style="color:#a6e3a1">'max'</span>, <span style="color:#a6e3a1">'min'</span>])
+    result[<span style="color:#a6e3a1">'波动幅度'</span>] = result[<span style="color:#a6e3a1">'max'</span>] - result[<span style="color:#a6e3a1">'min'</span>]
+    result = result.sort_values(<span style="color:#a6e3a1">'波动幅度'</span>, ascending=<span style="color:#fab387">False</span>)
+
+    <span style="color:#a6adc8"># ② 判：把数字喂给 AI，让它下结论</span>
+    data_str = result[[<span style="color:#a6e3a1">'波动幅度'</span>]].head(<span style="color:#fab387">10</span>).to_string()
+    prompt = <span style="color:#a6e3a1">f"""以下是台区月度用电波动数据（单位kWh）：
+{data_str}
+
+请分析：哪个台区波动最异常？整体波动水平如何？给出简短结论（3-5句话）。"""</span>
+    resp = client.chat.completions.create(
+        model=<span style="color:#a6e3a1">"deepseek-chat"</span>,
+        messages=[{<span style="color:#a6e3a1">"role"</span>: <span style="color:#a6e3a1">"user"</span>, <span style="color:#a6e3a1">"content"</span>: prompt}]
+    )
+    conclusion = resp.choices[<span style="color:#fab387">0</span>].message.content
+
+    <span style="color:#a6adc8"># ③ 画：波动 Top 10 柱状图</span>
+    top10 = result.head(<span style="color:#fab387">10</span>)
+    plt.figure(figsize=(<span style="color:#fab387">10</span>, <span style="color:#fab387">5</span>))
+    plt.bar(top10.index, top10[<span style="color:#a6e3a1">'波动幅度'</span>])
+    plt.title(<span style="color:#a6e3a1">'台区用电波动幅度 Top 10'</span>)
+    plt.xlabel(<span style="color:#a6e3a1">'台区编号'</span>)
+    plt.ylabel(<span style="color:#a6e3a1">'波动幅度 (kWh)'</span>)
+    plt.xticks(rotation=<span style="color:#fab387">45</span>)
+    plt.tight_layout()
+    plt.savefig(<span style="color:#a6e3a1">'台区波动图.png'</span>, dpi=<span style="color:#fab387">150</span>)
+
+    <span style="color:#a6adc8"># 输出报告</span>
+    <span style="color:#cdd6f4">with</span> open(<span style="color:#a6e3a1">'分析报告.txt'</span>, <span style="color:#a6e3a1">'w'</span>, encoding=<span style="color:#a6e3a1">'utf-8'</span>) <span style="color:#cdd6f4">as</span> f:
+        f.write(<span style="color:#a6e3a1">'=== 台区用电月度分析报告 ===\n\n'</span>)
+        f.write(conclusion)
+
+    <span style="color:#cdd6f4">return</span> conclusion
+
+<span style="color:#a6adc8"># ━━━ 主程序 ━━━</span>
+df = pd.read_csv(<span style="color:#a6e3a1">'台区用电.csv'</span>)
+report = analyze_and_report(df)
+print(report)
+print(<span style="color:#a6e3a1">'\n报告已保存：分析报告.txt + 台区波动图.png'</span>)</code></pre>
+
+<div class="callout green">
+  <strong>💡 数据流向：</strong>CSV → <code>df</code> → groupby 算出 <code>result</code> → <code>result</code> 同时喂给 AI（出文字）和 matplotlib（出图）→ 两份文件落地。<strong>一张表驱动两个产出，这就是流水线。</strong>
+</div>
+
+<h2>让 AI 帮你写这种长脚本</h2>
+
+<p>这种 40-50 行的脚本，手写容易漏东西。更好的办法是<strong>给 AI 完整上下文，让它一次生成</strong>：</p>
+
+<blockquote>"我有一个 CSV 文件，列是：台区编号、日期、用电量。帮我写一个 Python 脚本，完成以下任务：<br>1. 用 pandas groupby 算每个台区的用电波动幅度（max-min）<br>2. 把 Top 10 的波动数字喂给 DeepSeek API，让它下结论<br>3. 用 matplotlib 画 Top 10 波动柱状图，存成 PNG<br>4. 结论存成 txt 文件<br>输出格式：一个完整可跑的脚本，中文注释"</blockquote>
+
+<div class="callout">
+  <strong>📝 给 AI 的上下文清单：</strong>① 数据格式（列名、单位）② 三步需求（算什么、判什么、画什么）③ 输出格式（存什么文件）④ 语言要求（中文注释）。<strong>四样给全，AI 一次就能生成可跑的脚本。</strong>
+</div>
+
+<h2>验收要点：三个检查</h2>
+
+<p>脚本跑完了不等于对了。养成<strong>三看</strong>的习惯：</p>
+
+<table>
+  <tr><th>检查项</th><th>看什么</th><th>怎么看</th></tr>
+  <tr><td>① 数字对不对</td><td>pandas 算出的波动值和原始数据是否吻合</td><td>抽 1-2 个台区，手动验算 max-min</td></tr>
+  <tr><td>② 结论通不通</td><td>AI 说的数字和 pandas 算出的数字是否一致</td><td>对照 result 表，看 AI 有没有编数字</td></tr>
+  <tr><td>③ 图能不能看</td><td>柱状图有没有中文乱码、标签是否清晰</td><td>打开 PNG 文件肉眼看</td></tr>
+</table>
+
+<div class="callout">
+  <strong>⚠️ AI 会编数字：</strong>AI 下结论时偶尔会"编"一个看似合理但不准确的数字（比如把 600 说成 800）。<strong>结论里的每一个数字，都应该能在 result 表里找到对应</strong>。找不到就是 AI 编的，不能写进报告。
+</div>
+
+<h2>这就是你的第一个 AI 数据分析工具</h2>
+
+<p>到这一步，你已经拥有了一个<strong>可重复使用的自动化分析工具</strong>：</p>
+
+<ul>
+  <li>换一份 CSV，改个文件名就能跑</li>
+  <li>换一个分析维度，改 groupby 的列名就行</li>
+  <li>换一个画图类型，改 <code>plt.bar()</code> 为 <code>plt.plot()</code> 就行</li>
+</ul>
+
+<p>这就是「算 → 判 → 画」三步走的力量——<strong>骨架不变，内容可换</strong>。以后工作中遇到任何数据分析需求，先想：哪步算、哪步判、哪步画，然后让 AI 帮你填代码。</p>
+
+<h2>🤔 小测</h2>
+
+<p>你的分析脚本跑完了，数字和图都出来了，但 AI 下的结论里说「台区 T07 波动幅度为 600kWh，超过平均值 2 倍」，你怎么验证这个结论靠不靠谱？</p>
+
+<ol type="A">
+  <li>直接信 AI，它能推出结论说明没问题</li>
+  <li>回头检查 pandas 算出的原始数字，确认 600 和平均值确实差 2 倍</li>
+  <li>重新让 AI 算一遍，看两次结果一不一样</li>
+  <li>换一个 AI 模型再问一遍</li>
+</ol>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 脚本跑不通？报错了？随时找你的 AI 教练，把报错信息贴过去就行。</p>
+
+<div class="nav-links">
+  <a href="0019-metrics-and-conclusions.html">← 上一课：算指标+下结论</a>
+  <a href="0022-agent-architecture.html">下一课：Agent 架构 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>

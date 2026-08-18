@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0026 · 毕业项目：搭一个你自己的 AI 工具</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .chart-demo { text-align: center; margin: 1.5rem 0; }
+  .chart-demo svg { max-width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<h1>🎓 毕业项目：搭一个你自己的 AI 工具</h1>
+<p class="meta">第 0026 课 · 毕业课 <span class="tag">实践课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>不教新知识。引导你把前 25 课学的东西整合起来，做成一个能解决真实工作问题的 AI 小工具。这是毕业，不是考试。
+</div>
+
+<h2>先回头看：你走过的路</h2>
+
+<p>25 课下来，你经历了四个阶段：</p>
+
+<table>
+  <tr><th>阶段</th><th>篇名</th><th>你学会了什么</th></tr>
+  <tr><td>① 概念篇</td><td>理解 AI</td><td>知道大模型能干什么、不能干什么，会用赫默聊天解决问题</td></tr>
+  <tr><td>② 工具篇</td><td>写脚本</td><td>会装 Python、用 VS Code、让 AI 帮你写脚本跑起来</td></tr>
+  <tr><td>③ 应用篇</td><td>数据分析</td><td>pandas 算指标、AI 下结论、matplotlib 画图，三步走流水线</td></tr>
+  <tr><td>④ 创造篇</td><td>设计方案</td><td>区分脚本/工作流/Agent，会画架构图，会加错误处理</td></tr>
+</table>
+
+<p>这些零件你都见过。现在的问题是：<strong>能不能拼成一辆能跑的车？</strong></p>
+
+<h2>毕业项目要求</h2>
+
+<p>你要做一个完整的小工具。不需要完美，但要<strong>真能用</strong>。具体要求：</p>
+
+<ol>
+  <li><strong>选一个真实工作问题</strong>——你日常工作中真的会遇到的，不是编出来的</li>
+  <li><strong>判断用哪条路线</strong>——脚本？工作流？Agent？根据第 22-23 课的决策方法选</li>
+  <li><strong>画架构图</strong>——输入 → 处理 → 输出，三块画清楚（纸上画、白板画、AI 画都行）</li>
+  <li><strong>实现核心功能</strong>——可以让 AI 帮你写代码，但你要看懂每一行在干什么</li>
+  <li><strong>加上错误处理</strong>——文件读不到怎么办？数据为空怎么办？（第 25 课的内容）</li>
+  <li><strong>验收</strong>——数字对不对？结论通不通？能不能用？</li>
+</ol>
+
+<div class="callout">
+  <strong>💡 核心原则：</strong>你不需要从零手写所有代码。AI 是你的程序员，你是产品经理。你要做的是<strong>把问题定义清楚</strong>，然后让 AI 帮你实现。
+</div>
+
+<h2>三个选题建议</h2>
+
+<p>以下是结合你工作场景的三个选题，你选一个做，也可以自己想一个：</p>
+
+<h3>选题 A：台区用电月报自动生成器</h3>
+
+<ul>
+  <li><strong>路线：</strong>脚本</li>
+  <li><strong>整合：</strong>第 21 课（整合数据分析流水线）</li>
+  <li><strong>输入：</strong>台区月度用电 Excel 表</li>
+  <li><strong>处理：</strong>pandas 算指标 → AI 写结论 → matplotlib 画图</li>
+  <li><strong>输出：</strong>一份带表格、文字、图表的月报</li>
+  <li><strong>难度：</strong>⭐⭐（零件都学过，主要是拼装）</li>
+</ul>
+
+<h3>选题 B：计量知识问答助手</h3>
+
+<ul>
+  <li><strong>路线：</strong>Agent</li>
+  <li><strong>整合：</strong>第 22-23 课（Agent 架构与实现）</li>
+  <li><strong>输入：</strong>用户的计量相关问题</li>
+  <li><strong>处理：</strong>大模型理解问题 → 检索计量知识 → 组织回答</li>
+  <li><strong>输出：</strong>一段准确的、带依据的回答</li>
+  <li><strong>难度：</strong>⭐⭐⭐（Agent 路线比脚本复杂，但可以简化版起步）</li>
+</ul>
+
+<h3>选题 C：日报数据校验工具</h3>
+
+<ul>
+  <li><strong>路线：</strong>脚本 + AI 判断</li>
+  <li><strong>整合：</strong>第 19 课（算指标下结论）+ 第 25 课（错误处理）</li>
+  <li><strong>输入：</strong>日报数据表</li>
+  <li><strong>处理：</strong>pandas 检查格式和数值范围 → AI 判断有没有异常</li>
+  <li><strong>输出：</strong>校验报告（哪些数据有问题、建议怎么改）</li>
+  <li><strong>难度：</strong>⭐⭐（脚本为主，AI 做判断辅助）</li>
+</ul>
+
+<div class="callout green">
+  <strong>💡 选哪个？</strong>想稳妥选 A，想挑战选 B，想实用选 C。三个都能做出来就是合格的毕业生。
+</div>
+
+<h2>项目验收清单</h2>
+
+<p>做完项目后，用这 5 个问题检查自己：</p>
+
+<table>
+  <tr><th>检查项</th><th>问题</th><th>合格标准</th></tr>
+  <tr><td>① 真问题</td><td>这个工具解决的是你工作中真的会遇到的麻烦吗？</td><td>能说出具体场景：「每次做月报我要花 2 小时，现在 5 分钟」</td></tr>
+  <tr><td>② 能跑通</td><td>从输入到输出，整条流程能跑完吗？</td><td>给一个真实文件，能出结果，不报错</td></tr>
+  <tr><td>③ 结果对</td><td>输出的数字/结论，和手动核对的一致吗？</td><td>抽查 3-5 条，数字对得上</td></tr>
+  <tr><td>④ 会容错</td><td>输入有问题时，工具是崩溃还是给出提示？</td><td>文件缺失、数据为空时，报清晰错误信息而不是闪退</td></tr>
+  <tr><td>⑤ 能复用</td><td>下次遇到同类问题，能直接拿来用吗？</td><td>换个文件路径就能跑，不用改代码逻辑</td></tr>
+</table>
+
+<div class="callout">
+  <strong>⚠️ 别追求完美：</strong>第一版能跑通就行。工具是用的，不是展览的。先解决 80% 的场景，剩下的边用边改。
+</div>
+
+<h2>怎么做：推荐步骤</h2>
+
+<ol>
+  <li><strong>选好题</strong>——挑一个你最熟悉、最痛的工作场景</li>
+  <li><strong>手画架构图</strong>——输入是什么文件、处理分几步、输出是什么东西</li>
+  <li><strong>跟 AI 说需求</strong>——把架构图描述给 AI：「我要做一个 X，输入是 Y，输出是 Z，帮我写代码」</li>
+  <li><strong>跑通第一版</strong>——先别管错误处理，先让主流程跑通</li>
+  <li><strong>加错误处理</strong>——把跑过程中遇到的报错，一个个加 <code>try-except</code></li>
+  <li><strong>验收</strong>——用上面的 5 个问题检查</li>
+  <li><strong>用起来</strong>——拿到工作中真用，发现问题再改</li>
+</ol>
+
+<h2>结语：你已经走完了这条路</h2>
+
+<blockquote>25 课之前，你是「只会用赫默聊天」的人。<br>
+25 课之后，你是「能自己搭 AI 小工具」的人。</blockquote>
+
+<p>这两个身份之间的距离，比你以为的要近。你不需要成为程序员，不需要背 API，不需要理解神经网络的数学原理。你只需要：</p>
+
+<ul>
+  <li>把问题定义清楚</li>
+  <li>知道有哪些零件可以用</li>
+  <li>让 AI 帮你把零件拼起来</li>
+  <li>跑起来，验证，迭代</li>
+</ul>
+
+<p>这些你现在都会了。</p>
+
+<p><strong>毕业快乐。去搭你的第一个工具吧。</strong> 🎉</p>
+
+<h2>🤔 小测</h2>
+
+<p>毕业项目最关键的验收标准是什么？</p>
+
+<ol type="A">
+  <li>代码行数够不够多</li>
+  <li>能不能解决一个真实问题，而且用起来比手动快</li>
+  <li>用没用最新的 AI 模型</li>
+  <li>界面好不好看</li>
+</ol>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 做项目过程中遇到任何问题，随时找你的 AI 教练。毕业了也是。</p>
+
+<div class="nav-links">
+  <a href="0025-robustness-and-errors.html">← 上一课：错误处理</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>

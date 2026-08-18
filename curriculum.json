@@ -2,7 +2,7 @@
   "meta": {
     "version": 2,
     "created": "2026-07-14",
-    "description": "AI应用开发学习课程表 — 概念篇已学完，工具篇HTML已全部生成备份于GitHub，cron按实际进度逐节推送",
+    "description": "AI应用开发学习课程表 - P1概念篇+P2工具篇+P3应用篇已学完，P4创造篇待推送",
     "status_legend": {
       "pending": "尚未推送",
       "pushed": "已推送，等待用户确认已读",
@@ -131,15 +131,50 @@
       "num": 20,
       "topic": "visualize-data",
       "title": "画图：用 matplotlib 可视化数据",
-      "status": "pushed",
-      "note": "matplotlib 用户没练过，补上。08-13 推送"
+      "status": "done",
+      "note": "matplotlib 用户没练过，补上。08-13 推送，08-14/15 两次提醒无响应，08-17 兜底标记 done，选图口诀已充分传达"
     },
     {
       "num": 21,
       "topic": "p3-integration",
       "title": "整合：搭一个完整的数据分析流水线",
+      "status": "done",
+      "note": "P3收尾组装课：算->判->画->出报告，一条龙脚本。08-17 推送（20课兜底后顺推），08-17 用户确认学完"
+    },
+    {
+      "num": 22,
+      "topic": "agent-architecture",
+      "title": "Agent 入门：从脚本到智能体",
+      "status": "done",
+      "note": "P4开篇：脚本vs智能体，ReAct循环，为什么Hermes能自己干活。08-18推送，08-18用户确认学完，小测C正解"
+    },
+    {
+      "num": 23,
+      "topic": "tool-ecosystem",
+      "title": "工具生态：Function Calling 进阶与 MCP",
       "status": "pending",
-      "note": "组装课"
+      "note": "从单次调用到工具注册，MCP协议入门，对接用户的Coze工作流经验"
+    },
+    {
+      "num": 24,
+      "topic": "design-ai-workflow",
+      "title": "设计 AI 工作流：从需求到方案",
+      "status": "pending",
+      "note": "拆解真实工作问题，选路线（脚本/Agent/工作流），画架构图"
+    },
+    {
+      "num": 25,
+      "topic": "robustness-and-errors",
+      "title": "让工具可靠：错误处理与鲁棒性",
+      "status": "pending",
+      "note": "try/except、重试、降级、日志——从demo到能用的工具"
+    },
+    {
+      "num": 26,
+      "topic": "capstone-project",
+      "title": "毕业项目：搭一个你自己的 AI 工具",
+      "status": "pending",
+      "note": "P4收尾：选一个真实工作问题，从设计到实现到验收"
     }
   ]
 }

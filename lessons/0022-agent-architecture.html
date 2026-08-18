@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0022 · Agent 入门：从脚本到智能体</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .chart-demo { text-align: center; margin: 1.5rem 0; }
+  .chart-demo svg { max-width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<h1>🤖 Agent 入门：从脚本到智能体</h1>
+<p class="meta">第 0022 课 · 创造篇·一 <span class="tag">概念课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>理解 Agent 到底是什么，它和脚本有什么本质区别。你天天在用 Hermes——现在该搞懂它为什么能自己干活了。这是 Phase 4「创造篇」的第一步：从「会写脚本」升级到「理解智能体」。
+</div>
+
+<h2>你已经在用 Agent 了</h2>
+
+<p>过去 21 课里，你写了 pandas 代码、画了图、调了 API。每次都是<strong>你规定好每一步，电脑照着做</strong>——这就是脚本。</p>
+
+<p>但你也发现了另一件事：你跟 Hermes 说「帮我分析这些台区的用电异常」，它就自己读文件、算指标、判断异常、写结论，中间不用你插手。这不是脚本——这是 <strong>Agent（智能体）</strong>。</p>
+
+<div class="callout">
+  <strong>💡 一句话区分：</strong>脚本是「你规定每一步做什么」，Agent 是「你给目标，它自己决定怎么做」。
+</div>
+
+<h2>脚本 vs 智能体：一个对比例子</h2>
+
+<p>同一个任务：<strong>分析本月用电异常台区</strong>。</p>
+
+<h3>脚本方式</h3>
+
+<p>你需要自己想清楚每一步，然后写成代码：</p>
+
+<pre><code><span style="color:#a6adc8"># 你规定每一步</span>
+<span style="color:#a6adc8"># 第1步：读数据</span>
+df = pd.read_csv(<span style="color:#a6e3a1">'用电数据.csv'</span>)
+
+<span style="color:#a6adc8"># 第2步：算波动</span>
+df[<span style="color:#a6e3a1">'波动'</span>] = df.groupby(<span style="color:#a6e3a1">'台区'</span>)[<span style="color:#a6e3a1">'电量'</span>].std()
+
+<span style="color:#a6adc8"># 第3步：筛选异常</span>
+异常 = df[df[<span style="color:#a6e3a1">'波动'</span>] > 阈值]
+
+<span style="color:#a6adc8"># 第4步：调API让AI写结论</span>
+结论 = call_ai(<span style="color:#a6e3a1">f"根据以下异常数据写结论：{异常}"</span>)
+
+<span style="color:#a6adc8"># 第5步：输出</span>
+print(结论)</code></pre>
+
+<p>每一步都是你设计的。换个任务——比如「找出电量突增的台区」——你得重新写一套流程。</p>
+
+<h3>Agent 方式</h3>
+
+<p>你只给目标和权限：</p>
+
+<blockquote>"帮我分析本月哪些台区用电异常，给出报告。数据在 D:/用电数据.csv。"</blockquote>
+
+<p>Agent 自己决定怎么做：它可能先读数据看结构，发现需要算波动，算完发现某些台区数据缺失，自己想办法补，然后判断哪些算异常，画张图，最后写报告。<strong>中间这些决策，没有一个是你规定的</strong>。</p>
+
+<div class="callout green">
+  <strong>💡 核心区别：</strong>脚本 = 你是大脑，代码是手脚；Agent = 它自己是大脑+手脚，你只管提需求。
+</div>
+
+<h2>ReAct 循环：Agent 的核心引擎</h2>
+
+<p>Agent 为什么能「自己决定怎么做」？因为它在一个叫 <strong>ReAct</strong> 的循环里不断运转：</p>
+
+<table>
+  <tr><th>阶段</th><th>做什么</th><th>类比</th></tr>
+  <tr><td><strong>Thought</strong>（思考）</td><td>分析当前状况，决定下一步做什么</td><td>「数据读到了，发现有空值，得先处理」</td></tr>
+  <tr><td><strong>Action</strong>（行动）</td><td>调用工具执行操作</td><td>调 pandas 填充空值</td></tr>
+  <tr><td><strong>Observation</strong>（观察）</td><td>看行动的结果，更新认知</td><td>「空值填好了，数据完整了」</td></tr>
+  <tr><td>→ 回到 Thought</td><td>根据观察结果再思考</td><td>「现在可以算波动了」</td></tr>
+</table>
+
+<p>这个循环<strong>不断重复</strong>，直到 Agent 认为任务完成。这就是 Hermes 每次帮你干活时背后发生的事情。</p>
+
+<h3>用伪代码看 ReAct 循环</h3>
+
+<pre><code><span style="color:#a6adc8"># ReAct 循环的概念演示（伪代码，不可运行）</span>
+
+任务 = <span style="color:#a6e3a1">"分析本月用电异常台区，给出报告"</span>
+记忆 = []  <span style="color:#a6adc8"># 对话历史 / 上下文</span>
+
+<span style="color:#cdd6f4">while</span> <span style="color:#fab387">True</span>:
+    <span style="color:#a6adc8"># ① Thought：LLM 思考下一步</span>
+    thought = LLM.think(任务, 记忆)
+    <span style="color:#cdd6f4">print</span>(<span style="color:#a6e3a1">f"💭 {thought}"</span>)
+
+    <span style="color:#a6adc8"># 如果任务完成，退出循环</span>
+    <span style="color:#cdd6f4">if</span> thought.is_done():
+        <span style="color:#cdd6f4">break</span>
+
+    <span style="color:#a6adc8"># ② Action：调用工具</span>
+    action = thought.next_action      <span style="color:#a6adc8"># 比如 read_file / run_python</span>
+    result = 执行工具(action)         <span style="color:#a6adc8"># 比如：读到数据了</span>
+    <span style="color:#cdd6f4">print</span>(<span style="color:#a6e3a1">f"🔧 执行了 {action}"</span>)
+
+    <span style="color:#a6adc8"># ③ Observation：把结果存入记忆</span>
+    记忆.append((thought, action, result))
+    <span style="color:#cdd6f4">print</span>(<span style="color:#a6e3a1">f"👀 观察到：{result}"</span>)
+    <span style="color:#a6adc8"># → 回到循环顶部，带着新记忆重新思考</span></code></pre>
+
+<div class="callout">
+  <strong>⚠️ 注意：</strong>这不是真实代码，是帮你理解概念的伪代码。真实的 Agent 实现要复杂得多，但核心逻辑就是这个循环。
+</div>
+
+<h2>Agent 的三个核心组件</h2>
+
+<p>拆开看，任何 Agent（包括 Hermes）都有三个核心部件：</p>
+
+<table>
+  <tr><th>组件</th><th>是什么</th><th>在 Hermes 里对应什么</th></tr>
+  <tr><td>🧠 <strong>大脑</strong></td><td>LLM（大语言模型），负责思考、推理、做决策</td><td>背后的 AI 模型（如 GPT、Claude）</td></tr>
+  <tr><td>✋ <strong>手脚</strong></td><td>工具 / Function Calling，让 Agent 能操作外部世界</td><td>读文件、跑 Python、搜索网页、发消息</td></tr>
+  <tr><td>📝 <strong>记忆</strong></td><td>Context / 对话历史，记住之前做了什么</td><td>对话窗口里你看到的所有内容</td></tr>
+</table>
+
+<div class="callout green">
+  <strong>💡 人话版：</strong>大脑负责想，手脚负责做，记忆负责不忘。三个缺一个都不行——没大脑就是死脚本，没手脚就只能空谈，没记忆就每一步都从零开始。
+</div>
+
+<h2>为什么 Agent 比脚本强</h2>
+
+<p>不是所有场景都该用 Agent，但在以下情况，Agent 明显优于脚本：</p>
+
+<ul>
+  <li><strong>能处理意外：</strong>数据格式变了？脚本报错退出。Agent 发现不对，自己调整策略继续干。</li>
+  <li><strong>能自己选工具：</strong>脚本只能用你提前写好的函数。Agent 有工具箱，自己挑合适的用。</li>
+  <li><strong>能多步推理：</strong>复杂任务需要分多步、中间做判断。脚本只能按你预设的顺序走，Agent 能根据中间结果动态调整。</li>
+</ul>
+
+<p>反过来，如果任务是<strong>固定、重复、流程明确的</strong>——比如每月固定格式跑一个报表——脚本反而更可靠、更快、更省钱。Agent 的灵活性是有代价的：更慢、更贵、结果不完全可控。</p>
+
+<h2>回到你的工作场景</h2>
+
+<table>
+  <tr><th></th><th>脚本</th><th>Agent</th></tr>
+  <tr><td><strong>你的角色</strong></td><td>设计师：规定每一步</td><td>甲方：提需求和目标</td></tr>
+  <tr><td><strong>适合场景</strong></td><td>每月固定报表、批量算指标</td><td>灵活分析、临时任务、需要判断的活</td></tr>
+  <tr><td><strong>举例</strong></td><td>「帮我算这 10 个台区的波动」→ 写 pandas → 出结果</td><td>「帮我分析哪些台区用电异常，给出报告」→ Agent 自己读数据、算指标、判断、画图、写报告</td></tr>
+  <tr><td><strong>可控性</strong></td><td>高（你规定了一切）</td><td>中（结果可能每次略有不同）</td></tr>
+</table>
+
+<div class="callout">
+  <strong>🔑 关键认知：</strong>Agent 不是「更好的脚本」，而是<strong>另一种东西</strong>。脚本追求精确可控，Agent 追求灵活自主。成熟的工程师两种都会用，按场景选择。
+</div>
+
+<h2>🤔 小测</h2>
+
+<p>同样一个任务「分析本月用电异常台区」，以下哪种方式是对的？</p>
+
+<ol type="A">
+  <li>用脚本：自己写 pandas 代码算波动，再调 API 让 AI 写结论</li>
+  <li>用 Agent：给 Agent 目标和数据访问权限，让它自己决定怎么算、怎么判、怎么输出</li>
+  <li>A 和 B 都对，只是分工不同——脚本适合固定重复任务，Agent 适合灵活多变的任务</li>
+  <li>必须用 Agent，Agent 一定比脚本强</li>
+</ol>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 从这一课开始，你要从「会写脚本的人」变成「能指挥 Agent 的人」。下节课讲 Agent 怎么选工具。</p>
+
+<div class="nav-links">
+  <a href="0021-p3-integration.html">← 上一课：整合数据分析流水线</a>
+  <a href="0023-tool-ecosystem.html">下一课：工具生态 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>

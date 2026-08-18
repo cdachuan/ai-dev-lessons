@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0023 · 工具生态：Function Calling 进阶与 MCP</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .chart-demo { text-align: center; margin: 1.5rem 0; }
+  .chart-demo svg { max-width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<h1>🔌 工具生态：Function Calling 进阶与 MCP</h1>
+<p class="meta">第 0023 课 · 进阶篇 <span class="tag">概念课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>理解工具调用的三层进化——从单次 Function Calling，到多工具编排，再到 MCP 标准化共享。学完你能说清「什么时候用什么」。
+</div>
+
+<h2>回顾：Function Calling 是什么</h2>
+
+<p>第 10 课你学过 Function Calling——<strong>让 AI 调用你写好的函数</strong>。核心流程是这样的：</p>
+
+<pre><code><span style="color:#a6adc8"># 你定义一个函数</span>
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">query_meter</span>(meter_id, date):
+    <span style="color:#a6adc8"># 查数据库，返回日电量</span>
+    <span style="color:#cdd6f4">return</span> db.query(meter_id, date)
+
+<span style="color:#a6adc8"># 告诉 AI 这个函数怎么用</span>
+tools = [{
+    <span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"query_meter"</span>,
+    <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"查询某电表某日的电量数据"</span>,
+    <span style="color:#a6e3a1">"parameters"</span>: { <span style="color:#a6e3a1">"meter_id"</span>: <span style="color:#a6e3a1">"string"</span>, <span style="color:#a6e3a1">"date"</span>: <span style="color:#a6e3a1">"string"</span> }
+}]
+
+<span style="color:#a6adc8"># AI 看到用户问"查一下T07台区8月1日电量"，自己决定调用这个函数</span></code></pre>
+
+<p>关键点：AI 不是自己写查询代码，而是<strong>从你提供的工具列表里选一个调用</strong>。你负责写函数和定义，AI 负责决定什么时候用、用什么参数。</p>
+
+<div class="callout">
+  <strong>📌 第 10 课的核心：</strong>一个工具，一次调用。AI 看到一个问题，选一个函数，传参数，拿结果，回答用户。
+</div>
+
+<h2>进阶：从「一个工具」到「工具列表」</h2>
+
+<p>真实场景中，一个智能体不可能只有一个工具。你可能需要：<strong>查电表、查台区、算波动、画图、发邮件</strong>……把这些函数全部注册成工具列表，AI 自己选该调哪个。</p>
+
+<pre><code>tools = [
+    {<span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"query_meter"</span>,     <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"查电表日电量"</span>},
+    {<span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"query_taigu"</span>,    <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"查台区信息"</span>},
+    {<span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"calc_fluctuation"</span>, <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"算用电波动幅度"</span>},
+    {<span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"draw_chart"</span>,     <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"画柱状图"</span>},
+    {<span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"send_email"</span>,     <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"发邮件通知"</span>},
+]
+
+<span style="color:#a6adc8"># 用户说："查T07台区8月波动，画个图，发给张工"</span>
+<span style="color:#a6adc8"># AI 自动按顺序调用：query_taigu → calc_fluctuation → draw_chart → send_email</span></code></pre>
+
+<p>这就是<strong>工具注册</strong>——你把一堆函数的「说明书」交给 AI，AI 根据用户需求自己决定调哪个、什么顺序调。<strong>你不用写 if-else 去判断用户想干嘛，AI 自己路由。</strong></p>
+
+<h2>用你的 Coze 经验理解</h2>
+
+<p>你在大赛项目里用过 Coze（扣子），其实你已经接触过这套东西了，只是叫法不同：</p>
+
+<table>
+  <tr><th>Coze 里的概念</th><th>对应的技术概念</th><th>你做过的事</th></tr>
+  <tr><td>插件（Plugin）</td><td>Function Calling 的一个工具</td><td>在 Coze 里加个天气插件、搜索插件</td></tr>
+  <tr><td>工作流（Workflow）</td><td>多个工具串联编排</td><td>把「搜索→提取→总结」串成一条线</td></tr>
+  <tr><td>Bot / Agent</td><td>带工具列表的智能体</td><td>给 Bot 配上插件，让它自己决定调用</td></tr>
+</table>
+
+<div class="callout green">
+  <strong>💡 一句话打通：</strong>Coze 插件 = Function Calling 工具；Coze 工作流 = 多个 Function Calling 串起来；Coze Bot = 注册了工具列表的 Agent。你在 Coze 上拖拽的东西，底层就是这套机制。
+</div>
+
+<h2>MCP：工具的「USB 接口」</h2>
+
+<p>现在问题来了——你在 Coze 里配好的插件，换到另一个 AI 平台还能用吗？在 OpenAI 的 Function Calling 里写的工具，换到 Claude 还能直接用吗？</p>
+
+<p>以前不能。每个 AI 平台的工具格式不一样，换个平台就得重写一遍。<strong>MCP（Model Context Protocol）就是来解决这个问题的。</strong></p>
+
+<div class="callout">
+  <strong>🔌 MCP 的 USB 类比：</strong>USB 出现之前，鼠标有鼠标的接口，键盘有键盘的接口，打印机又是另一种接口，每个设备单独写驱动。USB 出现之后，<strong>不管什么设备，插上就能用</strong>。MCP 之于 AI 工具，就像 USB 之于硬件设备——<strong>不管什么 AI（Claude、GPT、本地模型），插上同一个 MCP 工具就能用</strong>，不用每个 AI 单独写适配。
+</div>
+
+<p>具体来说，MCP 做了这件事：<strong>定义了一套标准协议</strong>，规定工具怎么描述自己、怎么被调用、怎么返回结果。工具开发者按 MCP 标准写一遍，所有支持 MCP 的 AI 都能直接调用。</p>
+
+<table>
+  <tr><th>对比</th><th>传统 Function Calling</th><th>MCP</th></tr>
+  <tr><td>工具写几遍</td><td>每个 AI 平台写一遍</td><td>写一遍，所有 AI 都能用</td></tr>
+  <tr><td>谁定格式</td><td>各 AI 平台自己定（OpenAI 一套，Claude 一套）</td><td>统一标准，谁都遵守</td></tr>
+  <tr><td>换 AI 平台</td><td>工具代码大概率要改</td><td>工具不用改，直接接入</td></tr>
+  <tr><td>共享给别人</td><td>得连代码一起给，对方还得适配</td><td>给一个 MCP 地址，对方直接连</td></tr>
+</table>
+
+<h2>你工作中的 MCP 实例</h2>
+
+<p>你的知识问答智能体项目里，已经用了 MCP 封装。回忆一下那个架构：</p>
+
+<ul>
+  <li><strong>文件处理 MCP</strong>——读取 PDF、Word、Excel，提取文字内容。不管哪个智能体要用，调这个 MCP 就行，不用每个项目自己写一套文件解析逻辑。</li>
+  <li><strong>知识库检索 MCP</strong>——接收一个问题，去向量库里搜相关段落，返回结果。这个能力也是封装好的，任何智能体都能调。</li>
+</ul>
+
+<p>如果你不用 MCP，而是每个智能体各自写一遍文件解析和知识检索——3 个智能体就是 3 份代码，改一个 bug 要改 3 个地方。用了 MCP，<strong>改一处，3 个智能体同时受益</strong>。这就是标准化的价值。</p>
+
+<h2>什么时候用什么</h2>
+
+<p>这三层不是互相替代，而是<strong>不同场景用不同的层</strong>：</p>
+
+<table>
+  <tr><th>场景</th><th>用什么</th><th>举例</th></tr>
+  <tr><td>单次调用，一个工具就够</td><td>Function Calling</td><td>用户问天气 → 调一次天气 API → 回答</td></tr>
+  <tr><td>多个工具要按逻辑编排</td><td>工作流 / Agent</td><td>查数据 → 算指标 → 画图 → 发邮件</td></tr>
+  <tr><td>多个智能体共享同一个能力</td><td>MCP</td><td>3 个智能体都要查电能量，封装成一个 MCP 工具共享</td></tr>
+</table>
+
+<div class="callout green">
+  <strong>💡 记住这个递进关系：</strong>Function Calling（单工具）→ 工作流/Agent（多工具编排）→ MCP（标准化共享）。不是越高级越好，而是<strong>看你的场景需要哪一层</strong>。一个工具能搞定的事，别上 MCP。
+</div>
+
+<h2>🤔 小测</h2>
+
+<p>你的团队有 3 个智能体都要用到「查询电能量数据」这个能力。怎么做最合理？</p>
+
+<ol type="A">
+  <li>每个智能体各自写一份查询代码</li>
+  <li>把查询能力封装成一个 MCP 工具，3 个智能体都调用同一份</li>
+  <li>用 Function Calling，每次需要时让 AI 生成查询代码</li>
+  <li>手动查询后把结果复制给每个智能体</li>
+</ol>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">💬 想理解 MCP 的实际接入流程，或者想给你的智能体加一个新工具，随时找你的 AI 教练。</p>
+
+<div class="nav-links">
+  <a href="0022-agent-architecture.html">← 上一课：Agent 架构</a>
+  <a href="0024-design-ai-workflow.html">下一课：设计 AI 工作流 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+</body>
+</html>
