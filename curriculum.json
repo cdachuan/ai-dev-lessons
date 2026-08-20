@@ -163,12 +163,12 @@
    "note": "拆解真实工作问题，选路线（脚本/Agent/工作流），画架构图。08-18推送，08-18用户确认学完，小测B正解"
   },
   {
-   "num": 25,
-   "topic": "robustness-and-errors",
-   "title": "让工具可靠：错误处理与鲁棒性",
-   "status": "pending",
-   "note": "try/except、重试、降级、日志——从demo到能用的工具"
-  },
+     "num": 25,
+     "topic": "robustness-and-errors",
+     "title": "让工具可靠：错误处理与鲁棒性",
+     "status": "pushed",
+     "note": "try/except、重试、降级、日志——从demo到能用的工具。08-20 推送，等待确认"
+    },
   {
    "num": 26,
    "topic": "capstone-project",
