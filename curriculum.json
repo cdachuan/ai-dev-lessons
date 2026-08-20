@@ -165,9 +165,9 @@
   {
      "num": 25,
      "topic": "robustness-and-errors",
-     "title": "让工具可靠：错误处理与鲁棒性",
-     "status": "pushed",
-     "note": "try/except、重试、降级、日志——从demo到能用的工具。08-20 推送，等待确认"
+         "title": "让工具可靠：错误处理与鲁棒性",
+         "status": "done",
+         "note": "try/except、重试、降级、日志——从demo到能用的工具。08-20以现场方式推送，用户答对小测B正解，确认学完"
     },
   {
    "num": 26,
