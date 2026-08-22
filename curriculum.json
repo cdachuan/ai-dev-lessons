@@ -252,6 +252,62 @@
    "title": "毕业项目：完整 AI Agent（可展示+可部署）",
    "status": "pending",
    "note": "P5收尾，简历级产出。成果要可展示：简单网页界面或命令行应用，附README/架构图/示例数据/运行步骤/效果截图或图表。如能部署成别人可试用的小应用，简历价值明显提升"
-  }
- ]
-}
+     },
+     {
+      "num": 38,
+      "topic": "agent-workflow-design",
+      "title": "Agent 工作流设计",
+      "status": "pending",
+      "note": "P6开篇（承接P5巩固）：拆任务、选工具、规划步骤、控制上下文。从简单ReAct升级为可控多步任务流"
+     },
+     {
+      "num": 39,
+      "topic": "ecommerce-data-toolkit",
+      "title": "电商数据工具箱",
+      "status": "pending",
+      "note": "P6电商锚点开篇：将pandas/SQL/图表/文件读取封装成规范工具。重点工具描述/参数设计/返回结果与错误反馈。数据用公开电商数据集(Kaggle)贯穿"
+     },
+     {
+      "num": 40,
+      "topic": "ecommerce-data-analysis",
+      "title": "电商数据分析实战",
+      "status": "pending",
+      "note": "用户问题→Agent选工具→分析数据→图表→结论。真实电商数据(Kaggle)贯穿，指标口径/漏斗/转化/复购/RFM。pandas和pyecharts服务于Agent。核心：数据洞察而非只会写SQL"
+     },
+     {
+      "num": 41,
+      "topic": "real-world-data-agent",
+      "title": "真实世界数据 Agent",
+      "status": "pending",
+      "note": "Agent调HTTP API/数据库或本地文件；处理数据格式不稳定、接口失败等真实世界问题"
+     },
+     {
+      "num": 42,
+      "topic": "result-verification-self-correction",
+      "title": "结果验证与自我修正",
+      "status": "pending",
+      "note": "Agent检查SQL/Python结果、发现空结果或异常值后重试。重点是可落地地完成任务，非追求复杂推理"
+     },
+     {
+      "num": 43,
+      "topic": "data-insight-agent-mvp",
+      "title": "数据洞察 Agent 原型（求职作品主体）",
+      "status": "pending",
+      "note": "P6求职作品核心：上传CSV/Excel或连接数据源→自然语言提问→Agent自主分析→图表与报告→说明数据依据。用电商数据完成完整链路"
+     },
+     {
+      "num": 44,
+      "topic": "user-facing-agent-app",
+      "title": "面向用户的 Agent 应用",
+      "status": "pending",
+      "note": "Streamlit/简单Web界面、文件上传、会话记录、报告下载。把命令行脚本变成可试用小产品"
+     },
+     {
+      "num": 45,
+      "topic": "agent-engineering-advanced",
+      "title": "Agent 工程化进阶 + 部署",
+      "status": "pending",
+      "note": "配置管理、权限控制、日志、评估集、成本、监控与部署。让数据洞察Agent成为别人可试用、可部署的求职作品。电商经营驾驶舱为P7进阶货，不在P6"
+     }
+    ]
+   }
