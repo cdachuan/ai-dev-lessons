@@ -2,7 +2,7 @@
  "meta": {
   "version": 2,
   "created": "2026-07-14",
-  "description": "AI应用开发学习课程表 - P1-P3已学完，P4创造篇已学完，P5实战篇进行中（含pandas/pandasai/画图三门新增连贯课）",
+  "description": "AI应用开发学习课程表 - P1-P3已学完，P4创造篇已学完，P5实战篇进行中（含工具设计/数分实战/pandasai/画图等连贯课）",
   "status_legend": {
    "pending": "尚未推送",
    "pushed": "已推送，等待用户确认已读",
@@ -199,45 +199,52 @@
   },
   {
    "num": 30,
-   "topic": "pandas-foundation",
-   "title": "pandas 基础夯实：groupby / merge / 透视 / 清洗",
+   "topic": "tool-design-and-structured-output",
+   "title": "工具设计与结构化输出",
    "status": "pending",
-   "note": "P5新增连贯课（用户2026-08-20决定加回）：打牢pandas底子，再进Agent+数分。原20课只到算指标+画图，补merge/groupby/透视/复杂清洗"
+   "note": "P5新增（用户补充）：参数校验、JSON Schema、工具返回统一格式、何时该调用工具。从能跑到稳定可控的关键"
   },
   {
    "num": 31,
-   "topic": "pandasai-intro",
-   "title": "pandasai：用自然语言分析数据",
+   "topic": "pandas-foundation",
+   "title": "pandas 基础夯实 + 数据分析实战素材",
    "status": "pending",
-   "note": "P5新增连贯课：pandas底子牢了之后，上pandasai自然语言一键分析。用户决定加入以保证数分→Agent连贯"
+   "note": "P5新增连贯课：打牢pandas底子（groupby/merge/透视/清洗）。用真实业务数据（销售/用户增长/电商订单）贯穿，CSV/Excel读取、缺失值/异常值、日期字段、指标口径。核心：Pandas会写≠能回答业务问题"
   },
   {
    "num": 32,
-   "topic": "interactive-charting",
-   "title": "pyecharts：交互式图表升级",
+   "topic": "pandasai-intro",
+   "title": "pandasai：自然语言分析（体验课）",
    "status": "pending",
-   "note": "P5新增连贯课：从matplotlib升级到交互式图表（pyecharts/ECharts），接上用户给领导看、有档次的需求"
+   "note": "P5新增连贯课：自然语言一键分析的体验课。注意：不替代pandas——核心仍是能读懂数据、自己写pandas、核验AI生成的结果"
   },
   {
    "num": 33,
-   "topic": "agent-data-analysis",
-   "title": "Agent + 数据分析：让 Agent 自己分析 CSV",
+   "topic": "interactive-charting",
+   "title": "pyecharts：交互式图表升级",
    "status": "pending",
-   "note": "pandas操作封装成工具，Agent自主分析数据出结论。数分+Agent交叉核心课。用夯实后的pandas+pandasai，承接30-32"
+   "note": "P5新增连贯课：从matplotlib升级到交互式图表（pyecharts），接上给领导看、有档次的需求"
   },
   {
    "num": 34,
-   "topic": "agent-engineering",
-   "title": "Agent 工程化：错误处理、重试、日志",
+   "topic": "agent-data-analysis",
+   "title": "Agent + 数据分析（多工具协作）",
    "status": "pending",
-   "note": "try/except、重试、logging，从demo变成能用的工具"
+   "note": "多工具协作：数据读取、分析、图表与结论。用夯实pandas+pandasai，数分+Agent交叉核心课，承接31-33"
   },
   {
    "num": 35,
-   "topic": "capstone-agent-project",
-   "title": "毕业项目：搭一个完整的 AI Agent 工具",
+   "topic": "agent-engineering",
+   "title": "Agent 工程化：日志、重试、评估、安全",
    "status": "pending",
-   "note": "P5收尾：选真实场景，设计->实现->测试->README，简历级产出"
+   "note": "不止错误处理。加评估：为Agent准备固定测试问题集，验证工具选择/答案正确性/失败场景。加安全：API key环境变量、输入边界、危险操作确认、成本/调用次数记录"
+  },
+  {
+   "num": 36,
+   "topic": "capstone-agent-project",
+   "title": "毕业项目：完整 AI Agent（可展示+可部署）",
+   "status": "pending",
+   "note": "P5收尾，简历级产出。成果要可展示：简单网页界面或命令行应用，附README/架构图/示例数据/运行步骤/效果截图或图表。如能部署成别人可试用的小应用，简历价值明显提升"
   }
  ]
 }
