@@ -2,7 +2,7 @@
  "meta": {
   "version": 2,
   "created": "2026-07-14",
-  "description": "AI应用开发学习课程表 - P1-P3已学完，P4创造篇已学完，P5实战篇进行中（含工具设计/数分实战/pandasai/画图等连贯课）",
+  "description": "AI应用开发学习课程表 - P1-P3已学完，P4创造篇已学完，P5实战篇进行中（11课，含工具设计/数分实战/pandasai/画图/评估安全/部署）",
   "status_legend": {
    "pending": "尚未推送",
    "pushed": "已推送，等待用户确认已读",
@@ -234,13 +234,20 @@
   },
   {
    "num": 35,
-   "topic": "agent-engineering",
-   "title": "Agent 工程化：日志、重试、评估、安全",
+   "topic": "agent-evaluation-and-security",
+   "title": "Agent 评估与安全",
    "status": "pending",
-   "note": "不止错误处理。加评估：为Agent准备固定测试问题集，验证工具选择/答案正确性/失败场景。加安全：API key环境变量、输入边界、危险操作确认、成本/调用次数记录"
+   "note": "拆分为两课的第一门。评估：为Agent准备固定测试问题集，验证工具选择/答案正确性/失败场景。安全：API key环境变量、输入边界、危险操作确认、成本/调用次数记录"
   },
   {
    "num": 36,
+   "topic": "deploy-and-launch",
+   "title": "部署与上线",
+   "status": "pending",
+   "note": "拆分第二门：把Agent工程化产物从本地demo推到可运行环境。部署方式、环境变量管理、可给别人试用的发布路径"
+  },
+  {
+   "num": 37,
    "topic": "capstone-agent-project",
    "title": "毕业项目：完整 AI Agent（可展示+可部署）",
    "status": "pending",
