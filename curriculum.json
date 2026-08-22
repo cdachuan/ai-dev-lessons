@@ -173,8 +173,8 @@
      "num": 26,
      "topic": "capstone-project",
      "title": "毕业项目：搭一个你自己的 AI 工具",
-     "status": "done",
-     "note": "P4收尾：选一个真实工作问题，从设计到实现到验收。08-20现场推送，用户答对小测B正解，确认学完"
+         "status": "done",
+         "note": "P4收尾：选一个真实工作问题，从设计到实现到验收。08-20现场推送，用户答对小测B正解确认学完。【用户决定跳过该毕业项目，不落地做作品，直奔P5实战篇】"
   },
   {
    "num": 27,
@@ -202,7 +202,7 @@
    "topic": "agent-data-analysis",
    "title": "Agent + 数据分析：让 Agent 自己分析 CSV",
    "status": "pending",
-   "note": "pandas操作封装成工具，Agent自主分析数据出结论。数分+Agent交叉核心课"
+   "note": "pandas操作封装成工具，Agent自主分析数据出结论。数分+Agent交叉核心课。【用户决定：pandas底子自选课余自学夯实(非一两天可速成)，不进课表；pandasai/pyecharts暂不纳入P5】"
   },
   {
    "num": 31,
