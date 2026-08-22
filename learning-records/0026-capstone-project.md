@@ -1,7 +1,7 @@
 # 0026 · 毕业项目：搭一个你自己的 AI 工具
 
-- 日期：2026-08-22
-- 状态：**pushed**（cron 推送，待用户确认已读）
+- 日期：2026-08-20
+- 状态：**done**（用户答对小测B确认学完）
 - 类型：实践课 · P4 创造篇收尾
 - GitHub Pages：https://cdachuan.github.io/ai-dev-lessons/lessons/0026-capstone-project.html
 
