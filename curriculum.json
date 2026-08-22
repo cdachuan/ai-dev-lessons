@@ -171,10 +171,10 @@
     },
   {
    "num": 26,
-   "topic": "capstone-project",
-   "title": "毕业项目：搭一个你自己的 AI 工具",
-   "status": "pending",
-   "note": "P4收尾：选一个真实工作问题，从设计到实现到验收"
+       "topic": "capstone-project",
+       "title": "毕业项目：搭一个你自己的 AI 工具",
+       "status": "pushed",
+       "note": "P4收尾：选一个真实工作问题，从设计到实现到验收。08-22 cron推送"
   },
   {
    "num": 27,
