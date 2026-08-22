@@ -2,7 +2,7 @@
  "meta": {
   "version": 2,
   "created": "2026-07-14",
-  "description": "AI应用开发学习课程表 - P1-P3已学完，P4创造篇进行中，P5实战篇已规划",
+  "description": "AI应用开发学习课程表 - P1-P3已学完，P4创造篇已学完，P5实战篇进行中（含pandas/pandasai/画图三门新增连贯课）",
   "status_legend": {
    "pending": "尚未推送",
    "pushed": "已推送，等待用户确认已读",
@@ -125,56 +125,56 @@
    "topic": "metrics-and-conclusions",
    "title": "算指标+下结论：让 AI 帮你分析数据",
    "status": "done",
-   "note": "P3 真正难点，prompt 设计+AI 推理。08-02 推送，5 次提醒后用户沉默，08-13 兜底标记 done，核心概念已充分传达"
+   "note": "P3 真正难点，prompt 设计+AI 推理。08-02 推送，5 次提醒后用户沉默，08-13 兜底标记 done"
   },
   {
    "num": 20,
    "topic": "visualize-data",
    "title": "画图：用 matplotlib 可视化数据",
    "status": "done",
-   "note": "matplotlib 用户没练过，补上。08-13 推送，08-14/15 两次提醒无响应，08-17 兜底标记 done，选图口诀已充分传达"
+   "note": "matplotlib 用户没练过，补上。08-13 推送，08-14/15 两次提醒无响应，08-17 兜底标记 done"
   },
   {
    "num": 21,
    "topic": "p3-integration",
    "title": "整合：搭一个完整的数据分析流水线",
    "status": "done",
-   "note": "P3收尾组装课：算->判->画->出报告，一条龙脚本。08-17 推送（20课兜底后顺推），08-17 用户确认学完"
+   "note": "P3收尾组装课：算->判->画->出报告，一条龙脚本。08-17 推送，08-17 用户确认学完"
   },
   {
    "num": 22,
    "topic": "agent-architecture",
    "title": "Agent 入门：从脚本到智能体",
    "status": "done",
-   "note": "P4开篇：脚本vs智能体，ReAct循环，为什么Hermes能自己干活。08-18推送，08-18用户确认学完，小测C正解"
+   "note": "P4开篇：脚本vs智能体，ReAct循环，08-18推送，08-18用户确认学完"
   },
   {
    "num": 23,
    "topic": "tool-ecosystem",
    "title": "工具生态：Function Calling 进阶与 MCP",
    "status": "done",
-   "note": "从单次调用到工具注册，MCP协议入门，对接用户的Coze工作流经验。08-18推送，08-18用户确认学完，小测B正解。用户纠正：MCP非自己开发，只是调用方，对MCP server封装不熟"
+   "note": "从单次调用到工具注册，MCP协议入门。08-18推送，08-18用户确认学完。用户纠正：MCP非自己开发只是调用方"
   },
   {
    "num": 24,
    "topic": "design-ai-workflow",
    "title": "设计 AI 工作流：从需求到方案",
    "status": "done",
-   "note": "拆解真实工作问题，选路线（脚本/Agent/工作流），画架构图。08-18推送，08-18用户确认学完，小测B正解"
+   "note": "拆解真实工作问题，选路线，画架构图。08-18推送，08-18用户确认学完"
   },
   {
-     "num": 25,
-     "topic": "robustness-and-errors",
-         "title": "让工具可靠：错误处理与鲁棒性",
-         "status": "done",
-         "note": "try/except、重试、降级、日志——从demo到能用的工具。08-20以现场方式推送，用户答对小测B正解，确认学完"
-    },
+   "num": 25,
+   "topic": "robustness-and-errors",
+   "title": "让工具可靠：错误处理与鲁棒性",
+   "status": "done",
+   "note": "try/except、重试、降级、日志——从demo到能用的工具。08-20现场推送，用户答对小测B正解确认学完"
+  },
   {
-     "num": 26,
-     "topic": "capstone-project",
-     "title": "毕业项目：搭一个你自己的 AI 工具",
-         "status": "done",
-         "note": "P4收尾：选一个真实工作问题，从设计到实现到验收。08-20现场推送，用户答对小测B正解确认学完。【用户决定跳过该毕业项目，不落地做作品，直奔P5实战篇】"
+   "num": 26,
+   "topic": "capstone-project",
+   "title": "毕业项目：搭一个你自己的 AI 工具",
+   "status": "done",
+   "note": "P4收尾：选一个真实工作问题，从设计到实现到验收。08-20现场推送，用户答对小测B正解确认学完。【用户决定跳过该毕业项目，不落地做作品，直奔P5实战篇】"
   },
   {
    "num": 27,
@@ -199,20 +199,41 @@
   },
   {
    "num": 30,
-   "topic": "agent-data-analysis",
-   "title": "Agent + 数据分析：让 Agent 自己分析 CSV",
+   "topic": "pandas-foundation",
+   "title": "pandas 基础夯实：groupby / merge / 透视 / 清洗",
    "status": "pending",
-   "note": "pandas操作封装成工具，Agent自主分析数据出结论。数分+Agent交叉核心课。【用户决定：pandas底子自选课余自学夯实(非一两天可速成)，不进课表；pandasai/pyecharts暂不纳入P5】"
+   "note": "P5新增连贯课（用户2026-08-20决定加回）：打牢pandas底子，再进Agent+数分。原20课只到算指标+画图，补merge/groupby/透视/复杂清洗"
   },
   {
    "num": 31,
+   "topic": "pandasai-intro",
+   "title": "pandasai：用自然语言分析数据",
+   "status": "pending",
+   "note": "P5新增连贯课：pandas底子牢了之后，上pandasai自然语言一键分析。用户决定加入以保证数分→Agent连贯"
+  },
+  {
+   "num": 32,
+   "topic": "interactive-charting",
+   "title": "pyecharts：交互式图表升级",
+   "status": "pending",
+   "note": "P5新增连贯课：从matplotlib升级到交互式图表（pyecharts/ECharts），接上用户给领导看、有档次的需求"
+  },
+  {
+   "num": 33,
+   "topic": "agent-data-analysis",
+   "title": "Agent + 数据分析：让 Agent 自己分析 CSV",
+   "status": "pending",
+   "note": "pandas操作封装成工具，Agent自主分析数据出结论。数分+Agent交叉核心课。用夯实后的pandas+pandasai，承接30-32"
+  },
+  {
+   "num": 34,
    "topic": "agent-engineering",
    "title": "Agent 工程化：错误处理、重试、日志",
    "status": "pending",
    "note": "try/except、重试、logging，从demo变成能用的工具"
   },
   {
-   "num": 32,
+   "num": 35,
    "topic": "capstone-agent-project",
    "title": "毕业项目：搭一个完整的 AI Agent 工具",
    "status": "pending",
