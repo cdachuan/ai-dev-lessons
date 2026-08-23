@@ -1,313 +1,313 @@
-﻿{
- "meta": {
-  "version": 2,
-  "created": "2026-07-14",
-  "description": "AI应用开发学习课程表 - P1-P3已学完，P4创造篇已学完，P5实战篇进行中（11课，含工具设计/数分实战/pandasai/画图/评估安全/部署）",
-  "status_legend": {
-   "pending": "尚未推送",
-   "pushed": "已推送，等待用户确认已读",
-   "done": "用户确认已读完，可以推下一课"
-  }
- },
- "lessons": [
-  {
-   "num": 1,
-   "topic": "what-is-ai-model",
-   "title": "什么是 AI 模型",
-   "status": "done"
+{
+  "meta": {
+    "version": 2,
+    "created": "2026-07-14",
+    "description": "AI应用开发学习课程表 - P1-P3已学完，P4创造篇已学完，P5实战篇进行中（11课，含工具设计/数分实战/pandasai/画图/评估安全/部署）",
+    "status_legend": {
+      "pending": "尚未推送",
+      "pushed": "已推送，等待用户确认已读",
+      "done": "用户确认已读完，可以推下一课"
+    }
   },
-  {
-   "num": 2,
-   "topic": "what-is-api",
-   "title": "什么是 API",
-   "status": "done"
-  },
-  {
-   "num": 3,
-   "topic": "hello-world-deepseek-api",
-   "title": "Hello World — 调一次 DeepSeek API",
-   "status": "done"
-  },
-  {
-   "num": 4,
-   "topic": "what-is-prompt",
-   "title": "什么是 Prompt",
-   "status": "done"
-  },
-  {
-   "num": 5,
-   "topic": "read-file-summarize",
-   "title": "动手写一个能读文件并总结的脚本",
-   "status": "done"
-  },
-  {
-   "num": 6,
-   "topic": "what-is-token",
-   "title": "什么是 Token",
-   "status": "done"
-  },
-  {
-   "num": 7,
-   "topic": "system-prompt-role",
-   "title": "System Prompt 与角色设定",
-   "status": "done"
-  },
-  {
-   "num": 8,
-   "topic": "temperature-params",
-   "title": "Temperature 与参数控制",
-   "status": "done"
-  },
-  {
-   "num": 9,
-   "topic": "rag-intro",
-   "title": "RAG：让 AI 基于你的文档回答",
-   "status": "done"
-  },
-  {
-   "num": 10,
-   "topic": "function-calling",
-   "title": "Function Calling / Tool Use",
-   "status": "done"
-  },
-  {
-   "num": 11,
-   "topic": "daily-summary-script",
-   "title": "搭一个日报自动总结脚本",
-   "status": "done"
-  },
-  {
-   "num": 12,
-   "topic": "excel-extract-script",
-   "title": "搭一个 Excel 数据提取脚本",
-   "status": "done"
-  },
-  {
-   "num": 13,
-   "topic": "multi-source-merge",
-   "title": "搭一个多源信息合并工具",
-   "status": "done"
-  },
-  {
-   "num": 14,
-   "topic": "template-filler",
-   "title": "搭一个模板自动填表脚本",
-   "status": "done"
-  },
-  {
-   "num": 15,
-   "topic": "auto-runner",
-   "title": "搭一个定时任务脚本",
-   "status": "done"
-  },
-  {
-   "num": 16,
-   "topic": "toolkit-integration",
-   "title": "整合：你的小工具箱",
-   "status": "done"
-  },
-  {
-   "num": 17,
-   "topic": "read-clean-data-with-ai",
-   "title": "用 AI 写代码：读取和清洗业务数据",
-   "status": "done",
-   "note": "17+18 合并推送，pandas 基础已过关"
-  },
-  {
-   "num": 18,
-   "topic": "read-clean-data-with-ai",
-   "title": "（并入17）清洗脏数据",
-   "status": "done",
-   "note": "与17合并，内容在同一课"
-  },
-  {
-   "num": 19,
-   "topic": "metrics-and-conclusions",
-   "title": "算指标+下结论：让 AI 帮你分析数据",
-   "status": "done",
-   "note": "P3 真正难点，prompt 设计+AI 推理。08-02 推送，5 次提醒后用户沉默，08-13 兜底标记 done"
-  },
-  {
-   "num": 20,
-   "topic": "visualize-data",
-   "title": "画图：用 matplotlib 可视化数据",
-   "status": "done",
-   "note": "matplotlib 用户没练过，补上。08-13 推送，08-14/15 两次提醒无响应，08-17 兜底标记 done"
-  },
-  {
-   "num": 21,
-   "topic": "p3-integration",
-   "title": "整合：搭一个完整的数据分析流水线",
-   "status": "done",
-   "note": "P3收尾组装课：算->判->画->出报告，一条龙脚本。08-17 推送，08-17 用户确认学完"
-  },
-  {
-   "num": 22,
-   "topic": "agent-architecture",
-   "title": "Agent 入门：从脚本到智能体",
-   "status": "done",
-   "note": "P4开篇：脚本vs智能体，ReAct循环，08-18推送，08-18用户确认学完"
-  },
-  {
-   "num": 23,
-   "topic": "tool-ecosystem",
-   "title": "工具生态：Function Calling 进阶与 MCP",
-   "status": "done",
-   "note": "从单次调用到工具注册，MCP协议入门。08-18推送，08-18用户确认学完。用户纠正：MCP非自己开发只是调用方"
-  },
-  {
-   "num": 24,
-   "topic": "design-ai-workflow",
-   "title": "设计 AI 工作流：从需求到方案",
-   "status": "done",
-   "note": "拆解真实工作问题，选路线，画架构图。08-18推送，08-18用户确认学完"
-  },
-  {
-   "num": 25,
-   "topic": "robustness-and-errors",
-   "title": "让工具可靠：错误处理与鲁棒性",
-   "status": "done",
-   "note": "try/except、重试、降级、日志——从demo到能用的工具。08-20现场推送，用户答对小测B正解确认学完"
-  },
-  {
-   "num": 26,
-   "topic": "capstone-project",
-   "title": "毕业项目：搭一个你自己的 AI 工具",
-   "status": "done",
-   "note": "P4收尾：选一个真实工作问题，从设计到实现到验收。08-20现场推送，用户答对小测B正解确认学完。【用户决定跳过该毕业项目，不落地做作品，直奔P5实战篇】"
-  },
-  {
-   "num": 27,
-   "topic": "fc-hands-on",
-   "title": "Function Calling 实操：从零写一个让大模型调用工具的脚本",
-   "status": "pending",
-   "note": "P5实战篇开篇：亲手写代码，一个工具一次调用，最小可用Agent"
-  },
-  {
-   "num": 28,
-   "topic": "multi-tool-agent",
-   "title": "多工具 Agent：ReAct 循环的代码实现",
-   "status": "pending",
-   "note": "注册3-4个工具，实现Thought->Action->Observation循环"
-  },
-  {
-   "num": 29,
-   "topic": "agent-with-http-api",
-   "title": "接入真实 HTTP API 作为工具",
-   "status": "pending",
-   "note": "把HTTP API封装成工具，Agent调真实数据，不再mock"
-  },
-  {
-   "num": 30,
-   "topic": "tool-design-and-structured-output",
-   "title": "工具设计与结构化输出",
-   "status": "pending",
-   "note": "P5新增（用户补充）：参数校验、JSON Schema、工具返回统一格式、何时该调用工具。从能跑到稳定可控的关键"
-  },
-  {
-   "num": 31,
-   "topic": "pandas-foundation",
-   "title": "pandas 基础夯实 + 数据分析实战素材",
-   "status": "pending",
-   "note": "P5新增连贯课：打牢pandas底子（groupby/merge/透视/清洗）。用真实业务数据（销售/用户增长/电商订单）贯穿，CSV/Excel读取、缺失值/异常值、日期字段、指标口径。核心：Pandas会写≠能回答业务问题"
-  },
-  {
-   "num": 32,
-   "topic": "pandasai-intro",
-   "title": "pandasai：自然语言分析（体验课）",
-   "status": "pending",
-   "note": "P5新增连贯课：自然语言一键分析的体验课。注意：不替代pandas——核心仍是能读懂数据、自己写pandas、核验AI生成的结果"
-  },
-  {
-   "num": 33,
-   "topic": "interactive-charting",
-   "title": "pyecharts：交互式图表升级",
-   "status": "pending",
-   "note": "P5新增连贯课：从matplotlib升级到交互式图表（pyecharts），接上给领导看、有档次的需求"
-  },
-  {
-   "num": 34,
-   "topic": "agent-data-analysis",
-   "title": "Agent + 数据分析（多工具协作）",
-   "status": "pending",
-   "note": "多工具协作：数据读取、分析、图表与结论。用夯实pandas+pandasai，数分+Agent交叉核心课，承接31-33"
-  },
-  {
-   "num": 35,
-   "topic": "agent-evaluation-and-security",
-   "title": "Agent 评估与安全",
-   "status": "pending",
-   "note": "拆分为两课的第一门。评估：为Agent准备固定测试问题集，验证工具选择/答案正确性/失败场景。安全：API key环境变量、输入边界、危险操作确认、成本/调用次数记录"
-  },
-  {
-   "num": 36,
-   "topic": "deploy-and-launch",
-   "title": "部署与上线",
-   "status": "pending",
-   "note": "拆分第二门：把Agent工程化产物从本地demo推到可运行环境。部署方式、环境变量管理、可给别人试用的发布路径"
-  },
-  {
-   "num": 37,
-   "topic": "capstone-agent-project",
-   "title": "毕业项目：完整 AI Agent（可展示+可部署）",
-   "status": "pending",
-   "note": "P5收尾，简历级产出。成果要可展示：简单网页界面或命令行应用，附README/架构图/示例数据/运行步骤/效果截图或图表。如能部署成别人可试用的小应用，简历价值明显提升"
-     },
-     {
+  "lessons": [
+    {
+      "num": 1,
+      "topic": "what-is-ai-model",
+      "title": "什么是 AI 模型",
+      "status": "done"
+    },
+    {
+      "num": 2,
+      "topic": "what-is-api",
+      "title": "什么是 API",
+      "status": "done"
+    },
+    {
+      "num": 3,
+      "topic": "hello-world-deepseek-api",
+      "title": "Hello World — 调一次 DeepSeek API",
+      "status": "done"
+    },
+    {
+      "num": 4,
+      "topic": "what-is-prompt",
+      "title": "什么是 Prompt",
+      "status": "done"
+    },
+    {
+      "num": 5,
+      "topic": "read-file-summarize",
+      "title": "动手写一个能读文件并总结的脚本",
+      "status": "done"
+    },
+    {
+      "num": 6,
+      "topic": "what-is-token",
+      "title": "什么是 Token",
+      "status": "done"
+    },
+    {
+      "num": 7,
+      "topic": "system-prompt-role",
+      "title": "System Prompt 与角色设定",
+      "status": "done"
+    },
+    {
+      "num": 8,
+      "topic": "temperature-params",
+      "title": "Temperature 与参数控制",
+      "status": "done"
+    },
+    {
+      "num": 9,
+      "topic": "rag-intro",
+      "title": "RAG：让 AI 基于你的文档回答",
+      "status": "done"
+    },
+    {
+      "num": 10,
+      "topic": "function-calling",
+      "title": "Function Calling / Tool Use",
+      "status": "done"
+    },
+    {
+      "num": 11,
+      "topic": "daily-summary-script",
+      "title": "搭一个日报自动总结脚本",
+      "status": "done"
+    },
+    {
+      "num": 12,
+      "topic": "excel-extract-script",
+      "title": "搭一个 Excel 数据提取脚本",
+      "status": "done"
+    },
+    {
+      "num": 13,
+      "topic": "multi-source-merge",
+      "title": "搭一个多源信息合并工具",
+      "status": "done"
+    },
+    {
+      "num": 14,
+      "topic": "template-filler",
+      "title": "搭一个模板自动填表脚本",
+      "status": "done"
+    },
+    {
+      "num": 15,
+      "topic": "auto-runner",
+      "title": "搭一个定时任务脚本",
+      "status": "done"
+    },
+    {
+      "num": 16,
+      "topic": "toolkit-integration",
+      "title": "整合：你的小工具箱",
+      "status": "done"
+    },
+    {
+      "num": 17,
+      "topic": "read-clean-data-with-ai",
+      "title": "用 AI 写代码：读取和清洗业务数据",
+      "status": "done",
+      "note": "17+18 合并推送，pandas 基础已过关"
+    },
+    {
+      "num": 18,
+      "topic": "read-clean-data-with-ai",
+      "title": "（并入17）清洗脏数据",
+      "status": "done",
+      "note": "与17合并，内容在同一课"
+    },
+    {
+      "num": 19,
+      "topic": "metrics-and-conclusions",
+      "title": "算指标+下结论：让 AI 帮你分析数据",
+      "status": "done",
+      "note": "P3 真正难点，prompt 设计+AI 推理。08-02 推送，5 次提醒后用户沉默，08-13 兜底标记 done"
+    },
+    {
+      "num": 20,
+      "topic": "visualize-data",
+      "title": "画图：用 matplotlib 可视化数据",
+      "status": "done",
+      "note": "matplotlib 用户没练过，补上。08-13 推送，08-14/15 两次提醒无响应，08-17 兜底标记 done"
+    },
+    {
+      "num": 21,
+      "topic": "p3-integration",
+      "title": "整合：搭一个完整的数据分析流水线",
+      "status": "done",
+      "note": "P3收尾组装课：算->判->画->出报告，一条龙脚本。08-17 推送，08-17 用户确认学完"
+    },
+    {
+      "num": 22,
+      "topic": "agent-architecture",
+      "title": "Agent 入门：从脚本到智能体",
+      "status": "done",
+      "note": "P4开篇：脚本vs智能体，ReAct循环，08-18推送，08-18用户确认学完"
+    },
+    {
+      "num": 23,
+      "topic": "tool-ecosystem",
+      "title": "工具生态：Function Calling 进阶与 MCP",
+      "status": "done",
+      "note": "从单次调用到工具注册，MCP协议入门。08-18推送，08-18用户确认学完。用户纠正：MCP非自己开发只是调用方"
+    },
+    {
+      "num": 24,
+      "topic": "design-ai-workflow",
+      "title": "设计 AI 工作流：从需求到方案",
+      "status": "done",
+      "note": "拆解真实工作问题，选路线，画架构图。08-18推送，08-18用户确认学完"
+    },
+    {
+      "num": 25,
+      "topic": "robustness-and-errors",
+      "title": "让工具可靠：错误处理与鲁棒性",
+      "status": "done",
+      "note": "try/except、重试、降级、日志——从demo到能用的工具。08-20现场推送，用户答对小测B正解确认学完"
+    },
+    {
+      "num": 26,
+      "topic": "capstone-project",
+      "title": "毕业项目：搭一个你自己的 AI 工具",
+      "status": "done",
+      "note": "P4收尾：选一个真实工作问题，从设计到实现到验收。08-20现场推送，用户答对小测B正解确认学完。【用户决定跳过该毕业项目，不落地做作品，直奔P5实战篇】"
+    },
+    {
+      "num": 27,
+      "topic": "fc-hands-on",
+      "title": "Function Calling 实操：从零写一个让大模型调用工具的脚本",
+      "status": "pushed",
+      "note": "P5实战篇开篇：亲手写代码，一个工具一次调用，最小可用Agent"
+    },
+    {
+      "num": 28,
+      "topic": "multi-tool-agent",
+      "title": "多工具 Agent：ReAct 循环的代码实现",
+      "status": "pending",
+      "note": "注册3-4个工具，实现Thought->Action->Observation循环"
+    },
+    {
+      "num": 29,
+      "topic": "agent-with-http-api",
+      "title": "接入真实 HTTP API 作为工具",
+      "status": "pending",
+      "note": "把HTTP API封装成工具，Agent调真实数据，不再mock"
+    },
+    {
+      "num": 30,
+      "topic": "tool-design-and-structured-output",
+      "title": "工具设计与结构化输出",
+      "status": "pending",
+      "note": "P5新增（用户补充）：参数校验、JSON Schema、工具返回统一格式、何时该调用工具。从能跑到稳定可控的关键"
+    },
+    {
+      "num": 31,
+      "topic": "pandas-foundation",
+      "title": "pandas 基础夯实 + 数据分析实战素材",
+      "status": "pending",
+      "note": "P5新增连贯课：打牢pandas底子（groupby/merge/透视/清洗）。用真实业务数据（销售/用户增长/电商订单）贯穿，CSV/Excel读取、缺失值/异常值、日期字段、指标口径。核心：Pandas会写≠能回答业务问题"
+    },
+    {
+      "num": 32,
+      "topic": "pandasai-intro",
+      "title": "pandasai：自然语言分析（体验课）",
+      "status": "pending",
+      "note": "P5新增连贯课：自然语言一键分析的体验课。注意：不替代pandas——核心仍是能读懂数据、自己写pandas、核验AI生成的结果"
+    },
+    {
+      "num": 33,
+      "topic": "interactive-charting",
+      "title": "pyecharts：交互式图表升级",
+      "status": "pending",
+      "note": "P5新增连贯课：从matplotlib升级到交互式图表（pyecharts），接上给领导看、有档次的需求"
+    },
+    {
+      "num": 34,
+      "topic": "agent-data-analysis",
+      "title": "Agent + 数据分析（多工具协作）",
+      "status": "pending",
+      "note": "多工具协作：数据读取、分析、图表与结论。用夯实pandas+pandasai，数分+Agent交叉核心课，承接31-33"
+    },
+    {
+      "num": 35,
+      "topic": "agent-evaluation-and-security",
+      "title": "Agent 评估与安全",
+      "status": "pending",
+      "note": "拆分为两课的第一门。评估：为Agent准备固定测试问题集，验证工具选择/答案正确性/失败场景。安全：API key环境变量、输入边界、危险操作确认、成本/调用次数记录"
+    },
+    {
+      "num": 36,
+      "topic": "deploy-and-launch",
+      "title": "部署与上线",
+      "status": "pending",
+      "note": "拆分第二门：把Agent工程化产物从本地demo推到可运行环境。部署方式、环境变量管理、可给别人试用的发布路径"
+    },
+    {
+      "num": 37,
+      "topic": "capstone-agent-project",
+      "title": "毕业项目：完整 AI Agent（可展示+可部署）",
+      "status": "pending",
+      "note": "P5收尾，简历级产出。成果要可展示：简单网页界面或命令行应用，附README/架构图/示例数据/运行步骤/效果截图或图表。如能部署成别人可试用的小应用，简历价值明显提升"
+    },
+    {
       "num": 38,
       "topic": "agent-workflow-design",
       "title": "Agent 工作流设计",
       "status": "pending",
       "note": "P6开篇（承接P5巩固）：拆任务、选工具、规划步骤、控制上下文。从简单ReAct升级为可控多步任务流"
-     },
-     {
+    },
+    {
       "num": 39,
       "topic": "ecommerce-data-toolkit",
       "title": "电商数据工具箱",
       "status": "pending",
       "note": "P6电商锚点开篇：将pandas/SQL/图表/文件读取封装成规范工具。重点工具描述/参数设计/返回结果与错误反馈。数据用公开电商数据集(Kaggle)贯穿"
-     },
-     {
+    },
+    {
       "num": 40,
       "topic": "ecommerce-data-analysis",
       "title": "电商数据分析实战",
       "status": "pending",
       "note": "用户问题→Agent选工具→分析数据→图表→结论。真实电商数据(Kaggle)贯穿，指标口径/漏斗/转化/复购/RFM。pandas和pyecharts服务于Agent。核心：数据洞察而非只会写SQL"
-     },
-     {
+    },
+    {
       "num": 41,
       "topic": "real-world-data-agent",
       "title": "真实世界数据 Agent",
       "status": "pending",
       "note": "Agent调HTTP API/数据库或本地文件；处理数据格式不稳定、接口失败等真实世界问题"
-     },
-     {
+    },
+    {
       "num": 42,
       "topic": "result-verification-self-correction",
       "title": "结果验证与自我修正",
       "status": "pending",
       "note": "Agent检查SQL/Python结果、发现空结果或异常值后重试。重点是可落地地完成任务，非追求复杂推理"
-     },
-     {
+    },
+    {
       "num": 43,
       "topic": "data-insight-agent-mvp",
       "title": "数据洞察 Agent 原型（求职作品主体）",
       "status": "pending",
       "note": "P6求职作品核心：上传CSV/Excel或连接数据源→自然语言提问→Agent自主分析→图表与报告→说明数据依据。用电商数据完成完整链路"
-     },
-     {
+    },
+    {
       "num": 44,
       "topic": "user-facing-agent-app",
       "title": "面向用户的 Agent 应用",
       "status": "pending",
       "note": "Streamlit/简单Web界面、文件上传、会话记录、报告下载。把命令行脚本变成可试用小产品"
-     },
-     {
+    },
+    {
       "num": 45,
       "topic": "agent-engineering-advanced",
       "title": "Agent 工程化进阶 + 部署",
       "status": "pending",
       "note": "配置管理、权限控制、日志、评估集、成本、监控与部署。让数据洞察Agent成为别人可试用、可部署的求职作品。电商经营驾驶舱为P7进阶货，不在P6"
-     }
-    ]
-   }
+    }
+  ]
+}

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0027 · Function Calling 实操：从零写一个让大模型调用工具的脚本</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    background: var(--accent);
+    color: white;
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .diagram {
+    background: #f8fafc;
+    border: 1px dashed var(--border);
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 0.9rem;
+    margin: 1.2rem 0;
+  }
+</style>
+</head>
+<body>
+<h1>🛠️ Function Calling 实操：从零写一个让大模型调用工具的脚本</h1>
+<p class="meta">第 0027 课 · P5 实战篇开篇 <span class="tag">实操课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>亲手从零写一个完整的 Function Calling 脚本——一个工具、一次调用、跑通最小可用 Agent。学完你就能说「Function Calling 我会写，不是只会用」。
+</div>
+
+<h2>为什么是「实操课」</h2>
+
+<p>前面 <a href="0010-function-calling.html">第 10 课</a> 讲了 Function Calling 的概念和「骰子」示例，<a href="0023-tool-ecosystem.html">第 23 课</a> 又讲了工具列表和 MCP。但这些都是<strong>看代码</strong>。</p>
+
+<p>P5 实战篇开始动真格——<strong>自己写、自己跑、自己改</strong>。这节课我们就写一个真实工作里能用得上的工具：<strong>查台区日电量</strong>，跟你的电力计量业务直接相关。</p>
+
+<div class="callout">
+  <strong>📌 选这个工具的理由：</strong>你已经在工作里用 AI 写过不少 Python 脚本（日报、Excel 提取、模板填表），但你从来没让 AI <strong>自主决定</strong>要不要调用工具。这节课让 AI 从「等你写好逻辑」变成「自己挑工具」，是质的区别。
+</div>
+
+<h2>五分钟理解完整流程</h2>
+
+<p>Function Calling 的核心就是<strong>五步循环</strong>，跟第 10 课一样，但今天要写完整：</p>
+
+<div class="diagram">
+用户问 → AI 判断要不要工具 → AI 返回「工具名+参数」<br>
+↓<br>
+你的代码 <strong>实际执行</strong>工具 → 拿到结果<br>
+↓<br>
+把结果塞回给 AI → AI 组织自然语言回答
+</div>
+
+<p>我们今天的目标是：<strong>把这五步写成一个完整的 Python 脚本，能跑起来</strong>。</p>
+
+<h2>第一步：准备工具函数</h2>
+
+<p>先写一个真的能查台区日电量的函数。这是你自己的业务，AI 不会这个，你来写：</p>
+
+<pre><code><span style="color:#a6adc8"># mock_data.py —— 模拟台区日电量数据</span>
+<span style="color:#a6adc8"># 真实场景换成数据库查询或 Excel 读取</span>
+<span style="color:#cdd6f4">MOCK_METER_DATA</span> = {
+    <span style="color:#a6e3a1">"T07"</span>: {<span style="color:#a6e3a1">"2026-08-20"</span>: <span style="color:#fab387">1250.5</span>, <span style="color:#a6e3a1">"2026-08-21"</span>: <span style="color:#fab387">1180.2</span>, <span style="color:#a6e3a1">"2026-08-22"</span>: <span style="color:#fab387">1320.8</span>},
+    <span style="color:#a6e3a1">"T12"</span>: {<span style="color:#a6e3a1">"2026-08-20"</span>: <span style="color:#fab387">980.3</span>,  <span style="color:#a6e3a1">"2026-08-21"</span>: <span style="color:#fab387">1020.1</span>, <span style="color:#a6e3a1">"2026-08-22"</span>: <span style="color:#fab387">995.7</span> },
+    <span style="color:#a6e3a1">"T25"</span>: {<span style="color:#a6e3a1">"2026-08-20"</span>: <span style="color:#fab387">2150.6</span>, <span style="color:#a6e3a1">"2026-08-21"</span>: <span style="color:#fab387">2080.4</span>, <span style="color:#a6e3a1">"2026-08-22"</span>: <span style="color:#fab387">2210.9</span>},
+}
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">query_taigu_kwh</span>(taigu_id, date):
+    <span style="color:#a6adc8">"""查询某台区某日电量（kWh）"""</span>
+    <span style="color:#cdd6f4">data</span> = MOCK_METER_DATA.get(taigu_id)
+    <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">not</span> data:
+        <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"台区 {taigu_id} 不存在"</span>}
+    <span style="color:#cdd6f4">kwh</span> = data.get(date)
+    <span style="color:#cdd6f4">if</span> kwh <span style="color:#cdd6f4">is</span> <span style="color:#cdd6f4">None</span>:
+        <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"台区 {taigu_id} 在 {date} 无数据"</span>}
+    <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"taigu_id"</span>: taigu_id, <span style="color:#a6e3a1">"date"</span>: date, <span style="color:#a6e3a1">"kwh"</span>: kwh}</code></pre>
+
+<p>这是个<strong>普通的 Python 函数</strong>，没有 AI 任何事。这就是工具的本质——就是一个函数，AI 帮你决定「什么时候调」。</p>
+
+<h2>第二步：写工具「说明书」</h2>
+
+<p>要让 AI 知道这个函数能调，得写一份<strong>工具描述</strong>。AI 全靠这段文字判断「该不该调、传什么参数」：</p>
+
+<pre><code><span style="color:#cdd6f4">tools</span> = [
+    {
+        <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"function"</span>,
+        <span style="color:#a6e3a1">"function"</span>: {
+            <span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"query_taigu_kwh"</span>,
+            <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"查询指定台区在某一天的电量（kWh）。当用户问某个台区某天的用电量时使用。"</span>,
+            <span style="color:#a6e3a1">"parameters"</span>: {
+                <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"object"</span>,
+                <span style="color:#a6e3a1">"properties"</span>: {
+                    <span style="color:#a6e3a1">"taigu_id"</span>: {
+                        <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>,
+                        <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"台区编号，如 T07、T12"</span>
+                    },
+                    <span style="color:#a6e3a1">"date"</span>: {
+                        <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>,
+                        <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"日期，格式 YYYY-MM-DD"</span>
+                    }
+                },
+                <span style="color:#a6e3a1">"required"</span>: [<span style="color:#a6e3a1">"taigu_id"</span>, <span style="color:#a6e3a1">"date"</span>]
+            }
+        }
+    }
+]</code></pre>
+
+<div class="callout">
+  <strong>💡 「description」是最关键的部分：</strong>AI 不会读你的函数名或代码，它<strong>只看 description 决定要不要调</strong>。写「查询指定台区在某一天的电量」比写「查电」清晰 10 倍。
+</div>
+
+<h2>第三步：完整脚本（从发消息到拿回答）</h2>
+
+<p>把上面所有部分串起来，<strong>这是完整的最小可用 Agent</strong>：</p>
+
+<pre><code><span style="color:#a6adc8"># agent_fc_demo.py</span>
+<span style="color:#cdd6f4">import</span> json
+<span style="color:#cdd6f4">from</span> openai <span style="color:#cdd6f4">import</span> OpenAI
+<span style="color:#cdd6f4">from</span> mock_data <span style="color:#cdd6f4">import</span> query_taigu_kwh
+
+client = OpenAI(
+    api_key=<span style="color:#a6e3a1">"sk-你的密钥"</span>,
+    base_url=<span style="color:#a6e3a1">"https://api.deepseek.com"</span>
+)
+
+<span style="color:#a6adc8"># 工具说明书（精简版）</span>
+tools = [{
+    <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"function"</span>,
+    <span style="color:#a6e3a1">"function"</span>: {
+        <span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"query_taigu_kwh"</span>,
+        <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"查询台区某日电量（kWh）"</span>,
+        <span style="color:#a6e3a1">"parameters"</span>: {
+            <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"object"</span>,
+            <span style="color:#a6e3a1">"properties"</span>: {
+                <span style="color:#a6e3a1">"taigu_id"</span>: {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>, <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"台区编号，如 T07"</span>},
+                <span style="color:#a6e3a1">"date"</span>:    {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>, <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"日期 YYYY-MM-DD"</span>}
+            },
+            <span style="color:#a6e3a1">"required"</span>: [<span style="color:#a6e3a1">"taigu_id"</span>, <span style="color:#a6e3a1">"date"</span>]
+        }
+    }
+}]
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">run_agent</span>(user_query):
+    messages = [{<span style="color:#a6e3a1">"role"</span>: <span style="color:#a6e3a1">"user"</span>, <span style="color:#a6e3a1">"content"</span>: user_query}]
+
+    <span style="color:#a6adc8"># 第 1 次调用：让 AI 决定要不要调工具</span>
+    response = client.chat.completions.create(
+        model=<span style="color:#a6e3a1">"deepseek-chat"</span>,
+        messages=messages,
+        tools=tools
+    )
+    msg = response.choices[<span style="color:#fab387">0</span>].message
+
+    <span style="color:#a6adc8"># 如果 AI 不想调工具，直接返回它的回答</span>
+    <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">not</span> msg.tool_calls:
+        <span style="color:#cdd6f4">return</span> msg.content
+
+    <span style="color:#a6adc8"># AI 想调工具：执行它，把结果喂回去</span>
+    tool_call = msg.tool_calls[<span style="color:#fab387">0</span>]
+    args = json.loads(tool_call.function.arguments)
+    <span style="color:#cdd6f4">print</span>(<span style="color:#a6e3a1">f"→ AI 决定调用 {tool_call.function.name}({args})"</span>)
+
+    <span style="color:#a6adc8"># ← 这里是你真正在工作的代码</span>
+    tool_result = query_taigu_kwh(args[<span style="color:#a6e3a1">"taigu_id"</span>], args[<span style="color:#a6e3a1">"date"</span>])
+
+    <span style="color:#a6adc8"># 第 2 次调用：把工具结果喂给 AI，让它组织自然语言回答</span>
+    messages.append(msg)
+    messages.append({
+        <span style="color:#a6e3a1">"role"</span>: <span style="color:#a6e3a1">"tool"</span>,
+        <span style="color:#a6e3a1">"tool_call_id"</span>: tool_call.id,
+        <span style="color:#a6e3a1">"content"</span>: json.dumps(tool_result, ensure_ascii=<span style="color:#cdd6f4">False</span>)
+    })
+    final = client.chat.completions.create(
+        model=<span style="color:#a6e3a1">"deepseek-chat"</span>,
+        messages=messages
+    )
+    <span style="color:#cdd6f4">return</span> final.choices[<span style="color:#fab387">0</span>].message.content
+
+<span style="color:#cdd6f4">if</span> __name__ == <span style="color:#a6e3a1">"__main__"</span>:
+    <span style="color:#cdd6f4">print</span>(run_agent(<span style="color:#a6e3a1">"T07 台区 8 月 22 号用了多少度电？"</span>))</code></pre>
+
+<p>这段代码 <strong>~60 行</strong>，跑出来就是你的第一个最小可用 Agent。</p>
+
+<h2>第四步：跑起来看效果</h2>
+
+<p>把上面两段代码（mock_data.py 和 agent_fc_demo.py）保存到同一目录，<code>pip install openai</code> 装好依赖，然后：</p>
+
+<pre><code>$ python agent_fc_demo.py
+→ AI 决定调用 query_taigu_kwh({'taigu_id': 'T07', 'date': '2026-08-22'})
+T07 台区在 2026-08-22 用电 1320.8 kWh。</code></pre>
+
+<p>看到没？AI 看到「T07 台区 8 月 22 号用了多少度电」这句话，<strong>自己</strong>判断要调 <code>query_taigu_kwh</code>，<strong>自己</strong>从中文里提取出了 <code>taigu_id="T07"</code> 和 <code>date="2026-08-22"</code>，你完全没写 if-else 解析用户问什么。</p>
+
+<div class="callout green">
+  <strong>💡 你的第一个 Agent 跑起来了：</strong>用户问 → AI 决定调工具 → 你的代码执行 → AI 组织回答。这和赫默 agent 帮你查文件、调 API 是<strong>同一套机制</strong>，只不过这次是你自己写的。
+</div>
+
+<h2>第五步：试一试故意刁难 AI</h2>
+
+<p>改几个用户输入，看 AI 怎么反应。拷几个到代码里跑：</p>
+
+<ul>
+  <li>「T07 上周五多少度电？」—— AI 得自己换算「上周五 = 2026-08-22」</li>
+  <li>「今天天气怎么样？」—— AI 看到<strong>没相关工具</strong>，应该直接用文本回答，不调工具</li>
+  <li>「T99 昨天多少度电？」—— 工具会返回 <code>{"error": "台区 T99 不存在"}</code>，AI 得优雅告诉用户</li>
+</ul>
+
+<p>这三个测试就是 Function Calling 的<strong>基础健壮性检查</strong>。第 35 课（评估与安全）会专门讲怎么系统化做这件事。</p>
+
+<h2>本课学了什么</h2>
+
+<ul>
+  <li>✅ 自己写一个真实业务函数（台区日电量查询）</li>
+  <li>✅ 写工具说明书：name / description / parameters 三件套</li>
+  <li>✅ 完整 5 步脚本：发消息 → AI 决定 → 你的代码执行 → 喂回结果 → AI 回答</li>
+  <li>✅ 跑通最小可用 Agent，60 行代码搞定</li>
+  <li>✅ 三个边界测试：时间换算、无关问题、不存在数据</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>在 Function Calling 脚本里，下面哪件事是<strong>你的 Python 代码</strong>做的（不是 AI）？</p>
+
+<ol type="A">
+  <li>判断用户问的是哪个台区、哪一天</li>
+  <li>决定要不要调用工具</li>
+  <li>实际执行 <code>query_taigu_kwh()</code> 函数拿到数据</li>
+  <li>把工具结果组织成自然语言回答</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 跑脚本报错、API 调不通、想换成查真实数据库——任何问题都找你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0026-capstone-project.html">← 上一课：毕业项目</a>
+  <a href="0028-multi-tool-agent.html">下一课：多工具 Agent →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>C。<strong>你的代码</strong>实际执行 <code>query_taigu_kwh()</code>。A、B、D 都是 AI 模型的事——A 是 AI 从中文里提取参数，B 是 AI 决定要不要调工具，D 是 AI 把 JSON 结果组织成自然语言。<strong>「思考和决策归 AI，执行归代码」</strong>——这是 Function Calling 的核心设计，也是你赫默 agent 每天在做的事。
+</p>
+
+</body>
+</html>
