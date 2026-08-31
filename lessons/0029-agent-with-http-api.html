@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0029 · 接入真实 HTTP API 作为工具</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    background: var(--accent);
+    color: white;
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .diagram {
+    background: #f8fafc;
+    border: 1px dashed var(--border);
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 0.9rem;
+    margin: 1.2rem 0;
+  }
+</style>
+</head>
+<body>
+<h1>🌐 接入真实 HTTP API 作为工具</h1>
+<p class="meta">第 0029 课 · P5 实战篇 <span class="tag">实操课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>把 28 课的「mock 数据」替换成<strong>真实 HTTP API</strong>——让 Agent 通过网络调外部服务（天气、汇率、用电量、快递……）拿到真实数据。核心只多一件事：<strong>用 <code>requests</code> 发请求，包装成工具函数</strong>。骨架还是 28 课的 ReAct 循环。
+</div>
+
+<h2>从 mock 到真实：工具的本质是「函数」</h2>
+
+<p>28 课你写了一个 Agent，能调 4 个工具查台区电量。但那些数据是<strong>写死在 Python 字典里</strong>的——真实工作里，数据来自：</p>
+
+<ul>
+  <li>公司的<strong>业务系统 HTTP API</strong>（最常见）</li>
+  <li><strong>公开数据接口</strong>（天气、汇率、股票、新闻）</li>
+  <li><strong>数据库</strong>（MySQL、PostgreSQL、MongoDB）</li>
+  <li><strong>内部文件服务</strong>（Excel/CSV 上传下载）</li>
+</ul>
+
+<p>好消息：<strong>对 Agent 来说，这些全是「工具函数」</strong>，区别只在于函数内部做什么。HTTP API 工具就是<strong>用 <code>requests</code> 发个 HTTP 请求</strong>，把返回的 JSON 喂回 Agent。</p>
+
+<div class="callout">
+  <strong>📌 这节课的核心：</strong>你之前用 AI 写过不少<strong>调 API 的脚本</strong>（第 3 课 Hello World 调 DeepSeek、之后调各种外部 API）。今天学的是——把<strong>那个调 API 的 Python 函数</strong>注册成 Agent 的工具，让 AI <strong>自己决定</strong>什么时候调。骨架和 28 课一模一样，只是工具函数<strong>内部从查字典变成发 HTTP 请求</strong>。
+</div>
+
+<h2>动手：调一个真实天气 API</h2>
+
+<p>我们用一个<strong>免费、无需注册</strong>的接口：<code>wttr.in</code>。浏览器打开 <code>https://wttr.in/Beijing?format=j1</code> 直接看 JSON。下面把它注册成 Agent 的工具：</p>
+
+<pre><code><span style="color:#a6adc8"># tools_http.py —— 真实 HTTP API 工具</span>
+<span style="color:#cdd6f4">import</span> requests
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">get_weather</span>(city):
+    <span style="color:#a6adc8">"""查询指定城市的当前天气"""</span>
+    <span style="color:#cdd6f4">try</span>:
+        resp = requests.get(
+            <span style="color:#a6e3a1">f"https://wttr.in/{city}?format=j1"</span>,
+            timeout=<span style="color:#fab387">10</span>  <span style="color:#a6adc8"># 必加：别让程序卡死</span>
+        )
+        resp.raise_for_status()  <span style="color:#a6adc8"># 4xx/5xx 自动抛异常</span>
+        data = resp.json()
+
+        <span style="color:#a6adc8"># 只挑我们关心的字段返回给 AI，别把整个 200 行 JSON 塞过去</span>
+        current = data[<span style="color:#a6e3a1">"current_condition"</span>][<span style="color:#fab387">0</span>]
+        <span style="color:#cdd6f4">return</span> {
+            <span style="color:#a6e3a1">"city"</span>: city,
+            <span style="color:#a6e3a1">"temp_c"</span>: current[<span style="color:#a6e3a1">"temp_C"</span>],
+            <span style="color:#a6e3a1">"desc"</span>: current[<span style="color:#a6e3a1">"weatherDesc"</span>][<span style="color:#fab387">0</span>][<span style="color:#a6e3a1">"value"</span>],
+            <span style="color:#a6e3a1">"humidity"</span>: current[<span style="color:#a6e3a1">"humidity"</span>]
+        }
+    <span style="color:#cdd6f4">except</span> requests.Timeout:
+        <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"请求 {city} 超时（10s）"</span>}
+    <span style="color:#cdd6f4">except</span> requests.HTTPError <span style="color:#cdd6f4">as</span> e:
+        <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"HTTP 错误: {e.response.status_code}"</span>}
+    <span style="color:#cdd6f4">except</span> Exception <span style="color:#cdd6f4">as</span> e:
+        <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"未知错误: {type(e).__name__}: {e}"</span>}</code></pre>
+
+<div class="callout green">
+  <strong>💡 和 28 课 mock 工具的 3 个关键差异：</strong>
+  <ol style="margin-top:0.5rem">
+    <li><strong>加 <code>timeout=10</code></strong>：网络请求必加超时，否则对方服务器卡住，你这边无限等</li>
+    <li><strong>加 <code>raise_for_status()</code></strong>：4xx/5xx 自动转异常，比手动检查 <code>status_code</code> 干净</li>
+    <li><strong>只返回关键字段</strong>：wttr.in 原始 JSON 有 200+ 行，<strong>只挑 4 个字段</strong>喂给 AI，省 token、降干扰</li>
+  </ol>
+</div>
+
+<h2>工具说明书：和 28 课完全一样的写法</h2>
+
+<pre><code><span style="color:#cdd6f4">from</span> tools_http <span style="color:#cdd6f4">import</span> get_weather
+
+TOOL_REGISTRY = {
+    <span style="color:#a6e3a1">"get_weather"</span>: get_weather,
+}
+
+tools = [{
+    <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"function"</span>,
+    <span style="color:#a6e3a1">"function"</span>: {
+        <span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"get_weather"</span>,
+        <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"查询指定城市的实时天气（温度/天气描述/湿度）。当用户问某城市天气时使用。"</span>,
+        <span style="color:#a6e3a1">"parameters"</span>: {
+            <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"object"</span>,
+            <span style="color:#a6e3a1">"properties"</span>: {
+                <span style="color:#a6e3a1">"city"</span>: {
+                    <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>,
+                    <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"城市英文名，如 Beijing、Shanghai；中文名也支持"</span>
+                }
+            },
+            <span style="color:#a6e3a1">"required"</span>: [<span style="color:#a6e3a1">"city"</span>]
+        }
+    }
+}]</code></pre>
+
+<h2>复用 28 课的 ReAct 骨架</h2>
+
+<p>把 28 课的 <code>agent_react.py</code> 复制一份，改三处：</p>
+
+<pre><code><span style="color:#a6adc8"># agent_http.py —— 改自 28 课的 agent_react.py</span>
+<span style="color:#cdd6f4">import</span> json
+<span style="color:#cdd6f4">from</span> openai <span style="color:#cdd6f4">import</span> OpenAI
+<span style="color:#cdd6f4">from</span> tools_http <span style="color:#cdd6f4">import</span> TOOL_REGISTRY  <span style="color:#a6adc8"># ← 改 1</span>
+
+client = OpenAI(api_key=<span style="color:#a6e3a1">"sk-你的密钥"</span>, base_url=<span style="color:#a6e3a1">"https://api.deepseek.com"</span>)
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">run_agent</span>(user_query, max_steps=<span style="color:#fab387">4</span>):
+    messages = [{<span style="color:#a6e3a1">"role"</span>: <span style="color:#a6e3a1">"user"</span>, <span style="color:#a6e3a1">"content"</span>: user_query}]
+
+    <span style="color:#cdd6f4">for</span> step <span style="color:#cdd6f4">in</span> <span style="color:#fab387">range</span>(max_steps):
+        resp = client.chat.completions.create(
+            model=<span style="color:#a6e3a1">"deepseek-chat"</span>,
+            messages=messages,
+            tools=tools  <span style="color:#a6adc8"># ← 改 2：用新的 tools 列表</span>
+        )
+        msg = resp.choices[<span style="color:#fab387">0</span>].message
+
+        <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">not</span> msg.tool_calls:
+            <span style="color:#cdd6f4">return</span> msg.content
+
+        messages.append(msg)
+        <span style="color:#cdd6f4">for</span> call <span style="color:#cdd6f4">in</span> msg.tool_calls:
+            args = json.loads(call.function.arguments)
+            <span style="color:#cdd6f4">print</span>(<span style="color:#a6e3a1">f"  [step {step+1}] → {call.function.name}({args})"</span>)
+
+            <span style="color:#cdd6f4">try</span>:
+                result = TOOL_REGISTRY[call.function.name](**args)  <span style="color:#a6adc8"># ← 改 3</span>
+            <span style="color:#cdd6f4">except</span> Exception <span style="color:#cdd6f4">as</span> e:
+                result = {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"执行失败: {e}"</span>}
+
+            messages.append({
+                <span style="color:#a6e3a1">"role"</span>: <span style="color:#a6e3a1">"tool"</span>,
+                <span style="color:#a6e3a1">"tool_call_id"</span>: call.id,
+                <span style="color:#a6e3a1">"content"</span>: json.dumps(result, ensure_ascii=<span style="color:#cdd6f4">False</span>)
+            })
+
+    <span style="color:#cdd6f4">return</span> <span style="color:#a6e3a1">"（达到最大步数）"</span>
+
+<span style="color:#cdd6f4">if</span> __name__ == <span style="color:#a6e3a1">"__main__"</span>:
+    <span style="color:#cdd6f4">print</span>(run_agent(<span style="color:#a6e3a1">"今天北京天气怎么样？"</span>))</code></pre>
+
+<p>看——<strong>主循环代码和 28 课 100% 一样</strong>，只改了 3 行（导入的 registry、tools 列表、TOOL_REGISTRY 调用）。这就是工程化的力量：<strong>新工具不写循环逻辑，只写函数</strong>。</p>
+
+<h2>跑起来</h2>
+
+<pre><code>$ pip install requests openai
+$ python agent_http.py
+  [step 1] → get_weather({'city': 'Beijing'})
+北京当前温度 28°C，天气晴，湿度 45%。</code></pre>
+
+<p>真实数据。AI 没动一行代码，就拿到了实时天气。</p>
+
+<div class="callout">
+  <strong>⚠️ 调外网 API 的 3 个坑：</strong>
+  <ol style="margin-top:0.5rem">
+    <li><strong>timeout 必加</strong>：默认 requests 无超时，对方卡死你就死等</li>
+    <li><strong>限流 / 鉴权</strong>：公司内部 API 大多有 token / IP 白名单，加在 <code>headers=</code> 里</li>
+    <li><strong>字段清洗</strong>：外部 API 返回的字段又多又乱，<strong>只挑你需要的</strong>——既省 token 又减少 AI 干扰</li>
+  </ol>
+</div>
+
+<h2>进阶：把 HTTP API 工具和你 28 课的工具混用</h2>
+
+<p>最爽的玩法——<strong>把 mock 工具和真实 API 混着注册</strong>，AI 自己调度。比如「查北京天气 + 查台区 T07 电量，告诉我今天空调该开几度」：</p>
+
+<pre><code><span style="color:#a6adc8"># 合并 registry：mock 工具 + HTTP 工具一起注册</span>
+<span style="color:#cdd6f4">from</span> tools_4 <span style="color:#cdd6f4">import</span> TOOL_REGISTRY <span style="color:#cdd6f4">as</span> MOCK_REGISTRY
+<span style="color:#cdd6f4">from</span> tools_http <span style="color:#cdd6f4">import</span> get_weather
+
+TOOL_REGISTRY = {**MOCK_REGISTRY, <span style="color:#a6e3a1">"get_weather"</span>: get_weather}
+
+tools = [
+    <span style="color:#a6adc8"># 28 课的 4 个 tools schema + 上面 get_weather 的 schema</span>
+    <span style="color:#a6e3a1">...</span>
+]</code></pre>
+
+<p>Agent 自己会决定：先调 <code>get_weather</code> 拿北京温度，再调 <code>query_taigu_kwh</code> 拿 T07 电量，综合两个数据给建议。<strong>你的代码一行没改逻辑</strong>，多了一个工具函数就多一种能力。</p>
+
+<h2>和 28 课的关键区别</h2>
+
+<table>
+  <thead>
+    <tr><th>维度</th><th>28 课（mock）</th><th>29 课（真实 HTTP）</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>数据来源</td><td>Python 字典</td><td>外部 HTTP API</td></tr>
+    <tr><td>工具函数内部</td><td>查 dict</td><td><code>requests.get()</code></td></tr>
+    <tr><td>必加保护</td><td>无（同步内存操作）</td><td>timeout + try/except + raise_for_status</td></tr>
+    <tr><td>返回给 AI 的数据</td><td>已经挑好</td><td>需要从原始 JSON 挑字段</td></tr>
+    <tr><td>ReAct 循环</td><td>不变</td><td>不变</td></tr>
+    <tr><td>工具说明书</td><td>不变</td><td>不变</td></tr>
+  </tbody>
+</table>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong><strong>工具函数的实现方式</strong>（查字典 / 发 HTTP / 读数据库 / 读文件）<strong>对 Agent 来说没区别</strong>。你写好函数 + 写好 description，AI 都能调。区别只在<strong>你的函数内部怎么拿数据</strong>。这就是 28 课搭骨架、29 课换数据源的精髓。
+</div>
+
+<h2>本课学了什么</h2>
+
+<ul>
+  <li>✅ HTTP API 工具和 mock 工具的区别：<strong>只是函数内部实现</strong></li>
+  <li>✅ 调 HTTP API 的 3 个必加项：<code>timeout</code> / <code>raise_for_status</code> / <code>try-except</code></li>
+  <li>✅ 字段清洗：只挑关键字段喂给 AI，省 token 减干扰</li>
+  <li>✅ 复用 28 课 ReAct 骨架：只改 3 行就接入新工具</li>
+  <li>✅ mock + 真实 API 混用：多工具 registry 合并</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>在 HTTP API 工具函数里，下面哪项是<strong>必须</strong>加的？</p>
+
+<ol type="A">
+  <li>把整个 API 返回的 JSON 完整喂给 AI</li>
+  <li>用 <code>requests.get()</code> 时加 <code>timeout=10</code></li>
+  <li>让 AI 决定超时时长</li>
+  <li>用 POST 请求（GET 太简单）</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 跑 <code>wttr.in</code> 报错、想换成公司内网 API、想加鉴权 header——任何问题都找你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0028-multi-tool-agent.html">← 上一课：多工具 Agent</a>
+  <a href="0030-tool-design-and-structured-output.html">下一课：工具设计与结构化输出 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>B。<code>timeout=10</code> 是调 HTTP API 的<strong>安全底线</strong>——没有它，对方服务器卡住时你的程序会无限等待，整个 Agent 直接死锁。A 错：原始 JSON 经常上百行，完整喂给 AI 既烧 token 又干扰推理；正确做法是<strong>在工具函数里挑字段</strong>，只返回 4-5 个关键字段。C 错：超时时长是<strong>工程参数</strong>，跟 AI 决策无关，AI 只决定「调不调工具」，不决定「底层怎么调」。D 错：HTTP 方法（GET/POST/PUT/DELETE）由 API 设计决定，不是「越复杂越好」——<code>wttr.in</code> 就是 GET。29 课的核心习惯：<strong>外部 API 调用必加 timeout + 异常处理 + 字段清洗</strong>，这三条是 35 课《评估与安全》的预演。
+</p>
+</body>
+</html>

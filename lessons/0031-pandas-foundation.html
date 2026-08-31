@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0031 · pandas 基础夯实 + 数据分析实战素材</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  .callout.red {
+    background: #fef2f2;
+    border-left-color: var(--red);
+  }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    background: var(--accent);
+    color: white;
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .diagram {
+    background: #f8fafc;
+    border: 1px dashed var(--border);
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 0.9rem;
+    margin: 1.2rem 0;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>🐼 pandas 基础夯实 + 数据分析实战素材</h1>
+<p class="meta">第 0031 课 · P5 实战篇 <span class="tag">基础夯实课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>把 pandas 的<strong>四件套</strong>（读数据、筛选、分组、合并）练到「条件反射」，再补上透视表、日期处理、清洗三板斧。核心心法一句话：<strong>「Pandas 会写 ≠ 能回答业务问题」</strong>——先有业务问题，再选 pandas 操作，指标口径先于代码。
+</div>
+
+<h2>为什么先夯实 pandas？</h2>
+
+<p>接下来 34 课要做 <strong>Agent + 数据分析</strong>：Agent 负责「想」，pandas 负责「算」。如果 pandas 不熟，你会出现一个尴尬场面——<strong>Agent 把代码写出来了，你看不懂、也判断不了它对不对</strong>。Agent 分析数据的前提，是你自己得能读懂数据。</p>
+
+<div class="callout">
+  <strong>📌 新术语「指标口径」：</strong>同一个问题，不同算法会算出不同数字。「口径」就是<strong>「这个数到底怎么算的」的约定</strong>。比如「销售额」——是订单金额，还是去掉退款后的实付金额？口径不定，数字就没有意义。这是数据分析里<strong>最值钱的一个词</strong>。
+</div>
+
+<h2>四件套回顾：业务问题 → pandas 操作</h2>
+
+<p>每个操作都配一个真实业务问题，建立「问题 → 代码」的映射。我们的实战素材是一份<strong>电商订单表</strong> <code>orders.csv</code>（后面 39-40 课的电商项目也会用同款数据）：</p>
+
+<table>
+  <thead>
+    <tr><th>order_id</th><th>customer_id</th><th>date</th><th>category</th><th>amount</th><th>status</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1001</td><td>C01</td><td>2026-08-01</td><td>数码</td><td>2999</td><td>已完成</td></tr>
+    <tr><td>1002</td><td>C02</td><td>2026-08-02</td><td>服饰</td><td>199</td><td>已完成</td></tr>
+    <tr><td>1003</td><td>C01</td><td>2026-08-03</td><td>数码</td><td>1599</td><td>已退款</td></tr>
+    <tr><td>1004</td><td>C03</td><td>2026-08-04</td><td>食品</td><td>89</td><td>已完成</td></tr>
+    <tr><td>1005</td><td>C02</td><td>2026-08-05</td><td>服饰</td><td>399</td><td>已完成</td></tr>
+  </tbody>
+</table>
+
+<h3>① 读数据</h3>
+<pre><code><span style="color:#cdd6f4">import</span> pandas <span style="color:#cdd6f4">as</span> pd
+
+df = pd.read_csv(<span style="color:#a6e3a1">"orders.csv"</span>)          <span style="color:#a6adc8"># 读 CSV</span>
+df = pd.read_excel(<span style="color:#a6e3a1">"orders.xlsx"</span>)     <span style="color:#a6adc8"># 读 Excel（需 openpyxl）</span>
+df.head()                          <span style="color:#a6adc8"># 先看前 5 行，永远第一步</span>
+df.info()                          <span style="color:#a6adc8"># 看每列类型 + 有没有缺失值</span></code></pre>
+
+<h3>② 布尔筛选 —— 「找出符合条件的行」</h3>
+<pre><code><span style="color:#a6adc8"># 业务问题：数码类目有哪些订单？</span>
+df[df[<span style="color:#a6e3a1">"category"</span>] == <span style="color:#a6e3a1">"数码"</span>]
+
+<span style="color:#a6adc8"># 业务问题：金额超过 500 的订单</span>
+df[df[<span style="color:#a6e3a1">"amount"</span>] &gt; <span style="color:#fab387">500</span>]
+
+<span style="color:#a6adc8"># 多个条件用 &amp;（且）和 |（或），每个条件都要加括号</span>
+df[(df[<span style="color:#a6e3a1">"category"</span>] == <span style="color:#a6e3a1">"数码"</span>) &amp; (df[<span style="color:#a6e3a1">"amount"</span>] &gt; <span style="color:#fab387">1000</span>)]</code></pre>
+
+<h3>③ groupby 分组聚合 —— 「按 XX 算 YY」</h3>
+<pre><code><span style="color:#a6adc8"># 业务问题：每个类目的总销售额是多少？</span>
+df.groupby(<span style="color:#a6e3a1">"category"</span>)[<span style="color:#a6e3a1">"amount"</span>].sum()
+
+<span style="color:#a6adc8"># 业务问题：每个客户下了几单？</span>
+df.groupby(<span style="color:#a6e3a1">"customer_id"</span>)[<span style="color:#a6e3a1">"order_id"</span>].count()</code></pre>
+
+<p>口诀：<strong>「groupby(按谁分) + [对哪列] + 怎么算(sum/count/mean/max/min)」</strong>。</p>
+
+<h3>④ merge 合并 —— 「把两张表拼起来」</h3>
+<pre><code><span style="color:#a6adc8"># 业务问题：订单表 + 客户表，查出每个订单的客户姓名</span>
+customers = pd.read_csv(<span style="color:#a6e3a1">"customers.csv"</span>)   <span style="color:#a6adc8"># customer_id, name, city</span>
+merged = pd.merge(df, customers, on=<span style="color:#a6e3a1">"customer_id"</span>, how=<span style="color:#a6e3a1">"left"</span>)
+<span style="color:#a6adc8"># how="left"：以左边（订单）为主，右边没有的填 NaN</span></code></pre>
+
+<h2>进阶三件套（这课新学）</h2>
+
+<h3>透视表 pivot_table —— 「二维交叉汇总」</h3>
+<pre><code><span style="color:#a6adc8"># 业务问题：每个类目 × 每个月的销售额，一张表看全</span>
+df[<span style="color:#a6e3a1">"month"</span>] = pd.to_datetime(df[<span style="color:#a6e3a1">"date"</span>]).dt.month
+pd.pivot_table(df, values=<span style="color:#a6e3a1">"amount"</span>, index=<span style="color:#a6e3a1">"category"</span>,
+               columns=<span style="color:#a6e3a1">"month"</span>, aggfunc=<span style="color:#a6e3a1">"sum"</span>)
+
+<span style="color:#a6adc8"># 行 = 类目，列 = 月份，值 = 销售额。groupby 的二维版</span></code></pre>
+
+<h3>日期处理 to_datetime —— 「把文本变成可计算的时间」</h3>
+<pre><code>df[<span style="color:#a6e3a1">"date"</span>] = pd.to_datetime(df[<span style="color:#a6e3a1">"date"</span>])   <span style="color:#a6adc8"># 字符串 → 时间类型</span>
+df[<span style="color:#a6e3a1">"month"</span>] = df[<span style="color:#a6e3a1">"date"</span>].dt.month       <span style="color:#a6adc8"># 取月份</span>
+df[<span style="color:#a6e3a1">"weekday"</span>] = df[<span style="color:#a6e3a1">"date"</span>].dt.dayofweek  <span style="color:#a6adc8"># 取星期几（0=周一）</span></code></pre>
+
+<h3>清洗三板斧 —— 「脏数据怎么处理」</h3>
+<pre><code><span style="color:#a6adc8"># 1. 缺失值：先看有多少，再决定删还是填</span>
+df.isna().sum()                          <span style="color:#a6adc8"># 每列缺几个</span>
+df = df.dropna(subset=[<span style="color:#a6e3a1">"amount"</span>])     <span style="color:#a6adc8"># 关键列缺了就删行</span>
+df[<span style="color:#a6e3a1">"amount"</span>] = df[<span style="color:#a6e3a1">"amount"</span>].fillna(<span style="color:#fab387">0</span>)  <span style="color:#a6adc8"># 或填默认值</span>
+
+<span style="color:#a6adc8"># 2. 重复值</span>
+df = df.drop_duplicates(subset=[<span style="color:#a6e3a1">"order_id"</span>])
+
+<span style="color:#a6adc8"># 3. 异常值：先描述统计，肉眼看异常</span>
+df[<span style="color:#a6e3a1">"amount"</span>].describe()   <span style="color:#a6adc8"># min/max/mean，负数或离谱大数一眼可见</span></code></pre>
+
+<div class="callout red">
+  <strong>⚠️ 清洗铁律：删之前先想清楚。</strong>缺失值直接 <code>dropna</code> 最省事，但<strong>可能删掉有意义的行</strong>（比如「退款订单缺金额」恰恰是业务信号）。先 <code>isna().sum()</code> 看清楚规模，再决定策略——<strong>清洗动作永远要有理由，写进注释</strong>。
+</div>
+
+<h2>核心心法：指标口径先于代码</h2>
+
+<p>同样是 <code>groupby("category")["amount"].sum()</code>，不同人算出来可能差很多，因为口径没对齐。拿到业务问题的<strong>第一件事不是写代码，而是问三个问题</strong>：</p>
+
+<ol class="steps">
+  <li><strong>算谁？</strong>——所有订单，还是只要「已完成」的？（<code>status == "已完成"</code> 先筛一遍）</li>
+  <li><strong>怎么算？</strong>——求和、计数、去重计数、平均？「客户数」要 <code>nunique()</code>（去重），「订单数」用 <code>count()</code>（不去重）。</li>
+  <li><strong>要不要排除异常？</strong>——退款、测试单、金额为 0 的单子算不算？</li>
+</ol>
+
+<pre><code><span style="color:#a6adc8"># 反面教材：直接算，口径没想</span>
+total = df[<span style="color:#a6e3a1">"amount"</span>].sum()   <span style="color:#a6adc8"># 把退款也算进去了</span>
+
+<span style="color:#a6adc8"># 正确姿势：先定口径，再写代码</span>
+<span style="color:#a6adc8"># 口径：已完成订单的实付金额总和</span>
+valid = df[df[<span style="color:#a6e3a1">"status"</span>] == <span style="color:#a6e3a1">"已完成"</span>]
+total = valid[<span style="color:#a6e3a1">"amount"</span>].sum()   <span style="color:#a6adc8"># 2999+199+89+399 = 3686</span></code></pre>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>pandas 的语法你已经会了，这课把它<strong>挂到业务问题上</strong>：读数据 → <code>head()/info()</code> 先摸底 → 定指标口径 → 筛选/分组/合并。以后 34 课 Agent 输出分析结果，你第一句要问的就是——<strong>「这个数的口径是什么？」</strong>
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>四件套挂业务问题</strong>：读（read_csv）、筛（布尔）、分（groupby）、拼（merge）</li>
+  <li>✅ <strong>进阶三件套</strong>：透视表 pivot_table、日期 to_datetime、清洗三板斧（缺失/重复/异常）</li>
+  <li>✅ <strong>指标口径</strong>：算谁 / 怎么算 / 要不要排除——先定口径再写代码</li>
+  <li>✅ <strong>「Pandas 会写 ≠ 能回答业务问题」</strong>：操作是手段，业务答案是目的</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>订单表里一共 10 条订单记录，其中客户 C01 下了 3 单，C02 下了 2 单，其余 5 个客户各 1 单。领导问：<strong>「这个月一共有多少客户下单？」</strong> 应该用哪个操作？</p>
+
+<ol type="A">
+  <li><code>len(df)</code></li>
+  <li><code>df["customer_id"].nunique()</code></li>
+  <li><code>df["customer_id"].count()</code></li>
+  <li><code>df.groupby("customer_id").sum()</code></li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 想用你自己的业务数据（Excel 报表、CSV 导出）练一遍四件套？把文件丢给 AI 教练，一起把「业务问题 → pandas 代码」的映射做出来。任何不清楚的地方，都问你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0030-tool-design-and-structured-output.html">← 上一课：工具设计与结构化输出</a>
+  <a href="0032-pandasai-intro.html">下一课：pandasai 自然语言分析 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>B。<code>nunique()</code> = 去重计数。客户数必须<strong>去重</strong>——C01 下了 3 单也只算 1 个客户，正确答案是 7（C01、C02 加 5 个单客户）。A 错：<code>len(df)</code> 是订单行数 10，是「订单数」不是「客户数」。C 错：<code>count()</code> 数的是 customer_id 字段的出现次数（含重复），等于 10，同样不是客户数。D 错：<code>groupby().sum()</code> 是对金额求和，不是数客户。这题的教训：<strong>「数客户」和「数订单」是两个完全不同的问题</strong>，用错一个函数，汇报给领导的数字就错了。以后拿到任何「数 XX」的问题，先问一句：要不要去重？
+</p>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0030 · 工具设计与结构化输出</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  .callout.red {
+    background: #fef2f2;
+    border-left-color: var(--red);
+  }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    background: var(--accent);
+    color: white;
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .diagram {
+    background: #f8fafc;
+    border: 1px dashed var(--border);
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 0.9rem;
+    margin: 1.2rem 0;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>🛠️ 工具设计与结构化输出</h1>
+<p class="meta">第 0030 课 · P5 实战篇 <span class="tag">工程化课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>把 28-29 课「能跑起来」的 Agent，升级成<strong>「稳定可控」</strong>的工具集。三个工程武器：<strong>参数校验</strong>（AI 传错参数就拦下来） + <strong>统一返回格式</strong>（成功失败一眼分清） + <strong>写好 description</strong>（AI 知道何时该调、不会乱调）。<strong>这是「能跑」和「能用」的分水岭</strong>。
+</div>
+
+<h2>从「能跑」到「能跑稳」：3 个新问题</h2>
+
+<p>29 课你的 Agent 已经能调真实 HTTP API 了。试着想想——<strong>真把它交给同事用</strong>，会遇到什么：</p>
+
+<ol class="steps">
+  <li><strong>AI 传错参数：</strong>用户问「查 T07 台区电量」，AI 调 <code>query_taigu_kwh(taigu_id=7, date="今天")</code>——<code>taigu_id</code> 应该是 <code>"T07"</code> 字符串不是数字 <code>7</code>，<code>date</code> 应该是 <code>"2026-08-27"</code> 不是「今天」。你的函数要么报错崩溃，要么静默返回错误数据。</li>
+  <li><strong>返回格式混乱：</strong>有时候返回字典，有时候返回字符串，有时候返回 <code>None</code>。AI 拿到的数据「形状不固定」，下一次推理就抓瞎。</li>
+  <li><strong>AI 该调不调、不该调乱调：</strong>用户问「今天星期几」，AI 也想调 <code>query_taigu_kwh</code>；用户问「T07 电量」，AI 调了 <code>query_line_loss_rate</code>。<strong>根因是 description 没说清「什么时候该用我」</strong>。</li>
+</ol>
+
+<div class="callout">
+  <strong>📌 本课三个工程武器：</strong>
+  <ul style="margin-top:0.5rem">
+    <li><strong>武器 1：参数校验</strong>——AI 传错参数，工具直接告诉它「错了，重传」</li>
+    <li><strong>武器 2：统一返回格式</strong>——永远 <code>{"ok": True/False, ...}</code>，AI 不用猜</li>
+    <li><strong>武器 3：好的 description</strong>——写清「何时用、何时不用」，AI 选对工具</li>
+  </ul>
+</div>
+
+<h2>武器 1：参数校验——AI 传错就拦下来</h2>
+
+<p>工具函数最常见的「崩溃源」是 AI 传了不符合要求的参数。解决方法很直接：<strong>函数开头先校验</strong>，不符合要求就返回错误结构，<strong>不抛异常</strong>——因为异常会打断 Agent 的推理流，错误结构反而能让 AI 看到「参数不对，我重传」。</p>
+
+<pre><code><span style="color:#a6adc8"># tools_validated.py —— 加了参数校验的工具</span>
+<span style="color:#cdd6f4">import</span> re
+<span style="color:#cdd6f4">from</span> datetime <span style="color:#cdd6f4">import</span> datetime
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">query_taigu_kwh</span>(taigu_id, date):
+    <span style="color:#a6adc8">"""查询指定台区在某一天的电量（kWh）"""</span>
+
+    <span style="color:#a6adc8"># 校验 1：台区编号必须是 T 加 2-3 位数字</span>
+    <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">not</span> re.match(<span style="color:#a6e3a1">r"^T\d{2,3}$"</span>, taigu_id):
+        <span style="color:#cdd6f4">return</span> {
+            <span style="color:#a6e3a1">"ok"</span>: <span style="color:#cdd6f4">False</span>,
+            <span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"taigu_id 格式错：'{taigu_id}'，应该是 T 加 2-3 位数字，如 T07、T102"</span>
+        }
+
+    <span style="color:#a6adc8"># 校验 2：日期必须是 YYYY-MM-DD</span>
+    <span style="color:#cdd6f4">try</span>:
+        datetime.strptime(date, <span style="color:#a6e3a1">"%Y-%m-%d"</span>)
+    <span style="color:#cdd6f4">except</span> ValueError:
+        <span style="color:#cdd6f4">return</span> {
+            <span style="color:#a6adc8">"ok": False,</span>
+            <span style="color:#a6e3a1">"ok"</span>: <span style="color:#cdd6f4">False</span>,
+            <span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"date 格式错：'{date}'，应该是 YYYY-MM-DD，如 2026-08-27"</span>
+        }
+
+    <span style="color:#a6adc8"># 校验通过，执行真正的查询</span>
+    data = db_query(<span style="color:#a6e3a1">f"SELECT kwh FROM meter WHERE taigu='{taigu_id}' AND day='{date}'"</span>)
+    <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">not</span> data:
+        <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"ok"</span>: <span style="color:#cdd6f4">False</span>, <span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"没找到 {taigu_id} 在 {date} 的数据"</span>}
+
+    <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"ok"</span>: <span style="color:#cdd6f4">True</span>, <span style="color:#a6e3a1">"data"</span>: {<span style="color:#a6e3a1">"taigu_id"</span>: taigu_id, <span style="color:#a6e3a1">"date"</span>: date, <span style="color:#a6e3a1">"kwh"</span>: data[<span style="color:#fab387">0</span>]}}</code></pre>
+
+<div class="callout green">
+  <strong>💡 关键设计：</strong>参数错误时<strong>不抛异常</strong>，而是<strong>返回错误结构</strong>。原因是：异常会中断 Agent 的 ReAct 循环，错误结构却能<strong>让 AI 看到「我参数传错了，我重传」</strong>。Agent 拿到 <code>{"ok": False, "error": "..."}</code>，会自动修正参数重试一次。这是 AI Agent 工程化的核心模式——<strong>把错误变成可读信息</strong>。
+</div>
+
+<h2>武器 2：统一返回格式——永远 <code>{"ok": ..., ...}</code></h2>
+
+<p>每个工具函数，<strong>无论成功失败，返回值永远是同一个「壳」</strong>：</p>
+
+<pre><code><span style="color:#a6adc8"># 成功</span>
+{
+  <span style="color:#a6e3a1">"ok"</span>: <span style="color:#cdd6f4">True</span>,
+  <span style="color:#a6e3a1">"data"</span>: {<span style="color:#a6adc8">/* 业务数据 */</span>}
+}
+
+<span style="color:#a6adc8"># 失败（参数错 / 找不到 / 内部异常）</span>
+{
+  <span style="color:#a6e3a1">"ok"</span>: <span style="color:#cdd6f4">False</span>,
+  <span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">"人类可读的错误说明"</span>
+}</code></pre>
+
+<p>这给 Agent 带来两个好处：</p>
+<ol>
+  <li><strong>判断简单：</strong>AI 永远先看 <code>ok</code> 字段，是 <code>True</code> 就读 <code>data</code>，是 <code>False</code> 就读 <code>error</code> 决定怎么办</li>
+  <li><strong>写代码简单：</strong>你在 ReAct 主循环里，<strong>不用给每个工具写不同的异常处理</strong>，统一调 <code>TOOL_REGISTRY[name](**args)</code>，<code>try/except</code> 只兜底 Python 异常</li>
+</ol>
+
+<div class="callout red">
+  <strong>⚠️ 反例：</strong>不要让有的工具返回字典、有的返回列表、有的返回字符串、有的返回 <code>None</code>。<strong>「返回格式不统一」是 AI Agent 工程化最大的坑之一</strong>——AI 下次推理要靠记忆分辨每个工具的返回类型，<strong>一次新会话就忘光</strong>。统一 <code>{"ok": ..., ...}</code> 之后，AI 不用记。
+</div>
+
+<h2>武器 3：好的 description——决定 AI 会不会选对工具</h2>
+
+<p>description 是 AI 决定「用不用这个工具」「什么时候用」的<strong>唯一依据</strong>。AI 看不到你的函数名（除了关键词匹配），看不到函数内部代码，只看 description。写 description 有 4 条铁律：</p>
+
+<table>
+  <thead>
+    <tr><th>铁律</th><th>反例 ❌</th><th>正例 ✅</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1. <strong>写明输入是什么</strong></td>
+      <td>「查电量」</td>
+      <td>「查询指定台区在<strong>某一天</strong>的电量（kWh）」</td>
+    </tr>
+    <tr>
+      <td>2. <strong>写明输出是什么</strong></td>
+      <td>「返回数据」</td>
+      <td>「返回 <code>{taigu_id, date, kwh}</code>，kwh 是数字」</td>
+    </tr>
+    <tr>
+      <td>3. <strong>写明何时该用</strong></td>
+      <td>「查电量工具」</td>
+      <td>「当用户问<strong>某台区某天的电量</strong>时使用。<strong>不要</strong>用于查询线损、对比多个台区」</td>
+    </tr>
+    <tr>
+      <td>4. <strong>写明何时不该用</strong></td>
+      <td>（没说）</td>
+      <td>「如果用户只问'哪个台区用电高'，请用 <code>compare_taigus</code>」</td>
+    </tr>
+  </tbody>
+</table>
+
+<pre><code><span style="color:#a6adc8"># 工具说明书（一个完整的、好 description 的例子）</span>
+{
+  <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"function"</span>,
+  <span style="color:#a6e3a1">"function"</span>: {
+    <span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"query_taigu_kwh"</span>,
+    <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"查询某个台区在某一天的电量（kWh）。当用户问【单个台区某天/某段时间的用电量】时使用。返回 {taigu_id, date, kwh}。不要用于：(1) 多个台区对比（用 compare_taigus），(2) 查询线损率（用 query_line_loss_rate），(3) 算变化百分比（用 calculate_pct_change）。"</span>,
+    <span style="color:#a6e3a1">"parameters"</span>: {
+      <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"object"</span>,
+      <span style="color:#a6e3a1">"properties"</span>: {
+        <span style="color:#a6e3a1">"taigu_id"</span>: {
+          <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>,
+          <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"台区编号，格式 T 加 2-3 位数字，如 T07、T102"</span>,
+          <span style="color:#a6e3a1">"pattern"</span>: <span style="color:#a6e3a1">"^T\\d{2,3}$"</span>
+        },
+        <span style="color:#a6e3a1">"date"</span>: {
+          <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>,
+          <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"日期，格式 YYYY-MM-DD，如 2026-08-27"</span>,
+          <span style="color:#a6e3a1">"pattern"</span>: <span style="color:#a6e3a1">"^\\d{4}-\\d{2}-\\d{2}$"</span>
+        }
+      },
+      <span style="color:#a6e3a1">"required"</span>: [<span style="color:#a6e3a1">"taigu_id"</span>, <span style="color:#a6e3a1">"date"</span>]
+    }
+  }
+}</code></pre>
+
+<div class="callout">
+  <strong>📌 JSON Schema 里的 <code>pattern</code>：</strong>上面 <code>taigu_id</code> 和 <code>date</code> 都加了正则约束。DeepSeek / GPT 这类大模型<strong>会尽量遵守</strong>正则，但<strong>不能完全依赖</strong>——这就是为什么函数内部还要再做一次参数校验。<strong>Schema 是「软约束」，函数校验是「硬约束」</strong>，两者都要有。
+</div>
+
+<h2>三个武器一起用：完整工具模板</h2>
+
+<pre><code><span style="color:#a6adc8"># tools.py —— 标准工具模板：校验 + 统一格式 + 好 description</span>
+<span style="color:#cdd6f4">import</span> re
+<span style="color:#cdd6f4">from</span> datetime <span style="color:#cdd6f4">import</span> datetime
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">_ok</span>(data):
+    <span style="color:#a6adc8">"""成功结果模板"""</span>
+    <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"ok"</span>: <span style="color:#cdd6f4">True</span>, <span style="color:#a6e3a1">"data"</span>: data}
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">_err</span>(msg):
+    <span style="color:#a6adc8">"""失败结果模板"""</span>
+    <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"ok"</span>: <span style="color:#cdd6f4">False</span>, <span style="color:#a6e3a1">"error"</span>: msg}
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">query_taigu_kwh</span>(taigu_id, date):
+    <span style="color:#a6adc8">"""查询某个台区在某一天的电量（kWh）。单个台区单日数据用这个。"""</span>
+
+    <span style="color:#a6adc8"># 武器 1：参数校验</span>
+    <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">not</span> re.match(<span style="color:#a6e3a1">r"^T\d{2,3}$"</span>, taigu_id):
+        <span style="color:#cdd6f4">return</span> _err(<span style="color:#a6e3a1">f"taigu_id 格式错：'{taigu_id}'，应该是 T 加 2-3 位数字"</span>)
+    <span style="color:#cdd6f4">try</span>:
+        datetime.strptime(date, <span style="color:#a6e3a1">"%Y-%m-%d"</span>)
+    <span style="color:#cdd6f4">except</span> ValueError:
+        <span style="color:#cdd6f4">return</span> _err(<span style="color:#a6e3a1">f"date 格式错：'{date}'，应该是 YYYY-MM-DD"</span>)
+
+    <span style="color:#cdd6f4">try</span>:
+        <span style="color:#a6adc8"># 真实业务：查 DB / 调 API / 读文件</span>
+        kwh = _query_db(taigu_id, date)
+        <span style="color:#cdd6f4">if</span> kwh <span style="color:#cdd6f4">is</span> <span style="color:#cdd6f4">None</span>:
+            <span style="color:#cdd6f4">return</span> _err(<span style="color:#a6e3a1">f"没找到 {taigu_id} 在 {date} 的数据"</span>)
+        <span style="color:#cdd6f4">return</span> _ok({<span style="color:#a6e3a1">"taigu_id"</span>: taigu_id, <span style="color:#a6e3a1">"date"</span>: date, <span style="color:#a6e3a1">"kwh"</span>: kwh})
+    <span style="color:#cdd6f4">except</span> Exception <span style="color:#cdd6f4">as</span> e:
+        <span style="color:#cdd6f4">return</span> _err(<span style="color:#a6e3a1">f"查询失败: {type(e).__name__}: {e}"</span>)
+
+<span style="color:#a6adc8"># 工具说明书（带 4 条铁律的好 description）</span>
+TOOLS = [{
+    <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"function"</span>,
+    <span style="color:#a6e3a1">"function"</span>: {
+        <span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"query_taigu_kwh"</span>,
+        <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"查询某个台区在某一天的电量（kWh）。用于【单个台区单日】数据。返回 {taigu_id, date, kwh}。不要用于：多台区对比、线损率查询、计算百分比变化。"</span>,
+        <span style="color:#a6e3a1">"parameters"</span>: {
+            <span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"object"</span>,
+            <span style="color:#a6e3a1">"properties"</span>: {
+                <span style="color:#a6e3a1">"taigu_id"</span>: {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>, <span style="color:#a6e3a1">"pattern"</span>: <span style="color:#a6e3a1">"^T\\d{2,3}$"</span>, <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"台区编号，T 加数字，如 T07"</span>},
+                <span style="color:#a6e3a1">"date"</span>: {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>, <span style="color:#a6e3a1">"pattern"</span>: <span style="color:#a6e3a1">"^\\d{4}-\\d{2}-\\d{2}$"</span>, <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"日期 YYYY-MM-DD"</span>}
+            },
+            <span style="color:#a6e3a1">"required"</span>: [<span style="color:#a6e3a1">"taigu_id"</span>, <span style="color:#a6e3a1">"date"</span>]
+        }
+    }
+}]</code></pre>
+
+<h2>本课 vs 29 课：能力对比</h2>
+
+<table>
+  <thead>
+    <tr><th>维度</th><th>29 课（能跑）</th><th>30 课（能跑稳）</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>参数校验</td><td>无，AI 传错就崩</td><td>函数内 <code>if</code> 检查 + Schema <code>pattern</code></td></tr>
+    <tr><td>返回格式</td><td>每个工具自己定</td><td>统一 <code>{"ok": True/False, ...}</code></td></tr>
+    <tr><td>description</td><td>一两句话</td><td>4 条铁律：输入/输出/何时用/何时不用</td></tr>
+    <tr><td>AI 选错工具</td><td>经常</td><td>很少（description 写明反例）</td></tr>
+    <tr><td>AI 传错参数</td><td>崩 / 静默错</td><td>AI 收到错误信息自动重试</td></tr>
+    <tr><td>新人接手</td><td>翻代码猜行为</td><td>看 description 一目了然</td></tr>
+  </tbody>
+</table>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>工具函数的<strong>稳定性</strong>靠三件事：<strong>校验参数</strong>（硬约束 + Schema 软约束）+ <strong>统一返回</strong>（永远 <code>{ok, data/error}</code>）+ <strong>写好 description</strong>（4 条铁律）。这是「能跑」到「能用」的关键，也是 35 课《评估与安全》的预演——评估 Agent 的时候，工具这层不稳健，评估全白搭。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>武器 1：参数校验</strong>——函数内 <code>if</code> 检查 + JSON Schema <code>pattern</code> 双重保护</li>
+  <li>✅ <strong>武器 2：统一返回格式</strong>——永远 <code>{"ok": True/False, "data"/"error"}</code></li>
+  <li>✅ <strong>武器 3：好 description</strong>——输入/输出/何时用/何时不用 4 条铁律</li>
+  <li>✅ <strong>错误信息要让 AI 能读懂</strong>——不抛异常，返回错误结构，让 AI 自己重试</li>
+  <li>✅ <strong>Schema 是软约束，函数校验是硬约束</strong>——两者都不可少</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>想让 AI 在多个工具中<strong>减少选错工具</strong>的概率，最关键应该改：</p>
+
+<ol type="A">
+  <li>把工具函数名改得更短</li>
+  <li>在 description 里写清「何时用、何时不用」并给反例</li>
+  <li>工具数量越多越好，AI 选的可能性就多</li>
+  <li>把 description 改成英文，更专业</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 想给你的工具加更复杂的校验（数值范围、必填组合）、想统一管理所有工具的 description、想写一个自动生成工具说明书的脚本——任何问题都找你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0029-agent-with-http-api.html">← 上一课：HTTP API 工具</a>
+  <a href="0031-pandas-foundation.html">下一课：pandas 基础夯实 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>B。description 是 AI 选工具的<strong>唯一依据</strong>——AI 看不到你的函数名（除了关键词匹配），看不到函数内部代码。把「何时用」写清楚，把「何时不用」也写清楚（给反例），AI 选错工具的概率会<strong>显著下降</strong>。A 错：函数名长短对 AI 决策影响很小，description 才是关键。C 错：工具<strong>不是越多越好</strong>，工具多了 AI 反而更纠结，4-8 个工具是合理区间。D 错：DeepSeek、GPT 这些模型中文理解能力都很好，<strong>中文 description 反而比英文更准</strong>——你写工具是给同事用，中文场景优先。30 课的核心习惯：<strong>每个工具写 description 时过一遍 4 条铁律</strong>，这是从 demo 到生产工具的必经一步。
+</p>
+</body>
+</html>

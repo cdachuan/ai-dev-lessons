@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0028 · 多工具 Agent：ReAct 循环的代码实现</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    background: var(--accent);
+    color: white;
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .diagram {
+    background: #f8fafc;
+    border: 1px dashed var(--border);
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 0.9rem;
+    margin: 1.2rem 0;
+  }
+</style>
+</head>
+<body>
+<h1>🤖 多工具 Agent：ReAct 循环的代码实现</h1>
+<p class="meta">第 0028 课 · P5 实战篇 <span class="tag">实操课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>在 27 课的 1 工具 1 调用基础上，<strong>注册 3-4 个工具</strong>，用 <code>while</code> 循环实现 <strong>Thought → Action → Observation</strong> 多轮调用，让 Agent 自己决定「下一步该调哪个工具、调几次、什么时候停」。学完你就有了「能处理多步任务的 Agent」骨架。
+</div>
+
+<h2>从「一个工具」到「多工具」的真正变化</h2>
+
+<p>27 课的脚本只能处理「一步到位」的问题：<strong>用户问一个数据，AI 调一个工具，AI 回答</strong>。但真实工作里，你的问题往往需要<strong>多步</strong>：</p>
+
+<ul>
+  <li>「T07 台区 8 月 22 号用了多少度电，<strong>比前一天多了几个百分点？</strong>」——要查两次，还要算百分比</li>
+  <li>「<strong>帮我把这份数据</strong>按台区分组算总量，<strong>再画个图</strong>—— AI 要先读文件，再算，再画</li>
+  <li>「T07 和 T12 哪个台区<strong>昨天</strong>的线损率<strong>更高</strong>？高多少？」——查两个台区、算两个指标、做对比</li>
+</ul>
+
+<p>这种<strong>需要多次工具调用、调用顺序和次数都不固定</strong>的问题，27 课的代码搞不定。今天加一个 <code>while</code> 循环，把 Agent 从「调一次」升级到「一直调到 AI 自己喊停」。</p>
+
+<div class="callout">
+  <strong>📌 ReAct 是什么：</strong>ReAct = <strong>Re</strong>asoning（思考）+ <strong>Act</strong>ing（行动）。AI 每一步都先「想」下一步该做什么（「我需要先查 T07 22 号的电量」），再「动」（调工具），看到结果（Observation）后再「想」下一步。这就是 Agent 的核心循环。
+</div>
+
+<h2>设计四个工具，覆盖一组真实问题</h2>
+
+<p>围绕「<strong>查台区电量、做对比、出报告</strong>」这个真实场景，我们注册四个工具：</p>
+
+<table>
+  <thead>
+    <tr><th>工具名</th><th>能做什么</th><th>什么时候用</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>query_taigu_kwh</code></td><td>查某台区某日电量</td><td>用户问「多少度电」</td></tr>
+    <tr><td><code>query_line_loss_rate</code></td><td>查某台区某日线损率（%）</td><td>用户问「线损」</td></tr>
+    <tr><td><code>compare_taigus</code></td><td>对比两个台区某指标的差值</td><td>用户问「哪个高/低」</td></tr>
+    <tr><td><code>calculate_pct_change</code></td><td>算两数增减百分比</td><td>用户问「比……多了几个百分点」</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>💡 为什么是这四个：</strong>它们<strong>有依赖关系</strong>——「对比」要底层数据，「算百分比」要两个数。这就是真实任务的拆解：复杂问题=多个简单工具组合。28 课让你<strong>看见</strong>这个组合的过程。
+</div>
+
+<h2>第一步：四个工具函数 + 一份说明书</h2>
+
+<p>这四个函数和 27 课一样，是<strong>普通的 Python 函数</strong>——AI 帮你决定「调哪个、按什么顺序调」，但函数本身是你的代码在工作。</p>
+
+<pre><code><span style="color:#a6adc8"># tools_4.py —— 四个工具函数</span>
+
+<span style="color:#a6adc8"># 模拟台区数据</span>
+MOCK = {
+    <span style="color:#a6e3a1">"T07"</span>: {<span style="color:#a6e3a1">"kwh"</span>: {<span style="color:#a6e3a1">"2026-08-21"</span>: <span style="color:#fab387">1180.2</span>, <span style="color:#a6e3a1">"2026-08-22"</span>: <span style="color:#fab387">1320.8</span>},
+            <span style="color:#a6e3a1">"loss"</span>: {<span style="color:#a6e3a1">"2026-08-21"</span>: <span style="color:#fab387">3.2</span>,   <span style="color:#a6e3a1">"2026-08-22"</span>: <span style="color:#fab387">4.1</span>}},
+    <span style="color:#a6e3a1">"T12"</span>: {<span style="color:#a6e3a1">"kwh"</span>: {<span style="color:#a6e3a1">"2026-08-21"</span>: <span style="color:#fab387">1020.1</span>, <span style="color:#a6e3a1">"2026-08-22"</span>: <span style="color:#fab387">995.7</span> },
+            <span style="color:#a6e3a1">"loss"</span>: {<span style="color:#a6e3a1">"2026-08-21"</span>: <span style="color:#fab387">2.8</span>,   <span style="color:#a6e3a1">"2026-08-22"</span>: <span style="color:#fab387">2.5</span>}},
+}
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">query_taigu_kwh</span>(taigu_id, date):
+    <span style="color:#a6adc8">"""查某台区某日用电量（kWh）"""</span>
+    kwh = MOCK.get(taigu_id, {}).get(<span style="color:#a6e3a1">"kwh"</span>, {}).get(date)
+    <span style="color:#cdd6f4">if</span> kwh <span style="color:#cdd6f4">is</span> <span style="color:#cdd6f4">None</span>: <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"无数据: {taigu_id}/{date}"</span>}
+    <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"taigu_id"</span>: taigu_id, <span style="color:#a6e3a1">"date"</span>: date, <span style="color:#a6e3a1">"kwh"</span>: kwh}
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">query_line_loss_rate</span>(taigu_id, date):
+    <span style="color:#a6adc8">"""查某台区某日线损率（%）"""</span>
+    rate = MOCK.get(taigu_id, {}).get(<span style="color:#a6e3a1">"loss"</span>, {}).get(date)
+    <span style="color:#cdd6f4">if</span> rate <span style="color:#cdd6f4">is</span> <span style="color:#cdd6f4">None</span>: <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"无数据: {taigu_id}/{date}"</span>}
+    <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"taigu_id"</span>: taigu_id, <span style="color:#a6e3a1">"date"</span>: date, <span style="color:#a6e3a1">"loss_rate_pct"</span>: rate}
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">compare_taigus</span>(taigu_a, taigu_b, metric, date):
+    <span style="color:#a6adc8">"""对比两台区某指标在某日的差值（a - b）"""</span>
+    src = MOCK.get(taigu_a, {}).get(metric, {}).get(date)
+    dst = MOCK.get(taigu_b, {}).get(metric, {}).get(date)
+    <span style="color:#cdd6f4">if</span> src <span style="color:#cdd6f4">is</span> <span style="color:#cdd6f4">None</span> <span style="color:#cdd6f4">or</span> dst <span style="color:#cdd6f4">is</span> <span style="color:#cdd6f4">None</span>:
+        <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">"数据缺失"</span>}
+    <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"a"</span>: taigu_a, <span style="color:#a6e3a1">"b"</span>: taigu_b, <span style="color:#a6e3a1">"metric"</span>: metric,
+            <span style="color:#a6e3a1">"date"</span>: date, <span style="color:#a6e3a1">"diff"</span>: <span style="color:#fab387">round</span>(src - dst, <span style="color:#fab387">2</span>)}
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">calculate_pct_change</span>(old_value, new_value):
+    <span style="color:#a6adc8">"""算 (new - old) / old * 100%，返回百分比"""</span>
+    <span style="color:#cdd6f4">if</span> old_value == <span style="color:#fab387">0</span>: <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">"基数为 0，无法算百分比"</span>}
+    pct = <span style="color:#fab387">round</span>((new_value - old_value) / old_value * <span style="color:#fab387">100</span>, <span style="color:#fab387">2</span>)
+    <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"old"</span>: old_value, <span style="color:#a6e3a1">"new"</span>: new_value, <span style="color:#a6e3a1">"pct_change"</span>: pct}</code></pre>
+
+<p>接下来写<strong>一份说明书</strong>（tools schema），把四个函数告诉 AI。每个工具的 <code>description</code> 决定 AI 会不会选它：</p>
+
+<pre><code><span style="color:#cdd6f4">from</span> tools_4 <span style="color:#cdd6f4">import</span> query_taigu_kwh, query_line_loss_rate, compare_taigus, calculate_pct_change
+
+<span style="color:#cdd6f4">TOOL_REGISTRY</span> = {
+    <span style="color:#a6e3a1">"query_taigu_kwh"</span>: query_taigu_kwh,
+    <span style="color:#a6e3a1">"query_line_loss_rate"</span>: query_line_loss_rate,
+    <span style="color:#a6e3a1">"compare_taigus"</span>: compare_taigus,
+    <span style="color:#a6e3a1">"calculate_pct_change"</span>: calculate_pct_change,
+}
+
+tools = [
+    {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"function"</span>, <span style="color:#a6e3a1">"function"</span>: {
+        <span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"query_taigu_kwh"</span>,
+        <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"查询指定台区在某一天的用电量（kWh）。当用户问某台区某天的用电量时使用。"</span>,
+        <span style="color:#a6e3a1">"parameters"</span>: {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"object"</span>, <span style="color:#a6e3a1">"properties"</span>: {
+            <span style="color:#a6e3a1">"taigu_id"</span>: {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>, <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"台区编号，如 T07"</span>},
+            <span style="color:#a6e3a1">"date"</span>:    {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>, <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"日期 YYYY-MM-DD"</span>}},
+        <span style="color:#a6e3a1">"required"</span>: [<span style="color:#a6e3a1">"taigu_id"</span>, <span style="color:#a6e3a1">"date"</span>]}}},
+    {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"function"</span>, <span style="color:#a6e3a1">"function"</span>: {
+        <span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"query_line_loss_rate"</span>,
+        <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"查询指定台区在某一天的线损率（百分比）。当用户问线损/损耗时使用。"</span>,
+        <span style="color:#a6e3a1">"parameters"</span>: {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"object"</span>, <span style="color:#a6e3a1">"properties"</span>: {
+            <span style="color:#a6e3a1">"taigu_id"</span>: {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>, <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"台区编号"</span>},
+            <span style="color:#a6e3a1">"date"</span>:    {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>, <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"日期 YYYY-MM-DD"</span>}},
+        <span style="color:#a6e3a1">"required"</span>: [<span style="color:#a6e3a1">"taigu_id"</span>, <span style="color:#a6e3a1">"date"</span>]}}},
+    {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"function"</span>, <span style="color:#a6e3a1">"function"</span>: {
+        <span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"compare_taigus"</span>,
+        <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"对比两个台区在某日的某指标差值（a - b）。当用户问两个台区谁高/低/差多少时使用。"</span>,
+        <span style="color:#a6e3a1">"parameters"</span>: {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"object"</span>, <span style="color:#a6e3a1">"properties"</span>: {
+            <span style="color:#a6e3a1">"taigu_a"</span>:  {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>,  <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"台区 A 编号"</span>},
+            <span style="color:#a6e3a1">"taigu_b"</span>:  {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>,  <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"台区 B 编号"</span>},
+            <span style="color:#a6e3a1">"metric"</span>:  {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>,  <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"指标: 'kwh' 或 'loss'"</span>},
+            <span style="color:#a6e3a1">"date"</span>:    {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"string"</span>,  <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"日期 YYYY-MM-DD"</span>}},
+        <span style="color:#a6e3a1">"required"</span>: [<span style="color:#a6e3a1">"taigu_a"</span>, <span style="color:#a6e3a1">"taigu_b"</span>, <span style="color:#a6e3a1">"metric"</span>, <span style="color:#a6e3a1">"date"</span>]}}},
+    {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"function"</span>, <span style="color:#a6e3a1">"function"</span>: {
+        <span style="color:#a6e3a1">"name"</span>: <span style="color:#a6e3a1">"calculate_pct_change"</span>,
+        <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"计算两个数值之间的增减百分比 (new-old)/old*100。当用户问"比前一天多了几个百分点"时使用。"</span>,
+        <span style="color:#a6e3a1">"parameters"</span>: {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"object"</span>, <span style="color:#a6e3a1">"properties"</span>: {
+            <span style="color:#a6e3a1">"old_value"</span>: {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"number"</span>, <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"旧值（基期）"</span>},
+            <span style="color:#a6e3a1">"new_value"</span>: {<span style="color:#a6e3a1">"type"</span>: <span style="color:#a6e3a1">"number"</span>, <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"新值（当期）"</span>}},
+        <span style="color:#a6e3a1">"required"</span>: [<span style="color:#a6e3a1">"old_value"</span>, <span style="color:#a6e3a1">"new_value"</span>]}}},
+]</code></pre>
+
+<div class="callout">
+  <strong>💡 关键设计：<code>TOOL_REGISTRY</code> 字典</strong>——把工具名映射到 Python 函数。这样 AI 让你「调 <code>query_taigu_kwh</code>」时，你的代码用 <code>TOOL_REGISTRY[name](**args)</code> 就能找到并执行它。新增工具时<strong>只改两处</strong>：写函数 + 加进 registry。
+</div>
+
+<h2>第二步：ReAct 循环（核心 30 行）</h2>
+
+<p>27 课只有「1 次调用」，28 课加一个 <code>while</code> 循环，让 AI 一直调到它自己回答为止：</p>
+
+<div class="diagram">
+Thought（AI 想下一步）<br>
+↓<br>
+Action（AI 说调哪个工具）<br>
+↓<br>
+Observation（你的代码执行，结果喂回）<br>
+↓<br>
+再次 Thought（AI 看到结果再想）<br>
+↓<br>
+... 直到 AI 不再调工具，自己组织答案 ...
+</div>
+
+<p>完整脚本：</p>
+
+<pre><code><span style="color:#a6adc8"># agent_react.py</span>
+<span style="color:#cdd6f4">import</span> json
+<span style="color:#cdd6f4">from</span> openai <span style="color:#cdd6f4">import</span> OpenAI
+<span style="color:#cdd6f4">from</span> tools_4 <span style="color:#cdd6f4">import</span> TOOL_REGISTRY
+
+client = OpenAI(api_key=<span style="color:#a6e3a1">"sk-你的密钥"</span>, base_url=<span style="color:#a6e3a1">"https://api.deepseek.com"</span>)
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">run_agent</span>(user_query, max_steps=<span style="color:#fab387">6</span>):
+    messages = [{<span style="color:#a6e3a1">"role"</span>: <span style="color:#a6e3a1">"user"</span>, <span style="color:#a6e3a1">"content"</span>: user_query}]
+
+    <span style="color:#cdd6f4">for</span> step <span style="color:#cdd6f4">in</span> <span style="color:#fab387">range</span>(max_steps):
+        <span style="color:#a6adc8"># ① Thought + Action：让 AI 想下一步、决定调不调工具</span>
+        resp = client.chat.completions.create(
+            model=<span style="color:#a6e3a1">"deepseek-chat"</span>,
+            messages=messages,
+            tools=tools
+        )
+        msg = resp.choices[<span style="color:#fab387">0</span>].message
+
+        <span style="color:#a6adc8"># ② AI 不调工具 → 给最终答案，结束</span>
+        <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">not</span> msg.tool_calls:
+            <span style="color:#cdd6f4">return</span> msg.content
+
+        <span style="color:#a6adc8"># ③ AI 调工具 → 全部执行，把结果喂回</span>
+        messages.append(msg)  <span style="color:#a6adc8"># 必须先 append AI 的消息</span>
+        <span style="color:#cdd6f4">for</span> call <span style="color:#cdd6f4">in</span> msg.tool_calls:
+            args = json.loads(call.function.arguments)
+            <span style="color:#cdd6f4">print</span>(<span style="color:#a6e3a1">f"  [step {step+1}] → {call.function.name}({args})"</span>)
+
+            <span style="color:#a6adc8"># ← 你的代码实际执行工具</span>
+            <span style="color:#cdd6f4">try</span>:
+                result = TOOL_REGISTRY[call.function.name](**args)
+            <span style="color:#cdd6f4">except</span> <span style="color:#cdd6f4">Exception</span> <span style="color:#cdd6f4">as</span> e:
+                result = {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"执行失败: {e}"</span>}
+
+            <span style="color:#a6adc8"># ④ Observation：把结果塞回对话</span>
+            messages.append({
+                <span style="color:#a6e3a1">"role"</span>: <span style="color:#a6e3a1">"tool"</span>,
+                <span style="color:#a6e3a1">"tool_call_id"</span>: call.id,
+                <span style="color:#a6e3a1">"content"</span>: json.dumps(result, ensure_ascii=<span style="color:#cdd6f4">False</span>)
+            })
+
+    <span style="color:#cdd6f4">return</span> <span style="color:#a6e3a1">"（达到最大步数，Agent 还没给出答案）"</span>
+
+<span style="color:#cdd6f4">if</span> __name__ == <span style="color:#a6e3a1">"__main__"</span>:
+    <span style="color:#cdd6f4">print</span>(run_agent(<span style="color:#a6e3a1">"T07 台区 8 月 22 号用了多少度电，比前一天多了几个百分点？"</span>))</code></pre>
+
+<p>这段代码<strong>核心就 30 行</strong>，加了 <code>while</code>（<code>for step in range(max_steps)</code>）和多工具遍历。和 27 课比，<strong>只有循环和 <code>TOOL_REGISTRY</code> 是新东西</strong>，其它都是 27 课已有的逻辑。</p>
+
+<h2>第三步：跑起来看 AI 怎么「自己调度」</h2>
+
+<p>跑这个问题：<strong>「T07 台区 8 月 22 号用了多少度电，比前一天多了几个百分点？」</strong></p>
+
+<pre><code>$ python agent_react.py
+  [step 1] → query_taigu_kwh({'taigu_id': 'T07', 'date': '2026-08-22'})
+  [step 2] → query_taigu_kwh({'taigu_id': 'T07', 'date': '2026-08-21'})
+  [step 3] → calculate_pct_change({'old_value': 1180.2, 'new_value': 1320.8})
+T07 台区 2026-08-22 用电 1320.8 kWh，比前一天 1180.2 kWh 多了 11.9%。</code></pre>
+
+<p>看到没？AI <strong>自己</strong>决定了：</p>
+<ol>
+  <li>先查 22 号电量（step 1）</li>
+  <li>看到结果，<strong>再</strong>查 21 号电量（step 2）</li>
+  <li>看到两个数，<strong>再</strong>调 <code>calculate_pct_change</code>（step 3）</li>
+  <li>看到百分比，<strong>自己组织答案</strong>，不再调工具，循环结束</li>
+</ol>
+
+<div class="callout green">
+  <strong>💡 ReAct 的力量：</strong>你<strong>完全没写 if-else</strong>决定「该查哪天、该不该算百分比」。AI 看完每个工具的结果，<strong>自己推理</strong>下一步。这就是为什么叫「智能体」——它有自主决策能力，不是死板脚本。
+</div>
+
+<h2>第四步：故意刁难，看 AI 怎么应对</h2>
+
+<p>试试这几个不同问题，看 AI 怎么调度（拷到 <code>__main__</code> 里跑）：</p>
+
+<ul>
+  <li><strong>「T07 和 T12 昨天线损率哪个高？高多少？」</strong>——AI 应该<strong>一次调 <code>compare_taigus</code></strong>，因为这个工具直接返回差值，AI 不需要先查两个数再算。</li>
+  <li><strong>「今天北京天气怎么样？」</strong>——AI 看到<strong>没天气工具</strong>，应该<strong>直接文本回答</strong>「我没有这个工具」，不调用任何东西，step 1 就结束。</li>
+  <li><strong>「T07 8 月 22 号的电量，和 T12 比，谁多？算一下两个台区的差值百分比」</strong>——AI 可能先 <code>query_taigu_kwh</code> 两次，再 <code>compare_taigus</code> 拿差值，最后 <code>calculate_pct_change</code> 算百分比，3-4 步走完。</li>
+</ul>
+
+<p>这就是 ReAct 的<strong>动态性</strong>——同样四问，调几次、调哪些工具，<strong>AI 自己定</strong>。</p>
+
+<div class="callout">
+  <strong>⚠️ 兜底保护：<code>max_steps=6</code></strong>——限制最多 6 轮工具调用。万一 AI 死循环（反复调同一工具），到 6 步强制退出。<strong>真实工程里必加</strong>，否则一次任务烧光你的 API 额度。35 课会专门讲这个。
+</div>
+
+<h2>和 27 课的关键区别</h2>
+
+<table>
+  <thead>
+    <tr><th>维度</th><th>27 课（1 工具）</th><th>28 课（多工具 ReAct）</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>工具数</td><td>1 个</td><td>3-4 个</td></tr>
+    <tr><td>调用次数</td><td>0 或 1 次</td><td>0 到 N 次（N 由 AI 决定）</td></tr>
+    <tr><td>循环</td><td>无（一次 create 完事）</td><td>有（<code>for step in range()</code>）</td></tr>
+    <tr><td>代码行数</td><td>~60 行</td><td>~90 行（多 30 行）</td></tr>
+    <tr><td>能处理的问题</td><td>一步到位</td><td>多步、需组合</td></tr>
+    <tr><td>兜底</td><td>不需要</td><td><code>max_steps</code> 必加</td></tr>
+  </tbody>
+</table>
+
+<h2>本课学了什么</h2>
+
+<ul>
+  <li>✅ 注册 4 个工具：查电量、查线损、对比、算百分比</li>
+  <li>✅ 用 <code>TOOL_REGISTRY</code> 字典把工具名映射到 Python 函数</li>
+  <li>✅ 用 <code>for step in range(max_steps)</code> 实现 ReAct 循环</li>
+  <li>✅ 让 AI 自主决定：调几次、调哪些、什么时候停</li>
+  <li>✅ 加 <code>max_steps</code> 兜底，防止死循环</li>
+  <li>✅ try/except 包装工具执行，错误也能塞回给 AI 继续推理</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>在 ReAct 循环里，下面哪件事是 <strong>你的 Python 代码</strong> 做的（不是 AI）？</p>
+
+<ol type="A">
+  <li>决定「下一步该不该调工具、调哪个」</li>
+  <li>实际执行 <code>TOOL_REGISTRY[name](**args)</code> 拿到结果</li>
+  <li>看到工具结果后推理「还需要调什么」</li>
+  <li>把多次工具结果组织成最终自然语言答案</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 跑脚本报错、想加新工具、想换成真实数据源——任何问题都找你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0027-fc-hands-on.html">← 上一课：Function Calling 实操</a>
+  <a href="0029-agent-with-http-api.html">下一课：接入真实 HTTP API →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>B。<strong>你的代码</strong>实际执行 <code>TOOL_REGISTRY[name](**args)</code>。A、C、D 都是 AI 的事——A 是 Thought（AI 决定下一步），C 是 Observation 后的新 Thought（AI 看结果再决定），D 是 AI 组织最终答案。28 课和 27 课一样坚守同一个边界：<strong>「执行归代码，决策归 AI」</strong>。多工具场景下，AI 的「决策」从「要不要调」升级成「按什么顺序调几个工具、什么时候停」——这就是 ReAct 的本质。
+</p>
+</body>
+</html>
