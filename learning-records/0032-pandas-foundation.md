@@ -3,7 +3,7 @@
 - **日期**：2026-08-31
 - **课号**：31（P5 实战篇）
 - **类型**：基础夯实课（概念+实践）
-- **状态**：pushed（08-31 cron 推送，待用户确认）
+- **状态**：done（09-01 用户答对小测B确认学完；用户追问 nunique vs unique+size，已讲清 nunique=unique+计数合体）
 - **GitHub Pages**：https://cdachuan.github.io/ai-dev-lessons/lessons/0031-pandas-foundation.html
 
 ## 背景
