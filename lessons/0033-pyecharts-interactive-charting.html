@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第33课 · pyecharts：交互式图表升级</title>
+<style>
+  body{font-family:"Segoe UI","Microsoft YaHei",sans-serif;max-width:820px;margin:0 auto;padding:32px 24px;line-height:1.75;color:#1a1a2e;background:#fdfdfb}
+  .badge{display:inline-block;background:#0f766e;color:#fff;border-radius:4px;padding:2px 10px;font-size:.8rem;margin-right:6px}
+  h1{border-bottom:3px solid #0f766e;padding-bottom:8px}
+  h2{color:#0f766e;margin-top:2em;border-left:4px solid #0f766e;padding-left:10px}
+  code{background:#eef1ee;padding:2px 6px;border-radius:3px;font-size:.92em}
+  pre{background:#1e2a26;color:#d8e8e0;padding:16px;border-radius:8px;overflow-x:auto}
+  pre code{background:transparent;color:inherit;padding:0}
+  .box{background:#f0f7f4;border-left:4px solid #0f766e;padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0}
+  .warn{background:#fdf3e7;border-left:4px solid #d97706;padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0}
+  table{border-collapse:collapse;width:100%;margin:14px 0}
+  th,td{border:1px solid #cbd5d0;padding:8px 12px;text-align:left}
+  th{background:#e6f0ec}
+  .quiz{background:#f4f0fa;border-left:4px solid #7c3aed;padding:14px 18px;border-radius:0 8px 8px 0}
+  .quiz button{margin:4px 8px 4px 0;padding:6px 16px;border:1px solid #7c3aed;border-radius:6px;background:#fff;cursor:pointer}
+  .quiz button:hover{background:#f1e8fd}
+  #quiz-result{font-weight:bold;margin-top:8px}
+  footer{margin-top:3em;padding-top:12px;border-top:1px solid #ccc;font-size:.88rem;color:#555}
+</style>
+</head>
+<body>
+
+<h1>第 33 课 · pyecharts：交互式图表升级</h1>
+<p><span class="badge">P5 实战篇</span><span class="badge">类型：实践课</span><span class="badge">预计 25 分钟</span></p>
+
+<div class="box"><b>一句话心法：</b>matplotlib 负责「画出来」，pyecharts 负责「让人看懂」——交互不是炫技，是把「放大看细节」的权利交给看图的人。而它落盘成 HTML 文件的形态，恰好就是上一个探讨里「黑板可观察」的天然载体。</div>
+
+<h2>一、为什么升级：matplotlib 的三个天花板</h2>
+<table>
+<tr><th>场景</th><th>matplotlib</th><th>pyecharts</th></tr>
+<tr><td>给领导演示某品类占比</td><td>静态图片，细节靠嘴说</td><td>鼠标悬停显示具体数值，<b>图自己会说话</b></td></tr>
+<tr><td>数据点太多</td><td>全挤在一起</td><td>dataZoom 拖拽缩放，先看趋势再看局部</td></tr>
+<tr><td>想隐藏某些系列对比</td><td>改代码重画</td><td>图例点一下就切换</td></tr>
+</table>
+<p>判断标准很简单：<b>给自己看 → matplotlib 够用；给别人看（汇报/黑板展示）→ pyecharts。</b></p>
+
+<h2>二、最小可用代码（已实跑验证）</h2>
+<p>演示数据：60 行电商订单 <code>orders_60.csv</code>（与 31 课 orders.csv 同结构，在 <code>D:\学习\AI\工具实操\</code>）。</p>
+<pre><code>import pandas as pd
+from pyecharts.charts import Bar
+from pyecharts import options as opts
+
+df = pd.read_csv(r"D:\学习\AI\工具实操\orders_60.csv")
+
+# 口径先行（31课心法）：算销售额，先剔除退款单
+done = df[df["status"] == "已完成"]
+sales = done.groupby("category")["amount"].sum().sort_values(ascending=False)
+
+bar = (
+    Bar()
+    .add_xaxis(sales.index.tolist())          # X轴：品类
+    .add_yaxis("销售额(元)", sales.values.tolist())
+    .set_global_opts(title_opts=opts.TitleOpts(title="各品类销售额（剔除退款）"))
+)
+bar.render("品类销售额.html")   # ← 输出是一个HTML文件，浏览器打开即交互</code></pre>
+<div class="box"><b>注意两个习惯：</b>① 链式写法 <code>( Bar().add_xaxis()... )</code> 是 pyecharts 惯例，从上往下读就是配置顺序；② <code>render()</code> 产出的是独立 HTML 文件——双击就能发给别人看，不需要装 Python。</div>
+
+<h2>三、常用三招（够覆盖 90% 汇报场景）</h2>
+<pre><code># 1. 悬停提示（默认就有，可自定义单位）
+.set_series_opts(tooltip_opts=opts.TooltipOpts(formatter="{b}: {c} 元"))
+
+# 2. 区域缩放——数据点多的图必加
+.set_global_opts(datazoom_opts=[opts.DataZoomOpts()])
+
+# 3. 换图型只是换一个类
+from pyecharts.charts import Pie, Line, Bar
+pie = (
+    Pie()
+    .add("销售额", [list(z) for z in zip(sales.index, sales.values)])
+    .set_global_opts(title_opts=opts.TitleOpts(title="品类占比"))
+)</code></pre>
+<p>记住映射关系：<b>X轴数据 → add_xaxis，系列数据 → add_yaxis/add，全局配置（标题/缩放）→ set_global_opts，系列配置（提示/标签）→ set_series_opts</b>。四个方法名就是全部骨架。</p>
+
+<h2>四、和黑板的衔接（探讨成果落地）</h2>
+<p>上一个探讨里说黑板要「可观察」——pyecharts 的 render 产物就是最便宜的实现：<b>每个 step 跑完顺手 render 一张图，黑板里挂上文件路径</b>。看黑板的人点开就是可交互的图，不用读代码。这条路径在 34 课搭 Agent 时会正式接进去。</p>
+
+<h2>五、实操任务（15 分钟）</h2>
+<ol>
+<li>跑通上面第二节的代码，浏览器打开生成的 HTML，试试悬停</li>
+<li>把 Bar 换成 Pie（用第三节的写法），看品类占比</li>
+<li>挑战：给 Bar 加上 DataZoomOpts，然后<b>故意把口径改错一次</b>——不过滤退款直接画，对比两图的差异，体会「图骗人比数字骗人更直观」</li>
+</ol>
+
+<div class="quiz">
+<b>🤔 小测</b>：你用 pyecharts 画了各品类销售额给领导，领导问「家居类怎么这么低，是所有订单都算进去了吗？」你的第一反应应该是？<br>
+<button onclick="q('A')">A. 现场重新解释口径</button>
+<button onclick="q('B')">B. 指出图标题里写了「剔除退款」，并确认他问的口径是否一致</button>
+<button onclick="q('C')">C. 换成饼图再画一遍</button>
+<button onclick="q('D')">D. 说回去核对明天答复</button>
+<div id="quiz-result"></div>
+</div>
+
+<footer>
+上一课：<a href="0032-pandasai-intro.html">32 · pandasai 体验课</a> ｜ 下一课：34 · Agent + 数据分析（多工具协作）<br>
+推荐延伸阅读：<a href="https://pyecharts.org/#/zh-cn/README">pyecharts 官方文档（中文）</a>——只看「快速开始」和「基础图表」两节就够本课用。<br>
+有问题随时在对话里问你的 AI 教练。看完跟教练说一声「看完了」，就推进 34 课。
+</footer>
+
+<script>
+function q(c){
+  const r = document.getElementById('quiz-result');
+  if(c==='B'){r.textContent='✅ 正确！口径意识放在图里（标题声明）+放在嘴上（主动确认对方口径）。A 错在被动，C/D 是逃避确认口径。';r.style.color='#0f766e';}
+  else{r.textContent='❌ 再想想——核心考点是「口径确认」，不是重新画图或解释。提示：图标题本身就该是口径声明。';r.style.color='#d97706';}
+}
+</script>
+</body>
+</html>
