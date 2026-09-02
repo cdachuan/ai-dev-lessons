@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0032 · pandasai：自然语言分析（体验课）</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  .callout.red {
+    background: #fef2f2;
+    border-left-color: var(--red);
+  }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    background: var(--accent);
+    color: white;
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .diagram {
+    background: #f8fafc;
+    border: 1px dashed var(--border);
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 0.9rem;
+    margin: 1.2rem 0;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>🗣️ pandasai：用大白话问数据</h1>
+<p class="meta">第 0032 课 · P5 实战篇 <span class="tag">体验课</span></p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>体验「自然语言 → 分析结果」的一键链路，同时看清它的<strong>原理与边界</strong>。核心心法一句话：<strong>pandasai 负责「翻译」，你负责「把关」</strong>——它吐出的每个数，都要过得了你 31 课练出来的那双 pandas 眼睛。
+</div>
+
+<h2>它不是魔法：先看懂原理</h2>
+
+<p>名字很像「pandas 的 AI 版」，但 pandasai <strong>不是一个新数据分析库，而是给 pandas 加了一个翻译层</strong>：大模型把你的中文问题翻译成 pandas 代码（或 SQL），在<strong>你本机执行这段代码</strong>，再把结果——数字、表格或图表——返回给你。</p>
+
+<div class="diagram">
+你的问题（大白话）<br>
+↓ ① 大模型翻译<br>
+pandas / SQL 代码<br>
+↓ ② 本机执行<br>
+数字 · 表格 · 图表
+</div>
+
+<p>官方文档的原话是：pandasai 把自然语言<strong>转换成 Python 代码和 SQL 查询，再执行代码和数据交互，返回结果</strong>。所以它的体验像「聊天」，本质还是「写代码跑数」——只是写代码的人换成了大模型。</p>
+
+<div class="callout">
+  <strong>📌 关键认知：</strong>代码是<strong>「生成」的，不是「保证正确」的</strong>。大模型翻译可能翻错、可能用错列名、可能漏掉业务条件。这决定了下面所有用法——<strong>永远把它的输出当「待核验的草稿」，而不是「答案」</strong>。
+</div>
+
+<h2>装一个，跑一句（体验）</h2>
+
+<p>官方文档当前推荐版本（v3）要求 Python 3.8–3.11——你本机 3.11 正好在范围内。装两个包：主体 + 大模型接入扩展。</p>
+
+<pre><code><span style="color:#a6adc8"># 终端里装（需要联网）</span>
+pip install pandasai
+pip install pandasai-litellm</code></pre>
+
+<p>然后跑一句最简体验：</p>
+
+<pre><code><span style="color:#cdd6f4">import</span> pandasai <span style="color:#cdd6f4">as</span> pai
+<span style="color:#cdd6f4">from</span> pandasai_litellm.litellm <span style="color:#cdd6f4">import</span> LiteLLM
+
+<span style="color:#a6adc8"># ① 配大模型：key 从环境变量读，别写死在代码里</span>
+llm = LiteLLM(model=<span style="color:#a6e3a1">"gpt-4.1-mini"</span>, api_key=YOUR_API_KEY)
+pai.config.set({<span style="color:#a6e3a1">"llm"</span>: llm})
+
+<span style="color:#a6adc8"># ② 读数据——还是熟悉的 pandas 家族，orders.csv 是 31 课那张模拟电商订单表</span>
+df = pai.read_csv(<span style="color:#a6e3a1">"orders.csv"</span>)
+
+<span style="color:#a6adc8"># ③ 用大白话提问</span>
+resp = df.chat(<span style="color:#a6e3a1">"按类目统计销售额，哪个类目最高？"</span>)
+<span style="color:#cdd6f4">print</span>(resp)</code></pre>
+
+<p>根据你问的问题，返回可能是<strong>文本、数字、表格或图表</strong>——「哪个类目最高」给数字，「画个每月销售额趋势图」给图，「把退货的订单列出来」给表格。</p>
+
+<div class="callout red">
+  <strong>⚠️ 两句提醒：</strong>① 官方示例用 OpenAI，LiteLLM 是统一接口、可切换多种大模型（想用自己的模型时，以 pandas-ai 文档的 LLM 章节为准，别照抄网上旧写法——老教程里常见的 <code>SmartDataframe</code> 是 v2 的写法，新版入口是 <code>pai.read_csv()</code> + <code>.chat()</code>）。② <strong>你的问题会被发送给外部大模型</strong>——涉及公司真实经营数据的问题，先想清楚数据能不能出内网，按你自己的数据边界规矩来。练习就用模拟的 <code>orders.csv</code>，效果一样。
+</div>
+
+<h2>为什么 31 课不能省：你才是把关人</h2>
+
+<p>如果 pandas 不熟，pandasai 的体验会「爽 5 分钟、坑一整天」——它给你一个数字，你<strong>不知道对不对、也不知道怎么反驳它</strong>。会 pandas 的人用法完全不同：</p>
+
+<table>
+  <thead>
+    <tr><th>pandasai 可能犯的错</th><th>例子</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>不懂口径</strong></td><td>把「已退款」的订单也算进销售额——31 课的三问（算谁/怎么算/要不要排除）它不会主动替你问</td></tr>
+    <tr><td><strong>列名 / 字段幻觉</strong></td><td>把 <code>amount</code> 当成客户数来 count，或编一个不存在的列名</td></tr>
+    <tr><td><strong>生成的代码本身有 bug</strong></td><td>条件写反、groupby 键选错，跑完不报错但结果错</td></tr>
+  </tbody>
+</table>
+
+<p><strong>把关清单</strong>——拿到它的任何结果，走三步：</p>
+
+<ol class="steps">
+  <li><strong>要代码：</strong>让它把「怎么算的」展示出来（pandasai 能看到生成过程），或直接要求返回所用代码。</li>
+  <li><strong>对口径：</strong>套 31 课的三问——算谁？怎么算？要不要排除？退款算了吗？客户数去重了吗？</li>
+  <li><strong>复算：</strong>关键数字自己用 pandas 手写一遍，两边对上了才敢用。</li>
+</ol>
+
+<pre><code><span style="color:#a6adc8"># 关键数字自己复算一遍——10 秒钟的事，保住汇报的命</span>
+import pandas <span style="color:#cdd6f4">as</span> pd
+df = pd.read_csv(<span style="color:#a6e3a1">"orders.csv"</span>)
+valid = df[df[<span style="color:#a6e3a1">"status"</span>] == <span style="color:#a6e3a1">"已完成"</span>]
+<span style="color:#cdd6f4">print</span>(valid.groupby(<span style="color:#a6e3a1">"category"</span>)[<span style="color:#a6e3a1">"amount"</span>].sum())</code></pre>
+
+<h2>什么时候用它（判断框架）</h2>
+
+<p class="good">✅ 适合：</p>
+<ul>
+  <li>探索性快问快答——「先随便看看数据里有什么」，像跟数据聊天</li>
+  <li>给不懂代码的同事自助查数（pandasai 正是往这个方向做的）</li>
+  <li>快速画个趋势图，看个大概方向</li>
+</ul>
+
+<p class="bad">❌ 不适合：</p>
+<ul>
+  <li>正式汇报口径——需要可解释、可复现，每一步都要经得起问</li>
+  <li>涉及敏感 / 真实业务数据外传红线</li>
+  <li>你还没法判断它答案对不对的场景（回到 31 课补 pandas）</li>
+</ul>
+
+<div class="callout green">
+  <strong>🎯 和 34 课的伏笔：</strong>pandasai 本质上就是一个<strong>「会写 pandas 代码的 Agent 雏形」</strong>——大模型负责想（翻译成代码），工具负责算（执行）。34 课我们要亲手搭 Agent + 数据分析，思路一模一样：<strong>「想」和「算」分离，你在中间当验收官</strong>。这课先借 pandasai 把「翻译层」的感觉找好。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>原理</strong>：pandasai = 大模型把中文翻译成 pandas/SQL → 本机执行 → 返回数字/表/图</li>
+  <li>✅ <strong>体验路径</strong>：pip 装两个包 → 配 LLM（key 走环境变量）→ <code>pai.read_csv()</code> + <code>.chat()</code></li>
+  <li>✅ <strong>边界</strong>：代码是「生成」的不是「保证正确」的；口径、列名、代码 bug 三类坑</li>
+  <li>✅ <strong>把关清单</strong>：要代码 → 对口径 → 自己复算；正式汇报和敏感数据不靠它</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>pandasai 返回一句「数码类目销售额最高，共 4598 元」。你准备把这句话写进汇报，动手前最该做什么？</p>
+
+<ol type="A">
+  <li>让它再画一张图表，更直观</li>
+  <li>核验它生成的代码和口径</li>
+  <li>换一个更大的模型重新问</li>
+  <li>先检查自己电脑内存够不够</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 想拿你自己的练习数据（模拟/公开数据集）试试 pandasai？把文件丢给 AI 教练，一起跑一遍「提问 → 把关」的完整流程。任何不清楚的地方，都问你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0031-pandas-foundation.html">← 上一课：pandas 基础夯实</a>
+  <a href="0033-interactive-charting.html">下一课：pyecharts 交互式图表 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>B。<strong>核验代码和口径</strong>是唯一正解——这课的整条主线就是「翻译层不可信，你得把关」：pandasai 可能把退款订单也算进销售额（口径错），可能用错列（字段幻觉），可能生成有 bug 的代码，而这三类错误都<strong>不会报错</strong>，只会安静地给你一个错的数字。A 错：图画得再漂亮，源头数字是错的只会错得更隐蔽。C 错：换更大的模型是提升「翻译」的命中率，不是核验手段——同样的问题换个人翻译，你依然要自己验算。D 错：无关项。这题的教训：<strong>「AI 给的数」和「能写进汇报的数」之间，隔着你的 pandas 眼睛</strong>——先要代码、对口径、自己复算一遍，三关过了才轮得到汇报。
+</p>
+</body>
+</html>

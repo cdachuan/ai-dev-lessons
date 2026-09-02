@@ -1,4 +1,4 @@
-{
+﻿{
   "meta": {
     "version": 3,
     "created": "2026-07-14",
@@ -220,8 +220,8 @@
       "num": 32,
       "topic": "pandasai-intro",
       "title": "pandasai：自然语言分析（体验课）",
-      "status": "pending",
-      "note": "P5新增连贯课：自然语言一键分析的体验课。注意：不替代pandas——核心仍是能读懂数据、自己写pandas、核验AI生成的结果"
+      "status": "pushed",
+      "note": "P5新增连贯课：自然语言一键分析的体验课。注意：不替代pandas——核心仍是能读懂数据、自己写pandas、核验AI生成的结果 09-02推送"
     },
     {
       "num": 33,
