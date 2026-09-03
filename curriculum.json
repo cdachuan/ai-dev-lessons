@@ -227,8 +227,8 @@
       "num": 33,
       "topic": "interactive-charting",
       "title": "pyecharts：交互式图表升级",
-      "status": "pending",
-      "note": "P5新增连贯课：从matplotlib升级到交互式图表（pyecharts），接上给领导看、有档次的需求"
+      "status": "pushed",
+      "note": "P5新增连贯课：从matplotlib升级到交互式图表（pyecharts），接上给领导看、有档次的需求。09-02晚提前生成并交互推送（用户当天想继续学）。09-03 cron 第1次提醒（未确认，未推新课）"
     },
     {
       "num": 34,
