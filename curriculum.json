@@ -1,4 +1,4 @@
-{
+﻿{
   "meta": {
     "version": 3,
     "created": "2026-07-14",
@@ -227,15 +227,15 @@
       "num": 33,
       "topic": "interactive-charting",
       "title": "pyecharts：交互式图表升级",
-      "status": "pushed",
-      "note": "P5新增连贯课：从matplotlib升级到交互式图表（pyecharts），接上给领导看、有档次的需求。09-02晚提前生成并交互推送（用户当天想继续学）。09-03 cron 第1次提醒（未确认，未推新课）"
+      "status": "done",
+      "note": "P5新增连贯课：从matplotlib升级到交互式图表（pyecharts），接上给领导看、有档次的需求。09-02晚提前生成并交互推送（用户当天想继续学）。09-03 cron 第1次提醒（未确认，未推新课）。09-02晚交互推送+实跑验证，用户答对小测B当场确认done"
     },
     {
       "num": 34,
       "topic": "agent-data-analysis",
       "title": "Agent + 数据分析（多工具协作）",
-      "status": "pending",
-      "note": "多工具协作：数据读取、分析、图表与结论。用夯实pandas+pandasai，数分+Agent交叉核心课，承接31-33"
+      "status": "pushed",
+      "note": "多工具协作：数据读取、分析、图表与结论。用夯实pandas+pandasai，数分+Agent交叉核心课，承接31-33 09-04推送"
     },
     {
       "num": 35,

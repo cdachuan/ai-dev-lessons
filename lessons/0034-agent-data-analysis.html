@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0034 · Agent + 数据分析（多工具协作）</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  .callout.red {
+    background: #fef2f2;
+    border-left-color: var(--red);
+  }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    background: var(--accent);
+    color: white;
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .diagram {
+    background: #f8fafc;
+    border: 1px dashed var(--border);
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 0.9rem;
+    margin: 1.2rem 0;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>🤖 Agent + 数据分析（多工具协作）</h1>
+<p class="meta">第 0034 课 · P5 实战篇 <span class="tag">交叉核心课</span> · 预计 25 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>亲手搭一个<strong>「带核验卡口」的数分 Agent</strong>——它自己读数据、算指标、画图，但每一步都<strong>把「口径」写进产出、留痕可复算</strong>。核心心法一句话：<strong>「想」和「算」分离，核验是内置步骤，不是事后想起来的可选后缀。</strong>
+</div>
+
+<h2>一、从 pandasai 到自建 Agent：差的是一道卡口</h2>
+
+<p>32 课我们下了结论：pandasai 出局的真正原因是<strong>架构</strong>——它没有地方放「核验」这道卡口，LLM 生成代码就直接执行、直接报数。你会 pandas、在意口径，需要的不是「翻译层」，是一个<strong>你自己能插手的 Agent</strong>。</p>
+
+<table>
+  <thead><tr><th>维度</th><th>pandasai（32 课）</th><th>自建数分 Agent（本课）</th></tr></thead>
+  <tbody>
+    <tr><td>「想」</td><td>大模型翻译成代码</td><td>大模型选工具 + 定参数</td></tr>
+    <tr><td>「算」</td><td>本机执行生成代码</td><td>你写的 pandas 工具</td></tr>
+    <tr><td><strong>核验卡口</strong></td><td><span class="bad">没有</span></td><td><span class="good">口径声明 + 复算，内置</span></td></tr>
+    <tr><td>中间产物</td><td><span class="bad">不可见</span></td><td><span class="good">profile 卡片 / 口径 / 结果留痕</span></td></tr>
+  </tbody>
+</table>
+
+<p>底层的「想算分离」其实和 pandasai 一模一样——真正让两者分道扬镳的，就是那一行<strong>「口径声明」</strong>和一个<strong>「复算」</strong>动作。本课就做这两件事。</p>
+
+<h2>二、Agent 怎么「看懂」一张表：感知三层</h2>
+
+<p>Agent 不能把 60 行数据全塞进上下文（又贵又散）。正确姿势是<strong>先画像、再看数据</strong>，分三层：</p>
+
+<table>
+  <thead><tr><th>层</th><th>谁来做</th><th>产出什么</th></tr></thead>
+  <tbody>
+    <tr><td>① 机械画像</td><td><strong>代码</strong>（自动）</td><td>shape / 列名 / 类型 / 缺失 / 前几行，压成几百字符的「卡片」</td></tr>
+    <tr><td>② 语义解读</td><td><strong>LLM</strong>（猜）+ 你审</td><td>猜各列是啥（主键？金额？日期？）、口径疑似问题</td></tr>
+    <tr><td>③ 人为补充</td><td><strong>你</strong>（数据字典）</td><td>列的真实含义 / 口径 / 坑，一次写长期复用</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>📌 分工铁律：</strong>画像自动做、语义机器猜人审、<strong>口径和坑永远人说了算</strong>。本课落地第①层（机械画像），② 体验一下，③ 留到 43 课做成数据字典 YAML——那会是你作品的亮点（人对 AI 的知识输入工程化）。
+</div>
+
+<h2>三、最小骨架：三个工具 + 核验卡口（已实跑验证）</h2>
+
+<p>演示数据仍是 <code>orders_60.csv</code>（60 行，4 个品类，46 单已完成 / 14 单已退款），在 <code>D:\学习\AI\工具实操\</code>。ReAct 主循环<strong>复用 28 课骨架，一行不改</strong>——本课新增的是下面三个工具函数。</p>
+
+<pre><code><span style="color:#cdd6f4">import</span> pandas <span style="color:#cdd6f4">as</span> pd, json
+
+<span style="color:#a6adc8"># ① 感知工具：机械画像 —— 60 行压成一张几百字符的卡片（实测 717 字符）</span>
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">data_profile</span>(df):
+    card = {
+        <span style="color:#a6e3a1">"shape"</span>: <span style="color:#fab387">list</span>(df.shape),
+        <span style="color:#a6e3a1">"columns"</span>: <span style="color:#fab387">list</span>(df.columns),
+        <span style="color:#a6e3a1">"dtypes"</span>: {c: <span style="color:#fab387">str</span>(df[c].dtype) <span style="color:#cdd6f4">for</span> c <span style="color:#cdd6f4">in</span> df.columns},
+        <span style="color:#a6e3a1">"missing"</span>: df.isna().sum().to_dict(),
+        <span style="color:#a6e3a1">"status"</span>: df[<span style="color:#a6e3a1">"status"</span>].value_counts().to_dict(),
+        <span style="color:#a6e3a1">"head"</span>: df.head(<span style="color:#fab387">3</span>).to_dict(<span style="color:#a6e3a1">"records"</span>),
+    }
+    <span style="color:#cdd6f4">return</span> json.dumps(card, ensure_ascii=<span style="color:#fab387">False</span>)
+
+<span style="color:#a6adc8"># ② 分析工具：默认剔除退款，并把「口径」写进返回值（核验卡口在此）</span>
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">analyze</span>(df, by, metric, agg):
+    done = df[df[<span style="color:#a6e3a1">"status"</span>] == <span style="color:#a6e3a1">"已完成"</span>]        <span style="color:#a6adc8"># 口径：只看已完成订单</span>
+    result = done.groupby(by)[metric].agg(agg).sort_values(ascending=<span style="color:#fab387">False</span>)
+    <span style="color:#cdd6f4">return</span> {
+        <span style="color:#a6e3a1">"口径"</span>: <span style="color:#a6e3a1">"已剔除 status='已退款' 的订单"</span>,
+        <span style="color:#a6e3a1">"结果"</span>: result.to_dict(),
+    }</code></pre>
+
+<pre><code><span style="color:#a6adc8"># ③ 图表工具：复用 33 课 pyecharts，落盘成 HTML 文件</span>
+<span style="color:#cdd6f4">from</span> pyecharts.charts <span style="color:#cdd6f4">import</span> Bar
+<span style="color:#cdd6f4">from</span> pyecharts <span style="color:#cdd6f4">import</span> options <span style="color:#cdd6f4">as</span> opts
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">make_bar</span>(df, by=<span style="color:#a6e3a1">"category"</span>, metric=<span style="color:#a6e3a1">"amount"</span>):
+    done = df[df[<span style="color:#a6e3a1">"status"</span>] == <span style="color:#a6e3a1">"已完成"</span>]
+    s = done.groupby(by)[metric].sum().sort_values(ascending=<span style="color:#fab387">False</span>)
+    (Bar().add_xaxis(s.index.tolist())
+          .add_yaxis(<span style="color:#a6e3a1">"销售额(元)"</span>, s.values.tolist())
+          .set_global_opts(title_opts=opts.TitleOpts(title=<span style="color:#a6e3a1">"各品类销售额(剔除退款)"</span>))
+     ).render(<span style="color:#a6e3a1">"品类销售额.html"</span>)
+    <span style="color:#cdd6f4">return</span> <span style="color:#a6e3a1">"已生成 品类销售额.html，浏览器打开可交互"</span></code></pre>
+
+<p>三个工具的 <code>TOOL_REGISTRY</code> 和 description，照 30 课的四条铁律写——尤其给 <code>analyze</code> 写清「何时该用、何时不该用」：</p>
+
+<pre><code><span style="color:#a6e3a1">"analyze"</span>: {
+    <span style="color:#a6e3a1">"func"</span>: analyze,
+    <span style="color:#a6e3a1">"description"</span>: <span style="color:#a6e3a1">"对数据做分组聚合（sum/count/mean），默认剔除已退款订单并返回口径声明。"</span>
+                 <span style="color:#a6e3a1">"用在你已经知道要按哪列分组、算哪个指标时。"</span>
+                 <span style="color:#a6e3a1">"不要用它探索数据长什么样（先用 data_profile 画像）。"</span>
+}</code></pre>
+
+<div class="callout green">
+  <strong>🎯 实测结果（本节代码真实跑出来的）：</strong>各品类「已完成」销售额 = 数码 9932 / 服饰 9838 / 食品 6660 / 家居 6194，合计 32624；若不过滤退款直接算则是 39670。<strong>同一张表，口径差一个条件，数字差 7000 多</strong>——这就是为什么口径必须跟着结果一起返回。
+</div>
+
+<h2>四、核验卡口：本课的灵魂</h2>
+
+<p>回顾 32 课结尾那个探讨，我们定了<strong>三大产品级要求</strong>，本课先做进前两条：</p>
+
+<ol class="steps">
+  <li><strong>核验是内置步骤</strong>——<code>analyze</code> 的返回值<strong>自带口径字段</strong>，不是「跑完再口头解释」。Agent 报数必带口径，这是硬约束。</li>
+  <li><strong>中间产物可见</strong>——profile 卡片、口径、结果全部留痕（返回 JSON），图表落盘成 HTML。任何一步都能回溯。</li>
+  <li><strong>敢说不知道</strong>——口径不清就拒绝回答。这条要等 35 课「评估与安全」和 43 课数据字典接上才完整。</li>
+</ol>
+
+<p>再加一道<strong>人的卡口</strong>——复算，10 秒钟的事：</p>
+
+<pre><code><span style="color:#a6adc8"># Agent 报了「数码 9932」，你自己手写一遍对账</span>
+done = df[df[<span style="color:#a6e3a1">"status"</span>] == <span style="color:#a6e3a1">"已完成"</span>]
+<span style="color:#fab387">print</span>(done.groupby(<span style="color:#a6e3a1">"category"</span>)[<span style="color:#a6e3a1">"amount"</span>].sum())</code></pre>
+
+<div class="callout">
+  <strong>📌 反直觉的提醒：</strong>自建 Agent 的兜底逻辑全是自己写的，<strong>漏了验证反而会「错得更自信」</strong>——因为它看起来比 pandasai 更「专业」。核验卡口不是锦上添花，是保命绳。
+</div>
+
+<h2>五、实操任务（15 分钟）</h2>
+
+<ol>
+  <li>把第三节三个工具函数抄进一个 <code>agent34.py</code>，跑一遍 <code>data_profile</code>，看画像卡片长什么样（注意它比 60 行数据短多少）</li>
+  <li>跑 <code>analyze(df, "category", "amount", "sum")</code>，确认返回值里<strong>带口径字段</strong>，数字对上「数码 9932」</li>
+  <li>挑战：给 <code>analyze</code> 加一个参数 <code>exclude_refund=True</code>，改成「口径可切换」——领导问退款时你能同时给出两个数字</li>
+</ol>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>自建数分 Agent 与 pandasai 的分水岭</strong>：核验卡口（口径声明 + 复算）</li>
+  <li>✅ <strong>感知三层</strong>：机械画像（代码）→ 语义解读（LLM）→ 人为补充（数据字典）</li>
+  <li>✅ <strong>三个工具</strong>：data_profile / analyze（带口径）/ make_bar（pyecharts 落盘）</li>
+  <li>✅ <strong>核验是内置步骤不是可选后缀</strong>，中间产物留痕可回溯</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>你的数分 Agent 每次报数，领导都追问「退款算了吗、口径是什么」，把你问得手忙脚乱。下面哪个改动<strong>最能根治</strong>这个反复被问的局面？</p>
+
+<ol type="A">
+  <li>换一个更贵的大模型，让它算得更准</li>
+  <li>给 Agent 注册更多分析工具</li>
+  <li>把「口径声明 + 复算」做成 analyze 函数的默认输出，每次报数都自动带口径</li>
+  <li>让 Agent 只在你要求时才解释口径</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 想把这段代码真接上 DeepSeek API、让 Agent 自己调度这三个工具跑起来？把 28 课的 ReAct 骨架拿来，教练陪你把这节课的工具接进去。任何不清楚的地方，都问你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0033-interactive-charting.html">← 上一课：pyecharts 交互式图表</a>
+  <a href="0035-agent-evaluation-and-security.html">下一课：Agent 评估与安全 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>C。<strong>把「口径声明 + 复算」做成 analyze 的默认输出</strong>是唯一根治——这课的整条主线就是「核验是内置步骤，不是可选后缀」：口径字段跟着结果<strong>每次</strong>自动返回，领导的问题在你开口前就被回答了，复算卡口也让错误在源头被拦下。A 错：换更贵的模型提升的是「想」的命中率，不是「核验」——同样可能算错，只是错得更流利。B 错：工具更多 ≠ 更可靠，反而可能让 Agent 更纠结（30 课：4-8 个是合理区间）。D 错：把口径变成「可选、按需解释」，恰恰是本课要消灭的坏习惯——它让核验退化成事后补救，而事后往往已经来不及。这题的教训：<strong>让 AI 报的数「可信」，靠的不是更强的模型，是把它设计成「不报口径就报不了数」</strong>。
+</p>
+</body>
+</html>
