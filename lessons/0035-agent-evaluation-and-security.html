@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0035 · Agent 评估与安全</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  .callout.red {
+    background: #fef2f2;
+    border-left-color: var(--red);
+  }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    background: var(--accent);
+    color: white;
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .score {
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 0.85rem;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 0.9rem;
+    margin: 0.8rem 0;
+  }
+</style>
+</head>
+<body>
+<h1>🩺 Agent 评估与安全</h1>
+<p class="meta">第 0035 课 · P5 实战篇 <span class="tag">工程化课</span> · 预计 20 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>给 34 课的 Agent 配一张<strong>「体检表」</strong>——固定一组测试问题，改代码前后各跑一遍，<strong>分数涨没涨一眼可见</strong>。再加<strong>安全四道闸</strong>，把「会算」的 Agent 变成「敢交给别人用」的 Agent。心法一句话：<strong>你不评估，就不知道自己的 Agent 到底行不行；你不设闸，就不敢把它交出去。</strong>
+</div>
+
+<h2>一、为什么 34 课之后马上要「评估」</h2>
+
+<p>34 课你给 Agent 装了<strong>核验卡口</strong>（口径声明 + 复算）。但「单个工具有卡口」不等于「整套 Agent 靠得住」——你怎么知道 Agent 在<strong>十种不同问法</strong>下都选对工具、都报对数？</p>
+
+<div class="callout">
+  <strong>📌 关键区别：</strong>34 课的核验是<strong>工具内部</strong>的自查；35 课的评估是<strong>站在 Agent 外面</strong>，拿一组固定问题当「考卷」，考它整体表现。前者防「算错」，后者防「这套 Agent 整体不行」。
+</div>
+
+<h2>二、评估三要素：考卷 = 问题 + 金标准 + 判分器</h2>
+
+<p>评估台（eval）不神秘，就是三样东西，全是<strong>纯代码、可复现</strong>——不接真 LLM 也能先把框架搭好、跑通：</p>
+
+<ol class="steps">
+  <li><strong>固定测试集 EVAL_SET</strong>——一组写死的问题，覆盖不同考点：工具选对没、口径算对没、该拒绝时拒绝没。</li>
+  <li><strong>金标准答案 golden</strong>——每题的标准答案，<strong>实跑 pandas 算出来的</strong>，不是拍的。</li>
+  <li><strong>判分器 judge()</strong>——把 Agent 的实际输出和金标准比对，吐一个 PASS / FAIL。</li>
+</ol>
+
+<pre><code><span style="color:#a6adc8"># 评估集样例（完整版在 agent35_eval_demo.py，四题已实跑）</span>
+EVAL_SET = [
+  {<span style="color:#a6e3a1">"question"</span>: <span style="color:#a6e3a1">"各品类已完成订单的销售额排名？"</span>,
+   <span style="color:#a6e3a1">"expect_tool"</span>: <span style="color:#a6e3a1">"analyze"</span>,
+   <span style="color:#a6e3a1">"golden"</span>: {<span style="color:#a6e3a1">"数码"</span>: <span style="color:#fab387">9932</span>, <span style="color:#a6e3a1">"服饰"</span>: <span style="color:#fab387">9838</span>, <span style="color:#a6e3a1">"食品"</span>: <span style="color:#fab387">6660</span>, <span style="color:#a6e3a1">"家居"</span>: <span style="color:#fab387">6194</span>}},
+  {<span style="color:#a6e3a1">"question"</span>: <span style="color:#a6e3a1">"amount 的平均值是多少？"</span>,
+   <span style="color:#a6e3a1">"expect_tool"</span>: <span style="color:#a6e3a1">"refuse"</span>,   <span style="color:#a6adc8"># 正确行为 = 追问口径，不报数</span>
+   <span style="color:#a6e3a1">"golden"</span>: <span style="color:#fab387">None</span>},
+]</code></pre>
+
+<h2>三、四道评估题：一张「考卷」覆盖四个考点</h2>
+
+<table>
+  <thead><tr><th>题</th><th>考点</th><th>「裸奔」Agent 的表现</th></tr></thead>
+  <tbody>
+    <tr><td>① 各品类已完成销售额排名</td><td>口径正确性</td><td><span class="good">对</span>（9932/9838/6660/6194）</td></tr>
+    <tr><td>② 这张表几行几列</td><td>工具选择</td><td><span class="good">对</span>（选了 data_profile，60 行 6 列）</td></tr>
+    <tr><td>③ 把退款也算进去，销售额？</td><td>口径澄清</td><td><span class="bad">错</span>——不追问，直接报「已完成」口径的数</td></tr>
+    <tr><td>④ amount 平均值是多少</td><td>失败场景</td><td><span class="bad">错</span>——直接报 661.2，没问「算全部还是已完成」</td></tr>
+  </tbody>
+</table>
+
+<div class="score">$ python agent35_eval_demo.py<br>通过 2/4 —— 裸奔 Agent 只过了 2 题。<br>这正是评估台的价值：改代码前后各跑一遍，分数涨没涨一眼可见。</div>
+
+<div class="callout red">
+  <strong>⚠️ 一眼看懂「裸奔」死在哪：</strong>第③④题都是<strong>口径问题</strong>。裸奔 Agent 把「已完成」口径当成默认、算全表平均不追问——这两处正是 34 课「敢说不知道」的落空。评估台把这两个洞<strong>量化成了 FAIL</strong>，你才知道要补哪。
+</div>
+
+<h2>四、安全四道闸：敢交给别人用的前提</h2>
+
+<p>评估解决「对不对」，安全解决「会不会出事」。四道闸，从便宜到关键：</p>
+
+<table>
+  <thead><tr><th>闸</th><th>防什么</th><th>做法</th></tr></thead>
+  <tbody>
+    <tr><td>① API key 环境变量</td><td>密钥泄露进代码 / git</td><td>key 写进 <code>.env</code> 或环境变量，代码里用 <code>os.environ.get()</code> 读，<strong>永不写死在脚本里</strong></td></tr>
+    <tr><td>② 输入边界</td><td>恶意/畸形输入搞崩 Agent</td><td>进 Agent 前的用户输入先校验长度、类型；工具参数照 30 课做校验</td></tr>
+    <tr><td>③ 危险操作确认</td><td>Agent 删文件、改数据、发消息</td><td>删/改/发送类工具，执行前要求<strong>人工确认</strong>（原数据只读，正是 34 课定下的）</td></tr>
+    <tr><td>④ 成本记录</td><td>调用失控烧钱</td><td>每次调 LLM 记 token 数 / 费用，设<strong>单次上限</strong>，超了就停</td></tr>
+  </tbody>
+</table>
+
+<pre><code><span style="color:#a6adc8"># ① API key：永远这么读，不写死</span>
+<span style="color:#cdd6f4">import</span> os
+api_key = os.environ.get(<span style="color:#a6e3a1">"DEEPSEEK_API_KEY"</span>)
+<span style="color:#cdd6f4">if not</span> api_key:
+    <span style="color:#cdd6f4">raise</span> SystemExit(<span style="color:#a6e3a1">"未找到 DEEPSEEK_API_KEY，请在环境变量里配置"</span>)
+
+<span style="color:#a6adc8"># ④ 成本：每轮累计 token，超上限就停</span>
+<span style="color:#cdd6f4">if</span> total_tokens &gt; MAX_TOKENS:
+    <span style="color:#cdd6f4">return</span> <span style="color:#a6e3a1">"已达本轮 token 上限，请缩小问题范围或提高预算"</span></code></pre>
+
+<div class="callout">
+  <strong>📌 原数据只读（接 34 课）：</strong>安全闸③和 34 课「原数据物理只读」是同一条线——Agent 对原数据<strong>永远只读</strong>，任何改动都是「衍生品」，改决策=删下游重跑。这样即使 Agent 想作妖，也动不了你的底账。
+</div>
+
+<h2>五、实操任务（15 分钟）</h2>
+
+<ol>
+  <li>跑 <code>python agent35_eval_demo.py</code>，看「裸奔」Agent 的 2/4 分，对着三、四两节的表格，确认它死在③④两题</li>
+  <li><strong>改代码让分数涨</strong>：给 <code>analyze</code> 加一个 <code>include_refund=False</code> 参数（34 课挑战题正好接上）——第③题就能「同时给两个口径的数」；给 Agent 加「口径不清先反问」的规则，第④题就能转 PASS</li>
+  <li>把改完的 Agent 重新跑评估台，<strong>亲眼看到分数从 2/4 涨到 3/4 甚至 4/4</strong>——这就是「评估驱动开发」的完整闭环</li>
+</ol>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>评估台是一张<strong>可反复跑的考卷</strong>，它把「Agent 行不行」从玄学变成数字。你以后每改一次 Agent（换工具、改 prompt、换模型），<strong>第一件事就是重跑评估台看分数</strong>——涨了说明改对了，掉了说明改坏了。这是 43 课毕业作品「可演示」的底气来源。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>评估三要素</strong>：固定测试集 + 金标准答案（实跑算出）+ 判分器，纯代码可复现</li>
+  <li>✅ <strong>四道评估题</strong>：覆盖「工具选择 / 口径正确性 / 口径澄清 / 失败场景」四个考点</li>
+  <li>✅ <strong>评估驱动开发</strong>：改代码前后各跑一遍，分数涨跌=改对改错</li>
+  <li>✅ <strong>安全四道闸</strong>：API key 环境变量、输入边界、危险操作确认、成本记录</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>你调了一版 Agent，想把「各品类已完成销售额」的正确答案从 4/4 稳到 4/4，但心里没底它改好没有。下面哪个做法<strong>最能给你确定的答案</strong>？</p>
+
+<ol type="A">
+  <li>手动多问它几遍，凭感觉判断稳不稳</li>
+  <li>写死一组测试问题+金标准答案，改一次跑一次，看 PASS 数量</li>
+  <li>换一个更贵的大模型重试</li>
+  <li>把工具的 description 写得更长更详细</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 想把评估台真接上你的 DeepSeek Agent（用 ReAct 主循环替换 <code>simulate_answer()</code>，考卷和判分器一字不动）？教练陪你把它接起来，让你真正体会「改模型不改考卷」的复用威力。任何不清楚的地方，都问你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0034-agent-data-analysis.html">← 上一课：Agent + 数据分析</a>
+  <a href="0036-deploy-and-launch.html">下一课：部署与上线 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>B。<strong>写死测试集 + 金标准 + 判分器，改一次跑一次看 PASS 数</strong>——这正是本课评估台的意义：把「稳不稳」从感觉变成可复现的数字。A 错：手动多问凭感觉，同一问法你可能问出不同结果，更别说换种问法就露馅，没有可比性。C 错：换贵模型是赌「更强的模型更稳」，但<strong>没有评估台，你根本不知道它到底稳没稳</strong>——贵模型也可能在某个口径上同样翻车，只是翻得更自信。D 错：改 description 是 30 课的「工具决策」优化，它解决「选错工具」，解决不了「算错数」「该拒绝没拒绝」——那些要靠评估台暴露出来。这题的教训：<strong>「确定」不是问出来的，是拿固定考卷反复跑出来的</strong>。以后任何人（包括你自己）说「这版 Agent 稳了」，第一反应都该是：评估分数多少？
+</p>
+</body>
+</html>

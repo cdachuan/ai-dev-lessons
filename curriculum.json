@@ -234,15 +234,15 @@
       "num": 34,
       "topic": "agent-data-analysis",
       "title": "Agent + 数据分析（多工具协作）",
-      "status": "pushed",
-      "note": "多工具协作：数据读取、分析、图表与结论。用夯实pandas+pandasai，数分+Agent交叉核心课，承接31-33 09-04推送，09-06/09-07两次提醒未确认"
+      "status": "done",
+      "note": "多工具协作：数据读取、分析、图表与结论。用夯实pandas+pandasai，数分+Agent交叉核心课，承接31-33 09-04推送，09-06/09-07两次提醒未确认，09-08按19/20/30课先例兜底标记done"
     },
     {
       "num": 35,
       "topic": "agent-evaluation-and-security",
       "title": "Agent 评估与安全",
-      "status": "pending",
-      "note": "拆分为两课的第一门。评估：为Agent准备固定测试问题集，验证工具选择/答案正确性/失败场景。安全：API key环境变量、输入边界、危险操作确认、成本/调用次数记录"
+      "status": "pushed",
+      "note": "拆分为两课的第一门。评估：为Agent准备固定测试问题集，验证工具选择/答案正确性/失败场景。安全：API key环境变量、输入边界、危险操作确认、成本/调用次数记录。09-08推送（评估台实跑2/4，agent35_eval_demo.py已交付）"
     },
     {
       "num": 36,
