@@ -1,4 +1,4 @@
-﻿{
+{
   "meta": {
     "version": 3,
     "created": "2026-07-14",
@@ -234,8 +234,8 @@
       "num": 34,
       "topic": "agent-data-analysis",
       "title": "Agent + 数据分析（多工具协作）",
-      "status": "done",
-      "note": "多工具协作：数据读取、分析、图表与结论。用夯实pandas+pandasai，数分+Agent交叉核心课，承接31-33 09-04推送，09-06/09-07两次提醒未确认，09-08按19/20/30课先例兜底标记done"
+      "status": "pushed",
+      "note": "多工具协作：数据读取、分析、图表与结论。用夯实pandas+pandasai，数分+Agent交叉核心课，承接31-33 09-04推送，09-06/09-07两次提醒未确认，09-08按19/20/30课先例兜底标记done。09-02晚交互实跑（Agent带verify核验卡口跑通，ReAct三步正确，修了Series序列化bug），用户提供key临时实跑"
     },
     {
       "num": 35,
