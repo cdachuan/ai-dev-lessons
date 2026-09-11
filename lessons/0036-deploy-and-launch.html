@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0036 · 部署与上线</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green {
+    background: #f0fdf4;
+    border-left-color: var(--green);
+  }
+  .callout.green strong { color: #166534; }
+  .callout.red {
+    background: #fef2f2;
+    border-left-color: var(--red);
+  }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    background: var(--accent);
+    color: white;
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .ladder { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .ladder h3 { margin-top: 0; }
+  .checklist { list-style: none; padding-left: 0; }
+  .checklist li { padding-left: 1.9rem; position: relative; margin-bottom: 0.7rem; }
+  .checklist li::before { content: "☐"; position: absolute; left: 0; top: -0.05rem; font-size: 1.15rem; color: var(--accent); }
+  .filelist { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; }
+</style>
+</head>
+<body>
+<h1>🚀 部署与上线</h1>
+<p class="meta">第 0036 课 · P5 实战篇 <span class="tag">工程化课</span> · 预计 20 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>把 34／35 课的 Agent 从「只在你电脑上活着」变成<strong>「别人拿得到、跑得起来、点得开看」</strong>。心法一句话：<strong>部署不是更高深的技术，是把三件小事补全——依赖说清、密钥分离、入口明确。</strong>
+</div>
+
+<h2>一、先破除神秘感：部署到底在做什么</h2>
+
+<p>现在你的 Agent 是什么状态？在你自己电脑上敲 <code>python agent.py</code>，它跑得好好的。但——</p>
+
+<ul>
+  <li>你关机，它就没了（不像网页，你不会的时候它还开着）；</li>
+  <li>你把文件夹发给别人，对方一运行就报一堆错；</li>
+  <li>换台电脑、换个目录，你自己都跑不起来。</li>
+</ul>
+
+<p><strong>部署就是修掉上面这三件事</strong>：让程序在<strong>别人的机器上</strong>，或者<strong>一台别人能访问到的机器上</strong>跑起来。它考的从来不是算法，是<strong>交付习惯</strong>。</p>
+
+<div class="callout">
+  <strong>📌 关键认知：</strong>「在我电脑上跑」和「能交付」之间，差的不是技术难度，而是三件<strong>你脑子里有、但没写下来</strong>的事：<strong>装了哪些库</strong>（依赖）、<strong>key 从哪来</strong>（配置）、<strong>从哪个文件启动</strong>（入口）。写下来，就交付了。
+</div>
+
+<h2>二、诊断：为什么「发个文件夹」过去就跑不起来</h2>
+
+<table>
+  <thead><tr><th>坑</th><th>对方看到什么</th><th>正解</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>依赖没写</td>
+      <td><code>ModuleNotFoundError: No module named 'pandas'</code>——对方根本不知道要装什么</td>
+      <td>列一份 <code>requirements.txt</code>，写清所有第三方库</td>
+    </tr>
+    <tr>
+      <td>密钥混在代码里</td>
+      <td>要么对方没 key 跑不起来；要么你的密钥跟着代码到处跑</td>
+      <td>代码只<strong>读</strong>环境变量；给一份 <code>.env.example</code> 模板，对方自己填值</td>
+    </tr>
+    <tr>
+      <td>绝对路径写死</td>
+      <td><code>FileNotFoundError: D:\学习\...</code>——你电脑上的路径，别人机器上不存在</td>
+      <td>用相对路径，或 <code>Path(__file__).parent</code> 定位脚本所在目录</td>
+    </tr>
+    <tr>
+      <td>数据没跟着走（或真数据跟着走了）</td>
+      <td>示例数据缺失 → 跑不动；真实业务数据进了仓库 → 合规风险</td>
+      <td><strong>示例数据</strong>提交进仓库；<strong>真实数据</strong>写进 <code>.gitignore</code> 绝不提交</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout red">
+  <strong>⚠️ 接 35 课的安全闸①：</strong>密钥永远不写死在脚本里。这条在<strong>单人本地跑</strong>时是「好习惯」，一旦<strong>要交付</strong>就变成「必须」——因为你迟早会把代码给别人、或者推到 GitHub。
+</div>
+
+<h2>三、三级阶梯：按成本从低到高，别一步跳到最贵的</h2>
+
+<div class="ladder">
+  <h3>阶梯 0 · 可复现仓库（0 元，今天就能完成）</h3>
+  <p><strong>交付物</strong>＝一个 git 仓库，里面有几样固定成员：</p>
+  <p class="filelist">
+    <code>README.md</code>（怎么装、怎么配 key、怎么跑）<br>
+    <code>requirements.txt</code>（依赖清单）<br>
+    <code>.env.example</code>（配置模板，只有键名没有值）<br>
+    <code>.gitignore</code>（挡住 .env 和真实数据）<br>
+    <code>data/sample.csv</code>（示例数据）<br>
+    <code>main.py</code>（入口）
+  </p>
+  <p>别人 <code>git clone</code> → 配好 key → 一条命令跑起来。<strong>这就是「部署」的最小完整形态</strong>，多数场景足够用。</p>
+  <p>⭐ <strong>对求职价值最高的一级</strong>：面试官最认「我 clone 下来、按你的 README 跑通了」——这比任何自我描述都硬。</p>
+</div>
+
+<div class="ladder">
+  <h3>阶梯 1 · 免费托管平台（0 元，要的是一个链接）</h3>
+  <p>当你要的是<strong>「给个网址就能点开看」</strong>（43／44 课的作品、给人演示）时，用 <strong>Streamlit Community Cloud</strong>：GitHub 账号登录 → 选仓库／分支／入口文件 → Deploy，就是官方说的三步（<a href="https://streamlit.io/cloud">streamlit.io/cloud</a>）。之后你每次 <code>git push</code>，线上应用自动更新。</p>
+  <p><strong>key 怎么办</strong>：不放代码，放平台自带的 Secrets 配置里，代码用 <code>st.secrets</code> 读——本质还是 35 课那条铁律，只是「环境变量」换了个存放位置。</p>
+  <p>⚠️ <strong>一个必须自己实测的点</strong>：这类境外托管平台在国内网络下能否直接打开，各人网络环境不同。<strong>投递简历链接之前，先用手机流量和公司网络各开一次</strong>——打不开的链接比没有链接更伤。</p>
+</div>
+
+<div class="ladder">
+  <h3>阶梯 2 · 国内云（要花钱，解决「连数据库／给内网访问」）</h3>
+  <p>真到要连公司数据库、或让客户在内网访问时，才上这一级：</p>
+  <ul>
+    <li><strong>阿里云函数计算 FC「Web 函数」</strong>：支持自带 Flask 等 Web 框架，按实际资源用量计费，不访问不计费；新账号首次登录可领试用额度（<a href="https://help.aliyun.com/zh/functioncompute/fc/web-function-quick-start">官方文档</a>）。</li>
+    <li><strong>腾讯云 Serverless HTTP（云函数 SCF）</strong>：同样按量付费，Python 支持 Flask／Django 这类 WSGI 框架。</li>
+    <li><strong>轻量应用服务器</strong>：最直白的一台小服务器，年付百元级起，装什么跑什么。</li>
+  </ul>
+  <p><strong>本课只认路，不实操</strong>——43-45 课真需要了再上。记住顺序：先用 0 元的跑通全流程，缺什么再补什么，别一上来就买服务器。</p>
+</div>
+
+<h2>四、部署前检查清单（本课最该带走的东西）</h2>
+
+<p>部署失败，九成死在这六条。以后每次要「交出去」，照着过一遍（也存成了<a href="../reference/deploy-checklist.html">独立速查页</a>）：</p>
+
+<ul class="checklist">
+  <li><strong>依赖写全</strong>：<code>pip freeze &gt; requirements.txt</code>，或手写只列用到的库。</li>
+  <li><strong>key 不写死</strong>：代码里只有 <code>os.environ.get("DEEPSEEK_API_KEY")</code>；值放本地 <code>.env</code>（不提交）＋ 一份 <code>.env.example</code>（提交）。</li>
+  <li><strong>没有绝对路径</strong>：全用相对路径或 <code>Path(__file__).parent</code>。</li>
+  <li><strong>示例数据随仓库走</strong>：没有数据对方跑不动；真实业务数据一律进 <code>.gitignore</code>。</li>
+  <li><strong>README 第一行就是启动命令</strong>：<code>pip install -r requirements.txt</code> → 配 key → <code>python main.py</code>。</li>
+  <li><strong>「假装自己是别人」跑一遍</strong>：换个目录（或换台电脑）clone 下来，严格照 README 走一遍——报的每一个错，都是你漏掉的检查项。</li>
+</ul>
+
+<h2>五、实操任务（30 分钟）</h2>
+
+<p>教练给你备了一份<strong>可交付模板</strong>：<code>lessons/code/deploy_kit/</code>（README、requirements、.env.example、.gitignore 都写好了，每个文件都有注释说明该填什么）。用它把 34／35 课那个 Agent 变成可交付仓库：</p>
+
+<ol class="steps">
+  <li>把 <code>deploy_kit/</code> 复制到你的项目目录，把 <code>agent35_eval_demo.py</code> 一起放进去。</li>
+  <li>填 <code>requirements.txt</code>：把你真正 import 过的库列上（pandas、openai 之类）。</li>
+  <li>把脚本里所有 key 读取统一改成 <code>os.environ.get(...)</code>，本地建 <code>.env</code> 填上值，跑通一次。</li>
+  <li>照模板写 README：三段——装依赖、配 key、启动命令。</li>
+  <li>换个目录（比如 <code>D:\tmp\test_clone</code>）「假装自己是别人」，严格照 README 走一遍，把所有报错修掉。</li>
+</ol>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>「部署」这个词听着像运维，实际是<strong>把你脑中隐含的三样东西写成文件</strong>——依赖、配置、入口。做完这一步，你的 Agent 就从「我的玩具」变成「一个东西」。37 课毕业项目要的「可展示 + 可部署」，地基就是本课这份仓库。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>部署的本质</strong>：不是更难的技术，是交付习惯——依赖说清、密钥分离、入口明确</li>
+  <li>✅ <strong>四大交付坑</strong>：依赖没写／密钥混在代码里／绝对路径／数据没跟着走</li>
+  <li>✅ <strong>三级阶梯</strong>：0 元可复现仓库 → 免费托管平台（<code>st.secrets</code> 放 key）→ 国内云（按量付费／轻量服务器）</li>
+  <li>✅ <strong>六条检查清单</strong>：交给别人之前逐条过一遍，「假装自己是别人」跑一次</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>你要把 34 课的 Agent 交给同事试用，同事电脑上没装任何东西。下面哪种做法<strong>最能让同事真的把它跑起来</strong>？</p>
+
+<ol type="A">
+  <li>把整个项目文件夹压缩成 zip 发过去，让对方自己摸索运行方式</li>
+  <li>给一个 git 仓库，含 README、依赖清单、.env.example，对方配好 key 一条命令跑起来</li>
+  <li>把自己可用的 API key 一起写进代码里，对方拿到就能直接运行</li>
+  <li>录一段自己本地运行的完整屏幕录像发过去，让对方照着复现</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 想把自己那个 Agent 真交付出去（或者想知道你的网络能不能访问 Streamlit Community Cloud）？把你的仓库结构发我，教练逐项帮你过一遍检查清单。任何不清楚的地方，都问你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0035-agent-evaluation-and-security.html">← 上一课：Agent 评估与安全</a>
+  <a href="0037-capstone-agent-project.html">下一课：毕业项目（完整 AI Agent）→</a>
+  <a href="../reference/deploy-checklist.html">📋 部署检查清单</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>B。<strong>仓库 + README + 依赖清单 + .env.example，对方自配 key 后一条命令跑起来</strong>——这正是本课「可复现仓库」的定义：依赖、配置、入口三样都写清楚了，对方不需要你在场。<br>
+A 错：zip 里没有依赖清单、没有 key 说明、路径还是你机器上的绝对路径，对方拿到就是一堆报错——「发出去」不等于「交付」。<br>
+C 错：把你的 key 写进代码，等于把家门钥匙连同房子一起送人——密钥泄露、费用记在你账上。这正好违反 35 课安全闸①。<br>
+D 错：录像只能证明「你电脑上能跑」，不能证明「别人电脑上能跑」。同事照着复现，卡在环境那一步照样过不去，而你还不知道错在哪。<br>
+这题的教训：<strong>「能交付」的标准不是「我发过给他」，而是「他不需要我在场也能跑起来」</strong>。判断方法只有一个——换个干净目录，假装自己是别人，跑一遍。
+</p>
+</body>
+</html>

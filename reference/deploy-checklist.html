@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>部署检查清单 · AI 应用开发</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.75;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+  }
+  h1 { font-size: 1.7rem; font-weight: 800; margin-bottom: 0.3rem; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.8rem; }
+  h2 { font-size: 1.15rem; font-weight: 700; margin: 2rem 0 0.7rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+  p, li { margin-bottom: 0.7rem; }
+  ul { padding-left: 1.4rem; margin-bottom: 0.9rem; }
+  code { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.85em; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; }
+  pre { background: #1e1e2e; color: #cdd6f4; padding: 0.9rem 1.1rem; border-radius: 8px; overflow-x: auto; font-size: 0.83rem; line-height: 1.55; margin: 0.9rem 0 1.3rem; }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  table { width: 100%; border-collapse: collapse; margin: 0.9rem 0; font-size: 0.88rem; }
+  th, td { border: 1px solid var(--border); padding: 0.45rem 0.7rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .callout { background: var(--highlight); border-left: 4px solid #f59e0b; padding: 0.7rem 0.9rem; margin: 1rem 0; border-radius: 0 6px 6px 0; font-size: 0.93rem; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .checklist { list-style: none; padding-left: 0; }
+  .checklist li { padding-left: 1.8rem; position: relative; }
+  .checklist li::before { content: "☐"; position: absolute; left: 0; font-size: 1.1rem; color: var(--accent); }
+  @media print {
+    body { background: #fff; padding: 0; max-width: none; font-size: 11pt; }
+    h2 { break-after: avoid; }
+    pre, table { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<h1>📋 部署检查清单</h1>
+<p class="meta">速查页 · 配套 <a href="../lessons/0036-deploy-and-launch.html">0036 部署与上线</a> · 可打印</p>
+
+<div class="callout">
+  <strong>用法：</strong>每次要把自己的工具<strong>交给别人</strong>（同事试用、简历作品、部署上线）之前，从上到下过一遍。六条里漏任何一条，对方就会卡住——而你还不知道卡在哪。
+</div>
+
+<h2>一、六条硬检查</h2>
+<table>
+  <thead><tr><th>#</th><th>检查项</th><th>判断标准</th><th>出问题的信号</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>依赖写全</td><td><code>requirements.txt</code> 列出脚本真正 import 的每个第三方库</td><td><code>ModuleNotFoundError: No module named 'xxx'</code></td></tr>
+    <tr><td>2</td><td>key 不写死</td><td>代码里只有 <code>os.environ.get("XXX_KEY")</code>；值在本地 <code>.env</code>（不提交），仓库里给 <code>.env.example</code></td><td>401／代码里能搜到 <code>sk-...</code></td></tr>
+    <tr><td>3</td><td>无绝对路径</td><td>全用相对路径或 <code>Path(__file__).parent</code></td><td><code>FileNotFoundError: D:\学习\...</code></td></tr>
+    <tr><td>4</td><td>示例数据随仓库</td><td>小样本已提交；真实业务数据在 <code>.gitignore</code></td><td>对方跑起来找不到输入文件</td></tr>
+    <tr><td>5</td><td>README 第一行是启动命令</td><td><code>pip install -r requirements.txt</code> → 配 key → <code>python main.py</code></td><td>对方反复问「怎么跑」</td></tr>
+    <tr><td>6</td><td>干净目录实测</td><td>换目录／换机器 clone 下来，严格照 README 走通一遍</td><td>报的每个错＝你漏掉的检查项</td></tr>
+  </tbody>
+</table>
+
+<h2>二、仓库标准结构</h2>
+<pre><code>my-agent/
+├── README.md            # 怎么装、怎么配 key、怎么跑
+├── requirements.txt     # 依赖清单
+├── .env.example         # 配置模板：只有键名，没有真值
+├── .gitignore           # 挡住 .env 和真实数据
+├── main.py              # 入口：一条命令能起
+├── agent/               # 工具 / 主循环代码
+└── data/
+    └── sample.csv       # 示例数据（可提交）</code></pre>
+
+<h2>三、.gitignore 最小内容</h2>
+<pre><code>.env
+*.key
+__pycache__/
+*.pyc
+data/real_*        # 真实业务数据一律不进仓库</code></pre>
+
+<h2>四、配置读取的标准写法</h2>
+<pre><code>import os
+api_key = os.environ.get("DEEPSEEK_API_KEY")
+if not api_key:
+    raise SystemExit("未找到 DEEPSEEK_API_KEY，请复制 .env.example 为 .env 并填入")</code></pre>
+<p><code>.env.example</code>（提交）：<code>DEEPSEEK_API_KEY=your_key_here</code>　·　<code>.env</code>（<strong>不提交</strong>）：<code>DEEPSEEK_API_KEY=sk-xxxx</code></p>
+
+<h2>五、三级阶梯速查</h2>
+<table>
+  <thead><tr><th>阶梯</th><th>方案</th><th>成本</th><th>适用</th><th>key 放哪</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>git 仓库（README＋requirements＋.env.example）</td><td>0</td><td>交付代码、求职作品、同事试用</td><td>对方本地 <code>.env</code></td></tr>
+    <tr><td>1</td><td>Streamlit Community Cloud</td><td>0</td><td>要「给个链接点开看」</td><td>平台 Secrets，代码用 <code>st.secrets</code></td></tr>
+    <tr><td>2</td><td>阿里云函数计算 FC／腾讯云 Serverless HTTP／轻量服务器</td><td>按量付费</td><td>连数据库、内网访问、长期在线</td><td>平台环境变量配置</td></tr>
+  </tbody>
+</table>
+<p><strong>顺序原则：</strong>先用 0 元方案跑通全流程，缺什么再补什么——别一上来就买服务器。</p>
+
+<h2>六、容易忘的三个细节</h2>
+<ul class="checklist">
+  <li><strong>路径</strong>：<code>Path(__file__).parent / "data" / "sample.csv"</code> 比 <code>"data/sample.csv"</code> 更稳，不怕别人从别的目录启动。</li>
+  <li><strong>编码</strong>：读文件一律写 <code>encoding="utf-8"</code>——Windows 默认编码会让中文乱码。</li>
+  <li><strong>入口</strong>：入口脚本只做「解析参数 → 调函数 → 打印结果」，业务逻辑别堆在入口里。</li>
+</ul>
+
+<p style="margin-top:1.8rem;font-size:0.85rem;color:var(--muted);">创建于 2026-09-11 · 有不清楚的，问你的 AI 教练。</p>
+</body>
+</html>

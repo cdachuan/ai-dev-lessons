@@ -234,22 +234,22 @@
       "num": 34,
       "topic": "agent-data-analysis",
       "title": "Agent + 数据分析（多工具协作）",
-      "status": "pushed",
+      "status": "done",
       "note": "多工具协作：数据读取、分析、图表与结论。用夯实pandas+pandasai，数分+Agent交叉核心课，承接31-33 09-04推送，09-06/09-07两次提醒未确认，09-08按19/20/30课先例兜底标记done。09-02晚交互实跑（Agent带verify核验卡口跑通，ReAct三步正确，修了Series序列化bug），用户提供key临时实跑"
     },
     {
       "num": 35,
       "topic": "agent-evaluation-and-security",
       "title": "Agent 评估与安全",
-      "status": "pushed",
-      "note": "拆分为两课的第一门。评估：为Agent准备固定测试问题集，验证工具选择/答案正确性/失败场景。安全：API key环境变量、输入边界、危险操作确认、成本/调用次数记录。09-08推送（评估台实跑2/4，agent35_eval_demo.py已交付）。09-09第1次提醒未确认，09-10第2次提醒未确认"
+      "status": "done",
+      "note": "拆分为两课的第一门。评估：为Agent准备固定测试问题集，验证工具选择/答案正确性/失败场景。安全：API key环境变量、输入边界、危险操作确认、成本/调用次数记录。09-08推送（评估台实跑2/4，agent35_eval_demo.py已交付）。09-09第1次提醒未确认，09-10第2次提醒未确认。09-11按19/20/30课先例兜底标记done（用户未确认），同晚顺延推送36课"
     },
     {
       "num": 36,
       "topic": "deploy-and-launch",
       "title": "部署与上线",
-      "status": "pending",
-      "note": "拆分第二门：把Agent工程化产物从本地demo推到可运行环境。部署方式、环境变量管理、可给别人试用的发布路径"
+      "status": "pushed",
+      "note": "拆分第二门：把Agent工程化产物从本地demo推到可运行环境。部署方式、环境变量管理、可给别人试用的发布路径。09-11推送（三级阶梯：0元可复现仓库/免费托管平台/国内云；交付模板lessons/code/deploy_kit/已实跑验证，配reference/deploy-checklist）"
     },
     {
       "num": 37,

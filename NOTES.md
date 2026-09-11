@@ -44,3 +44,10 @@ P3 共 5 课（17-21），用户 pandas 基础已过关，节奏调整：
 - 33课已提前生成（09-02晚，pyecharts API实跑验证过），cron明晚推送时只投递
 - 32课后用户深度探讨（pandasai批判→黑板→审批门→原数据只读）沉淀在 learning-records/0034-agent-data-profiling-design.md，34课/43课设计直接引用
 - pyecharts 2.1.0 已装；pandasai 已卸载
+
+## 2026-09-11 状态机顺延规则（第三次复用）
+
+- 35 课 09-08 推送、09-09/09-10 两次提醒无响应 → 09-11 按 19/20/30 课先例兜底标记 done，**同晚推送 36 课**（不空转、不丢课，与 09-08「34 兜底 done + 推 35」同一模式）
+- 顺手修正 34 课 status（note 已写兜底 done 但 status 仍是 pushed）——**课程表是权威源，status 与 note 必须一致**
+- 36 课交付物除了课件，另出可打印速查页 `reference/deploy-checklist.html` 与可交付模板 `lessons/code/deploy_kit/`（实跑验证：换目录启动正常）
+- 下一课：37 毕业项目（完整 AI Agent，可展示+可部署）
