@@ -249,7 +249,7 @@
       "topic": "deploy-and-launch",
       "title": "部署与上线",
       "status": "pushed",
-      "note": "拆分第二门：把Agent工程化产物从本地demo推到可运行环境。部署方式、环境变量管理、可给别人试用的发布路径。09-11推送（三级阶梯：0元可复现仓库/免费托管平台/国内云；交付模板lessons/code/deploy_kit/已实跑验证，配reference/deploy-checklist）"
+      "note": "拆分第二门：把Agent工程化产物从本地demo推到可运行环境。部署方式、环境变量管理、可给别人试用的发布路径。09-11推送（三级阶梯：0元可复现仓库/免费托管平台/国内云；交付模板lessons/code/deploy_kit/已实跑验证，配reference/deploy-checklist）。09-12第1次提醒未确认"
     },
     {
       "num": 37,
