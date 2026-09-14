@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0038 · Agent 工作流设计</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>🧭 Agent 工作流设计</h1>
+<p class="meta">第 0038 课 · P6 开篇 <span class="tag">架构课</span> · 预计 15 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>学会一个判断——<strong>任务里哪几步该让模型自己决定，哪几步应该写死成固定流程。</strong>学会这一条，你就不再是「什么都塞给 Agent」，而是<strong>会设计系统</strong>的人。这是 P6 所有内容的底层思路。
+</div>
+
+<h2>一、先分清两个词：工作流 ≠ Agent</h2>
+
+<p>过去几课你说「Agent」时，脑子里大概是「一个会自己调工具的循环」。但在工程实践里，这两件事被明确区分开了——这个区分来自 Anthropic 的权威文档 <a href="https://www.anthropic.com/engineering/building-effective-agents">Building Effective Agents</a>：</p>
+
+<table>
+  <thead><tr><th></th><th>工作流 Workflow</th><th>Agent</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>路径谁定</strong></td>
+      <td>你（开发者）预先在代码里定好</td>
+      <td>模型自己边做边定</td>
+    </tr>
+    <tr>
+      <td><strong>控制权</strong></td>
+      <td>代码控制流程，模型只做单点判断</td>
+      <td>模型控制流程，代码提供工具</td>
+    </tr>
+    <tr>
+      <td><strong>可预测性</strong></td>
+      <td class="good">高，每一步都能预知</td>
+      <td class="bad">低，同样问题可能走不同路</td>
+    </tr>
+    <tr>
+      <td><strong>适合什么</strong></td>
+      <td>步骤明确、要稳定、要便宜、要审计</td>
+      <td>路径事先说不清、需要临场判断</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>📌 最重要的一句：</strong>你 37 课做的那个 <code>capstone_kit</code> 是 <strong>Agent</strong>（ReAct 循环，模型自己选工具）。但它里面有一处是 <strong>工作流</strong>——系统提示词规定「分析前必须先调 profile」。<br>
+  <strong>设计 = 决定每一段用哪种。</strong>不是「越智能越好」。
+</div>
+
+<h2>二、五种经典工作流结构</h2>
+
+<p>Anthropic 那篇文档里归纳了五种常见的、把模型串起来的固定结构。不用背，但要认得出来——因为它们几乎覆盖了所有「看起来像 Agent」的重复性任务：</p>
+
+<div class="flow">
+  <h3>1 · 提示链 Prompt Chaining</h3>
+  <span class="arrow">输入 → [步骤A] → 中间产物 → [步骤B] → 输出</span>
+  <p>把任务拆成固定顺序的多步，每步的输出是下一步的输入。适合「先抽取、再翻译、再润色」这种一步做不到、但步骤明确的事。</p>
+</div>
+
+<div class="flow">
+  <h3>2 · 路由 Routing</h3>
+  <span class="arrow">输入 → [分类判断] → 走分支1 / 分支2 / 分支3</span>
+  <p>先判断「这是哪一类问题」，再交给对应的处理方式。适合类型明确但处理方式不同的场景（如「退款咨询」走一套流程，「数据查询」走另一套）。</p>
+</div>
+
+<div class="flow">
+  <h3>3 · 并行 Parallelization</h3>
+  <span class="arrow">输入 → [任务1] + [任务2] + [任务3] → 汇总</span>
+  <p>几个互不依赖的子任务同时做，最后合并；或者同一问题用几套判断并行跑，多数投票。</p>
+</div>
+
+<div class="flow">
+  <h3>4 · 编排者-执行者 Orchestrator-Workers</h3>
+  <span class="arrow">输入 → [主模型拆任务] → [多个子任务分别做] → [主模型汇总]</span>
+  <p>由模型动态拆解任务、分派出去、再汇总。比并行更灵活——子任务数量不预设。适合「一次要改多个文件」「一次分析多个维度」这种。</p>
+</div>
+
+<div class="flow">
+  <h3>5 · 评估者-优化者 Evaluator-Optimizer</h3>
+  <span class="arrow">[生成] → [评估] → 不合格 → 带着意见回到生成</span>
+  <p>一个模型产出，另一个（或同一模型换角色）按标准挑错，循环到达标。这跟你 34 课做的 <strong>verify 核验卡口是同一个思想</strong>——只不过你核的是数字，它核的是文本。</p>
+</div>
+
+<div class="callout green">
+  <strong>💡 认出来了：</strong>第 5 种就是你已经在用的东西。所以这些结构你并不陌生，只是现在有了名字，可以<strong>主动选</strong>而不是碰巧用到。
+</div>
+
+<h2>三、判断规则：哪一步该写死，哪一步该放手</h2>
+
+<p>这张表是本课最该记住的东西。拆任务时，把每一步过一遍：</p>
+
+<table>
+  <thead><tr><th>这一步的特征</th><th>该用</th><th>理由</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>步骤固定、顺序不会变</td>
+      <td class="good">工作流（写死）</td>
+      <td>代码做更稳、更快、更便宜，出问题能精确定位</td>
+    </tr>
+    <tr>
+      <td>需要临场判断、路径说不清</td>
+      <td>Agent（放手）</td>
+      <td>写死的分支覆盖不全会漏情况</td>
+    </tr>
+    <tr>
+      <td>结果要拿去做审计 / 要能复现</td>
+      <td class="good">工作流（写死）</td>
+      <td>Agent 同一问题走不同路，无法保证一致性</td>
+    </tr>
+    <tr>
+      <td>要批量跑、成本敏感</td>
+      <td class="good">工作流（写死）</td>
+      <td>每一步的调用次数可预算，Agent 的循环次数不可控</td>
+    </tr>
+    <tr>
+      <td>是把多个已知步骤拼起来</td>
+      <td class="good">工作流（提示链）</td>
+      <td>不需要「自主」，只需要「串起来」</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout red">
+  <strong>⚠️ 最常见的过度设计：</strong>用 Agent 干工作流的活。<br>
+  比如「每天把 Excel 读进来 → 算 5 个指标 → 填模板 → 发出去」——这是个<strong>固定流程</strong>，第 15 课那个定时脚本就是正解。硬做成 Agent，结果是：每次跑法不一样、出错了难排查、token 花几倍、还要担心它今天心情不好。<br>
+  <strong>能用代码写死的，别交给模型决定。</strong>
+</div>
+
+<h2>四、拆任务：给每一步贴标签</h2>
+
+<p>拿到一个业务需求（P6 会给你电商场景的），不要一上来就写代码。先在纸上做这件事：</p>
+
+<ol class="steps">
+  <li><strong>把流程按「人原来怎么干的」写成步骤。</strong>不要美化，就写现状。</li>
+  <li><strong>给每一步贴标签</strong>：<code>[确定]</code> 还是 <code>[需判断]</code>。
+    <ul>
+      <li><code>[确定]</code>：读文件、算 sum、查去重数、画图、写文件——代码能做，且答案唯一。</li>
+      <li><code>[需判断]</code>：这句业务问题对应哪个指标、这个异常值要不要剔除、该用哪个口径——需要语义理解。</li>
+    </ul>
+  </li>
+  <li><strong>各归各位</strong>：<code>[确定]</code> 的步骤做成工具函数；<code>[需判断]</code> 的步骤交给模型。两者用「工具调用」连接——这就是 27-30 课学的接口。</li>
+  <li><strong>标出核验点</strong>：哪一步的输出数字会被写进结论？那一步后面必须挂 verify。</li>
+</ol>
+
+<div class="callout">
+  <strong>📌 一个反直觉的结论：</strong>标签贴完之后你会发现，<strong>「需判断」的步骤往往只有 1-2 个</strong>——通常是「听懂问题」和「组织结论」。中间一大段都是 <code>[确定]</code>。<br>
+  这意味着：<strong>你的 Agent 大部分代码应该是普通 Python，模型只在关键处出手。</strong>这就是 09-02 我们讨论出的那句——「便宜模型 + 好架构 &gt; 强模型 + 裸奔」。
+</div>
+
+<h2>五、控制上下文：别把中间产物一遍遍塞回去</h2>
+
+<p>ReAct 循环有个天然的坑：每一步的结果都追加进 <code>messages</code>，步数一多，上下文越滚越大，最后模型被淹在自己制造的垃圾里。</p>
+
+<p>两个做法（你 37 课项目里已经各用了一半）：</p>
+
+<ul>
+  <li><strong>中间产物落盘</strong>：大块结果（整个计算结果、生成的图表路径）写进文件，对话里只留「已存到 <code>runs/xxx.json</code>」这一句。<code>capstone_kit/agent/core.py</code> 的 <code>save_trace</code> 就是这个思路。</li>
+  <li><strong>画像代替全量数据</strong>：模型不该看见 10000 行数据，只该看见「行数/列/类型/取值/前 3 行」这张卡片。<code>tools.profile</code> 就是这个思路——34 课你亲手做的。</li>
+</ul>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>Agent 设计不是「让 AI 包办一切」，是<strong>划一条线</strong>——线的一边用代码写死（确定性、可复现、便宜），另一边交给模型（语义判断）。<strong>会划线的人，才算会做 Agent。</strong>
+</div>
+
+<h2>六、动手任务（15 分钟，不用写新代码）</h2>
+
+<ol class="steps">
+  <li>打开你 37 课的项目，写出它的完整流程步骤（大约 5-7 步）。</li>
+  <li>给每一步贴 <code>[确定]</code> / <code>[需判断]</code> 标签。</li>
+  <li>数一数：几个 <code>[需判断]</code>？如果超过 3 个，说明你把它当「万能助手」设计了，试着把其中几个改成固定流程。</li>
+  <li>找出核验点：哪一步的数字会被写进最终结论？verify 挂上了吗？</li>
+</ol>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>工作流 vs Agent</strong>：路径由你定（工作流）还是由模型定（Agent）——这是根本区别</li>
+  <li>✅ <strong>五种工作流结构</strong>：提示链 / 路由 / 并行 / 编排者-执行者 / 评估者-优化者</li>
+  <li>✅ <strong>判断规则</strong>：步骤固定、要审计、成本敏感 → 写死；路径说不清 → 放手</li>
+  <li>✅ <strong>拆任务方法</strong>：逐步贴 <code>[确定]</code> / <code>[需判断]</code> 标签，各归各位</li>
+  <li>✅ <strong>上下文控制</strong>：中间产物落盘、画像代替全量数据</li>
+</ul>
+
+<h2>📖 本课主要资源</h2>
+<p class="src">Anthropic · <a href="https://www.anthropic.com/engineering/building-effective-agents">Building Effective Agents</a> —— 业界公认讲得最清楚的一篇，本课的工作流/Agent 划分和五种结构都出自这里。英文，但值得读原文；读不懂的地方可以问我，我逐段给你翻译和解释。</p>
+
+<h2>🤔 小测</h2>
+
+<p>你要做一个「每周一自动生成上周销售周报」的工具：读上周数据 → 算 6 个固定指标 → 按模板生成报告 → 发到群里。用什么方式实现最合适？</p>
+
+<ol type="A">
+  <li>搭一个 ReAct Agent，让它自己决定每周该做哪些分析</li>
+  <li>写固定流程的脚本，需要判断的地方单独调用一次模型</li>
+  <li>用多个 Agent 并行，每个负责一两个指标的独立计算</li>
+  <li>把整个任务交给一次模型调用，让它一次性完成全部工作</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 想拿你手上的一个真实需求来试这个「贴标签」方法？把它描述给我，我陪你一起拆——拆完你会发现有些活根本不需要 Agent。任何不清楚的地方，都问你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0037-capstone-agent-project.html">← 上一课：毕业项目（完整 AI Agent）</a>
+  <a>下一课：电商数据工具箱（0039）→</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>B。<strong>固定流程的脚本 + 需要判断的地方单独调模型</strong>——步骤（读数据、算 6 个指标、套模板）全都固定且答案唯一，用代码写死最稳最省；只有「组织一段人读的结论文字」需要语义判断，那一步单独调一次模型。<br>
+A 错：指标是固定的 6 个，「让它自己决定做哪些分析」等于把确定性步骤变成不确定——这周算了 6 个、下周算了 4 个，没人能保证周报口径一致。<br>
+C 错：6 个指标都是在对同一份数据做不同聚合，毫秒级的计算，拆成多个 Agent 并行只是把简单问题复杂化，还多花几倍调用费。<br>
+D 错：一次性交给模型，等于让它同时负责算数（它算不准，尤其多步聚合）和写结论。<strong>数字必须由代码算，模型只负责解释数字</strong>——这是 19 课和 34 课反复强调的那条线。
+</p>
+</body>
+</html>

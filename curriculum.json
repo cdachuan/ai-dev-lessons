@@ -248,22 +248,22 @@
       "num": 36,
       "topic": "deploy-and-launch",
       "title": "部署与上线",
-      "status": "pushed",
-      "note": "拆分第二门：把Agent工程化产物从本地demo推到可运行环境。部署方式、环境变量管理、可给别人试用的发布路径。09-11推送（三级阶梯：0元可复现仓库/免费托管平台/国内云；交付模板lessons/code/deploy_kit/已实跑验证，配reference/deploy-checklist）。09-12第1次提醒未确认。09-13第2次提醒未确认"
+      "status": "done",
+      "note": "拆分第二门：把Agent工程化产物从本地demo推到可运行环境。部署方式、环境变量管理、可给别人试用的发布路径。09-11推送（三级阶梯：0元可复现仓库/免费托管平台/国内云；交付模板lessons/code/deploy_kit/已实跑验证，配reference/deploy-checklist）。09-12第1次提醒未确认。09-13第2次提醒未确认。09-14按19/20/30/34/35课先例兜底标记done（用户未确认），同晚顺延推送37课"
     },
     {
       "num": 37,
       "topic": "capstone-agent-project",
       "title": "毕业项目：完整 AI Agent（可展示+可部署）",
-      "status": "pending",
-      "note": "P5收尾，简历级产出。成果要可展示：简单网页界面或命令行应用，附README/架构图/示例数据/运行步骤/效果截图或图表。如能部署成别人可试用的小应用，简历价值明显提升"
+      "status": "pushed",
+      "note": "P5收尾，简历级产出。成果要可展示：简单网页界面或命令行应用，附README/架构图/示例数据/运行步骤/效果截图或图表。如能部署成别人可试用的小应用，简历价值明显提升。09-14推送（交付 lessons/code/capstone_kit 毕业项目脚手架：main.py + agent/tools.py(5工具含verify) + agent/core.py(ReAct+留痕) + tests/eval.py(固定测试问题集) + 60行示例电商订单。实跑验证：临时目录启动 --selftest 7/7 PASS、无key优雅降级、换目录可跑。38课HTML已提前生成）"
     },
     {
       "num": 38,
       "topic": "agent-workflow-design",
       "title": "Agent 工作流设计",
       "status": "pending",
-      "note": "P6开篇（承接P5巩固）：拆任务、选工具、规划步骤、控制上下文。从简单ReAct升级为可控多步任务流"
+      "note": "P6开篇（承接P5巩固）：拆任务、选工具、规划步骤、控制上下文。从简单ReAct升级为可控多步任务流。09-14晚提前生成HTML（0038-agent-workflow-design.html，依据Anthropic Building Effective Agents；待推送）"
     },
     {
       "num": 39,

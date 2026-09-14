@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.pyc
+runs/*.json
+# 真实业务数据绝不进仓库；只保留示例数据
+data/*
+!data/orders.csv

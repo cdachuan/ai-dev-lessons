@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0037 · 毕业项目：完整 AI Agent（可展示 + 可部署）</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --amber: #d97706;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight);
+    border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+    font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .tag.warm { background: #ffedd5; color: #9a3412; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    background: var(--accent);
+    color: white;
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .checklist { list-style: none; padding-left: 0; }
+  .checklist li { padding-left: 1.9rem; position: relative; margin-bottom: 0.7rem; }
+  .checklist li::before { content: "☐"; position: absolute; left: 0; top: -0.05rem; font-size: 1.15rem; color: var(--accent); }
+  .filelist { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; }
+  .gate { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .gate h3 { margin-top: 0; }
+  .out { background: #0f172a; color: #94e2d5; padding: 0.9rem 1.1rem; border-radius: 8px; font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.8rem; line-height: 1.7; white-space: pre-wrap; margin: 1rem 0 1.5rem; }
+</style>
+</head>
+<body>
+<h1>🎓 毕业项目：完整 AI Agent</h1>
+<p class="meta">第 0037 课 · P5 收尾 <span class="tag warm">项目课</span> <span class="tag">简历级产出</span> · 预计 20 分钟读完，动手 2-3 晚</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>不教新知识，只做一件事——把 27～36 课学到的零件<strong>组装成一件能展示、能交付、数字对得上的完整作品</strong>。这是你简历上第一个真正能拿出来讲的项目。
+</div>
+
+<h2>一、先看清单：你手上的零件已经齐了</h2>
+
+<p>P5 这十课不是十个知识点，是<strong>一台机器的十个零件</strong>。你现在把它们摆开看一遍：</p>
+
+<table>
+  <thead><tr><th>课程</th><th>零件</th><th>装到项目里是哪一块</th></tr></thead>
+  <tbody>
+    <tr><td>27 · Function Calling 实操</td><td>让模型调一个工具</td><td>整个项目的起点</td></tr>
+    <tr><td>28 · 多工具 ReAct 循环</td><td>工具注册表 + 循环</td><td><code>agent/core.py</code> 主循环</td></tr>
+    <tr><td>29 · 接真实 HTTP API</td><td>把外部服务当工具</td><td>（本期不用，P6 接电商 API 时上）</td></tr>
+    <tr><td>30 · 工具设计与结构化输出</td><td>参数校验、Schema</td><td>每个工具的入参定义</td></tr>
+    <tr><td>31 · pandas 夯实</td><td>groupby / 筛选 / nunique</td><td><code>agent/tools.py</code> 的算术</td></tr>
+    <tr><td>32 · pandasai（体验）</td><td>知道「现成方案缺什么」</td><td>这就是你自建的理由</td></tr>
+    <tr><td>33 · pyecharts</td><td>交互式图表</td><td>作品的门面（P6 加）</td></tr>
+    <tr><td>34 · Agent + 数据分析</td><td><strong>核验卡口</strong></td><td><code>verify</code> 工具——本项目的灵魂</td></tr>
+    <tr><td>35 · 评估与安全</td><td>固定测试问题集、key 不落盘</td><td><code>tests/eval.py</code> + <code>.env</code></td></tr>
+    <tr><td>36 · 部署与上线</td><td>可复现仓库六件套</td><td>整个 <code>capstone_kit/</code> 的目录</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>📌 看清楚这件事：</strong>你没有「还不会做的部分」。缺的只是把它们<strong>放进同一个文件夹，并且能从零跑一遍</strong>。这一步的名字不叫学新东西，叫<strong>交付</strong>。
+</div>
+
+<h2>二、毕业项目：三条硬标准</h2>
+
+<p>26 课那次「毕业项目」的标准是「解决一个真问题」。这次不一样——这次的产出要<strong>能拿给别人看</strong>，所以标准要硬三倍：</p>
+
+<table>
+  <thead><tr><th>标准</th><th>是什么意思</th><th>怎么算过关</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>① 可展示</strong></td>
+      <td>别人不用装 Python 也能看见结果</td>
+      <td>有一段输出记录 / 截图 / 图表；说得清「输入什么、输出什么」</td>
+    </tr>
+    <tr>
+      <td><strong>② 可部署</strong></td>
+      <td>别人 clone 下来能跑</td>
+      <td>按 36 课六条检查清单走一遍，换目录跑通，不报错</td>
+    </tr>
+    <tr>
+      <td><strong>③ 数字对得上</strong></td>
+      <td>结论不是「看起来合理」，是可复核</td>
+      <td>有固定测试问题集，每个答案都有独立算法复算过的标准值</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout red">
+  <strong>⚠️ 第三条是分水岭。</strong>市面上大量「AI 数据分析」作品停在第一条——界面好看、结论华丽，但没人能确认数字对不对。你从 34 课开始就带着 verify 走，这是你<strong>比同岗位其他候选人更硬的地方</strong>。面试时这一条要主动讲。
+</div>
+
+<h2>三、选题：主推「电商订单分析 Agent」</h2>
+
+<p>脚手架我已经按这个选题搭好了（下面第四节），所以推荐你<strong>直接用它起步</strong>——理由不是省事，是它同时对上三件事：</p>
+
+<ul>
+  <li><strong>对上后面的路</strong>：38～45 课（P6）会把电商工具箱一路做到求职作品主体，<strong>43 课（数据洞察 Agent）</strong>就是它的升级版。今天这一版是 v1，别扔。</li>
+  <li><strong>对上你的定位</strong>：你的求职锚点是<strong>数分 + 能落地 Agent</strong> 的复合位。这个项目正好把两条线焊在一起——分析能力（pandas/口径）和工程能力（Agent 架构）同一件作品里都有。</li>
+  <li><strong>数据脱敏</strong>：示例数据是 60 行模拟订单，<strong>不含任何公司真实业务数据</strong>——可以放心放 GitHub，这是硬约束。</li>
+</ul>
+
+<p>如果你更想用自己工作里的真问题，也可以，只要注意一条：<strong>把业务数据换成模拟数据再放仓库</strong>（35 课安全闸）。选题换不换，三条硬标准不变。</p>
+
+<h2>四、脚手架：<code>lessons/code/capstone_kit/</code></h2>
+
+<p>这不是「给你抄的答案」，是<strong>骨架</strong>——能跑、能读、留了明显的改造口。目录：</p>
+
+<p class="filelist">
+capstone_kit/<br>
+├── main.py&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;入口：提问 / <code>--selftest</code> 离线自测<br>
+├── agent/tools.py&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;五个数据工具（含 verify 核验卡口）<br>
+├── agent/core.py&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ReAct 循环 + 步数预算 + 运行留痕<br>
+├── tests/eval.py&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;固定测试问题集 + 标准答案<br>
+├── data/orders.csv&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;示例电商订单（60 行）<br>
+├── runs/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;每次提问的过程记录（JSON）<br>
+├── ARCHITECTURE.md&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;架构图 + 设计决策<br>
+├── README.md&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;三步跑起来<br>
+└── requirements.txt / .env.example / .gitignore
+</p>
+
+<p>本课推送前，我<strong>从临时目录实跑了一遍离线自测</strong>（验证「换目录也能跑」，36 课的那条）：</p>
+
+<div class="out">== 固定测试问题集（离线，不调模型） ==
+  [PASS] Q1 各品类销售额(剔除退款)
+  [PASS] Q1b 销售额合计独立复算
+  [PASS] Q2 各渠道订单量(全部)
+  [PASS] Q3 各渠道退款率
+  [PASS] Q4 不同订单号数(nunique)
+  [PASS] Q5a verify 能复算正确值
+  [PASS] Q5b verify 出错时返回失败而非崩溃
+
+结果：7 通过 / 0 失败</div>
+
+<div class="callout">
+  <strong>💡 注意这个设计：</strong><code>--selftest</code> <strong>不需要 API key</strong>。它一次都不调大模型，纯 pandas 跑——因为要验证的是<strong>数据层口径对不对</strong>，这跟模型无关。模型那层的验证，是用同一套问题去问 Agent，看它的回答是否落在标准值上（35 课的思路）。<strong>先确定「工具算得对」，再调模型</strong>——这个顺序本身就是工程判断力。
+</div>
+
+<h2>五、你的任务：四道关，逐个过</h2>
+
+<div class="gate">
+  <h3>第 1 关 · 跑通（30 分钟，今晚就能做完）</h3>
+  <p>把 <code>capstone_kit/</code> 复制到你的项目目录，装依赖，跑 <code>--selftest</code>，看到 7 个 PASS。再配好 key，问它一句「各品类销售额是多少（剔除退款）？」，看它自己调工具、复算、给结论。</p>
+  <p><strong>过关标志</strong>：<code>runs/</code> 里出现一个 JSON，打开能看到它每一步调了什么工具、传了什么参数。</p>
+</div>
+
+<div class="gate">
+  <h3>第 2 关 · 换数据（1 晚）</h3>
+  <p>把你自己的数据（脱敏后）放进 <code>data/</code>，改 <code>agent/tools.py</code> 顶部的 <code>DATA_FILE</code>，同步改 <code>tests/eval.py</code> 的问题和标准答案——<strong>标准答案必须你自己手算一遍填进去，不能用 Agent 的输出当答案</strong>（那是自证，35 课的坑）。再跑一次 selftest。</p>
+  <p><strong>过关标志</strong>：换了数据之后 selftest 依然全 PASS，且你能说清每一道题的口径。</p>
+</div>
+
+<div class="gate">
+  <h3>第 3 关 · 改造（1-2 晚，这一关才是你的作品）</h3>
+  <p>从下面挑至少两件做（做三件就够讲三个面试故事了）：</p>
+  <ul>
+    <li><strong>把 verify 从「提示词要求」改成「代码硬约束」</strong>：如果 Agent 最后一步没调 verify，就强制再走一轮。做完你会发现——<strong>代码约束比跟模型讲道理可靠</strong>。</li>
+    <li><strong>加一个「口径澄清」</strong>：问「8 月销售额多少」时，Agent 必须先声明自己用的口径（含/不含退款），且这个问题它答不上来时要说「需要你确认」而不是硬答。</li>
+    <li><strong>加一个可视化工具</strong>：用 33 课的 pyecharts 出一张交互图，存到 <code>runs/</code> 里一起交付。</li>
+    <li><strong>加一个工具</strong>：比如「按日期看趋势」（<code>groupby('日期')</code>），走 30 课的流程：写函数 → 定参数 Schema → 注册。</li>
+  </ul>
+  <p><strong>过关标志</strong>：改造后的行为有<strong>留痕可查</strong>——<code>runs/</code> 里的记录能证明新逻辑真的生效了。</p>
+</div>
+
+<div class="gate">
+  <h3>第 4 关 · 发布（1 晚）</h3>
+  <p>照 <a href="../reference/deploy-checklist.html">36 课六条检查清单</a>过一遍，建一个 GitHub 仓库推上去——README 第一屏就要写出：<strong>这是什么、解决什么问题、三步怎么跑、效果长什么样</strong>。想要个网址就上 Streamlit Community Cloud（记得先自测国内能不能打开）。</p>
+  <p><strong>过关标志</strong>：「假装自己是别人」——换个目录 clone 下来，严格照 README 从零跑通。报的每一个错都是你漏掉的检查项。</p>
+</div>
+
+<h2>六、验收清单</h2>
+
+<p>四关过了以后，用这六条自查（前三条对应本课三条硬标准）：</p>
+
+<ul class="checklist">
+  <li><strong>可展示</strong>：能给人看一段真实运行的完整过程（不是「我做了个东西」）。</li>
+  <li><strong>可部署</strong>：换目录 clone 后，照 README 一条命令跑通。</li>
+  <li><strong>数字对得上</strong>：固定测试问题集全 PASS，且标准答案是你手算的。</li>
+  <li><strong>有留痕</strong>：<code>runs/</code> 里的过程记录完整，中间产物看得见。</li>
+  <li><strong>会容错</strong>：没 key、文件缺失、列名不对时，给清晰提示而不是崩溃闪退。</li>
+  <li><strong>说得清</strong>：面试官问「你为什么不用 pandasai 这类现成方案」，你有答案（32 课的批判 + 34 课的核验卡口）。</li>
+</ul>
+
+<div class="callout green">
+  <strong>📝 简历怎么写这个项目（一句话模板）：</strong><br>
+  「独立开发数据分析 Agent（Python / DeepSeek API / 自研 ReAct 循环）：自然语言提问 → 自动选工具算指标 → <strong>出结论前用独立算法复算</strong>，并留存全流程可审计记录；配套固定测试问题集保证数据口径一致。」<br>
+  这句话里最有价值的是<strong>加粗那半句</strong>——它把「会调 API」和「知道 AI 会自信地错，所以设计了核验」区分开了。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>零件已齐</strong>：P5 十课对应项目里的每一块，没有「还没学的部分」，只差组装与交付</li>
+  <li>✅ <strong>三条硬标准</strong>：可展示 / 可部署 / 数字对得上——第三条是分水岭</li>
+  <li>✅ <strong>脚手架优先</strong>：<code>capstone_kit/</code> 已实跑验证（7/7 PASS，换目录可跑，无 key 优雅降级）</li>
+  <li>✅ <strong>四关路径</strong>：跑通 → 换数据 → 改造（至少两件）→ 发布</li>
+  <li>✅ <strong>先验证数据层、再调模型</strong>：口径对不对比模型对不对更重要</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>你要把这个 Agent 交给面试官看。下面哪种做法<strong>最能证明「这个项目真能用来做分析」</strong>？</p>
+
+<ol type="A">
+  <li>录一段流畅的演示视频，展示它如何自动完成一次完整分析</li>
+  <li>给一份固定测试问题集加标准答案，并说明结论经过独立算法复算</li>
+  <li>详细说明它用了 DeepSeek 的哪个版本、推理能力有多强</li>
+  <li>给出全套源代码，让面试官自己阅读理解实现思路</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 卡在哪一关都可以直接问我——尤其是第 2 关换数据时列名和口径对不上，或者第 3 关想改 verify 硬约束但不知道从哪下手。把你的 <code>runs/</code> 记录或报错贴给我，我陪你一起排。
+</p>
+
+<div class="nav-links">
+  <a href="0036-deploy-and-launch.html">← 上一课：部署与上线</a>
+  <a href="0038-agent-workflow-design.html">下一课：Agent 工作流设计 →</a>
+  <a href="../reference/deploy-checklist.html">📋 部署检查清单</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>B。<strong>固定测试问题集 + 独立复算</strong>——它证明的不是「它能跑」，而是「它的结论可以被检验」。这正是 34/35 两课的核心增量，也是本项目区别于多数 AI 数分作品的地方。<br>
+A 错：视频只能证明「有一次跑得很流畅」。面试官无法判断那次结果是碰巧对还是真的对——演示视频和「可复现」是两回事。<br>
+C 错：说模型版本是<strong>最弱的一种证明</strong>。换个模型你的项目还成立吗？成立，那就说明模型不是重点；不成立，那说明项目本身没有壁垒。<br>
+D 错：给源码是必要的（可部署标准要求），但「让面试官自己读懂」不算展示。你的 README 和运行记录应该让他 3 分钟就能看懂，而不是读完 150 行代码才明白你在干什么。
+</p>
+</body>
+</html>
