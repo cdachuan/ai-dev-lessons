@@ -256,7 +256,7 @@
       "topic": "capstone-agent-project",
       "title": "毕业项目：完整 AI Agent（可展示+可部署）",
       "status": "pushed",
-      "note": "P5收尾，简历级产出。成果要可展示：简单网页界面或命令行应用，附README/架构图/示例数据/运行步骤/效果截图或图表。如能部署成别人可试用的小应用，简历价值明显提升。09-14推送（交付 lessons/code/capstone_kit 毕业项目脚手架：main.py + agent/tools.py(5工具含verify) + agent/core.py(ReAct+留痕) + tests/eval.py(固定测试问题集) + 60行示例电商订单。实跑验证：临时目录启动 --selftest 7/7 PASS、无key优雅降级、换目录可跑。38课HTML已提前生成）。09-15第1次提醒未确认，仍待用户确认，不推38课。"
+      "note": "P5收尾，简历级产出。成果要可展示：简单网页界面或命令行应用，附README/架构图/示例数据/运行步骤/效果截图或图表。如能部署成别人可试用的小应用，简历价值明显提升。09-14推送（交付 lessons/code/capstone_kit 毕业项目脚手架：main.py + agent/tools.py(5工具含verify) + agent/core.py(ReAct+留痕) + tests/eval.py(固定测试问题集) + 60行示例电商订单。实跑验证：临时目录启动 --selftest 7/7 PASS、无key优雅降级、换目录可跑。38课HTML已提前生成）。09-15第1次提醒未确认，仍待用户确认，不推38课。09-16第2次提醒未确认，仍待用户确认，不推38课"
     },
     {
       "num": 38,
