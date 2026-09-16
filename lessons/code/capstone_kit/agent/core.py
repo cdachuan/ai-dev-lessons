@@ -75,7 +75,7 @@ def run_agent(user_query, max_steps=MAX_STEPS, verbose=True):
             "未检测到 DEEPSEEK_API_KEY。先跑 python main.py --selftest（无需 key），"
             "或按 README 配置 key 后再提问。")
 
-    client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+    client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_query},
@@ -84,7 +84,7 @@ def run_agent(user_query, max_steps=MAX_STEPS, verbose=True):
 
     for step in range(max_steps):
         resp = client.chat.completions.create(
-            model="deepseek-chat", messages=messages, tools=tools)
+            model="deepseek-v4-flash", messages=messages, tools=tools)
         msg = resp.choices[0].message
 
         if not msg.tool_calls:
