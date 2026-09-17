@@ -62,3 +62,8 @@ P3 共 5 课（17-21），用户 pandas 基础已过关，节奏调整：
 - 顺手修正 34 课 status（note 已写兜底 done 但 status 仍是 pushed）——**课程表是权威源，status 与 note 必须一致**
 - 36 课交付物除了课件，另出可打印速查页 `reference/deploy-checklist.html` 与可交付模板 `lessons/code/deploy_kit/`（实跑验证：换目录启动正常）
 - 下一课：37 毕业项目（完整 AI Agent，可展示+可部署）
+
+## 2026-09-17 回归对齐
+- 用户回归，35/36 虚标 done 经确认概念已过（代码未跑），已在交互中标 done 并注明
+- 37 毕业项目约定：用户自己在终端跑 `cd D:\学习\ai-dev\lessons\code\capstone_kit` + `python main.py --selftest`，输出贴回我审读；第一关跑通→真提问→换数据→改造→发布
+- 35 类比用户自己给的：机器学习测试集（EVAL_SET=测试集，golden=标签，judge=评估指标），理解到位
