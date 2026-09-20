@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0042 · 结果验证与自我修正</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+  .diagram {
+    background: #f8fafc;
+    border: 1px dashed var(--border);
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 0.9rem;
+    margin: 1.2rem 0;
+  }
+</style>
+</head>
+<body>
+<h1>🔍 结果验证与自我修正</h1>
+<p class="meta">第 0042 课 · P6 真实世界 + 可靠性 <span class="tag">工程课</span> · 预计 15 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>让 Agent 学会「自己检查自己的答案」——SQL/Python 结果出来后，先过一遍验证，空结果或异常值自动重试，而不是自信地把错答案报给你。<strong>这是从「能跑」到「可信」的关键一步。</strong>
+</div>
+
+<h2>一、为什么需要结果验证？</h2>
+
+<p>你 37 课的 <code>capstone_kit</code> 已经有了 <code>verify</code> 工具——这是核验思想的起点。但在真实场景里，Agent 可能犯的错误远不止「数字算错」：</p>
+
+<table>
+  <thead><tr><th>错误类型</th><th>真实案例</th><th>后果</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>空结果</strong></td>
+      <td>筛选条件写错，<code>status == "已完成"</code> 写成 <code>status == "完成"</code></td>
+      <td>Agent 报告「该品类销售额为 0」，你信了</td>
+    </tr>
+    <tr>
+      <td><strong>异常值</strong></td>
+      <td>一笔退款金额是负数 -5000，其他订单都是正数</td>
+      <td>总和被拉低，结论偏差很大</td>
+    </tr>
+    <tr>
+      <td><strong>口径不一致</strong></td>
+      <td>这次算了含退款的总额，下次又不算</td>
+      <td>给领导的数字前后矛盾</td>
+    </tr>
+    <tr>
+      <td><strong>代码执行失败</strong></td>
+      <td>列名拼错、数据类型不匹配</td>
+      <td>Agent 用空值硬算，得到荒谬结果</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout red">
+  <strong>⚠️ 最危险的情况：</strong>Agent 算出一个看起来「合理」的错误答案——比如某品类销售额是 0（实际是筛选条件写错了），你没有验证就信了。<strong>没有验证的分析，不如不做。</strong>
+</div>
+
+<h2>二、verify 核验卡口：你已经会的东西</h2>
+
+<p>34 课你亲手做的 <code>verify</code> 工具，核心思想是：<strong>用独立写法的代码路径复算同一个数</strong>。</p>
+
+<pre><code><span style="color:#a6adc8"># 主算法：用 groupby 算各品类销售额</span>
+df.groupby(<span style="color:#a6e3a1">"品类"</span>)[<span style="color:#a6e3a1">"金额"</span>].sum()
+
+<span style="color:#a6adc8"># verify：用布尔索引 + sum 复算（不同的写法）</span>
+df[df[<span style="color:#a6e3a1">"状态"</span>] == <span style="color:#a6e3a1">"已完成"</span>].query(<span style="color:#a6e3a1">"品类=='数码'"</span>)[<span style="color:#a6e3a1">"金额"</span>].sum()</code></pre>
+
+<p>两个结果应该一致——如果不一致，说明其中一条路径有 bug。</p>
+
+<div class="callout">
+  <strong>📌 42 课的增量：</strong>34 课的 verify 是「手动调用一次」。现在我们要把它<strong>自动化</strong>——Agent 出结论前，代码自动检查结果是否合理，不合理就触发重试或修正。
+</div>
+
+<h2>三、三种可落地的验证策略</h2>
+
+<h3>策略 1：空结果检测</h3>
+
+<p>最简单也最常见——算出来的结果是空的、0、或者 None。</p>
+
+<pre><code><span style="color:#a6adc8"># 空结果检测：group_sum 返回空字典时</span>
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">_is_empty_result</span>(result):
+    <span style="color:#a6adc8">"""检查工具返回结果是否为空"""</span>
+    <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">not</span> result:
+        <span style="color:#cdd6f4">return</span> <span style="color:#cdd6f4">True</span>
+    data = result.get(<span style="color:#a6e3a1">"结果"</span>, {})
+    <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">isinstance</span>(data, dict) <span style="color:#cdd6f4">and</span> <span style="color:#cdd6f4">len</span>(data) == 0:
+        <span style="color:#cdd6f4">return</span> <span style="color:#cdd6f4">True</span>
+    <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">isinstance</span>(data, (int, float)) <span style="color:#cdd6f4">and</span> data == 0:
+        <span style="color:#cdd6f4">return</span> <span style="color:#cdd6f4">True</span>
+    <span style="color:#cdd6f4">return</span> <span style="color:#cdd6f4">False</span></code></pre>
+
+<p>检测到空结果后，Agent 应该做什么？</p>
+
+<ol class="steps">
+  <li><strong>先检查筛选条件</strong>——是不是 filter_status 写错了？比如用户问「已完成订单的销售额」，Agent 却写了 <code>status == "完成"</code>（少了个「已」字）。</li>
+  <li><strong>检查列名</strong>——拼写对不对？大小写对不对？</li>
+  <li><strong>如果确实没有数据</strong>——如实告知用户，不要编一个 0 出来。</li>
+</ol>
+
+<h3>策略 2：异常值检测</h3>
+
+<p>结果不是空的，但数字看起来不对劲。</p>
+
+<pre><code><span style="color:#a6adc8"># 异常值检测：金额出现负数、或单笔金额远超均值</span>
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">_has_anomaly</span>(result):
+    <span style="color:#a6adc8">"""检查数值结果是否有明显异常"""</span>
+    data = result.get(<span style="color:#a6e3a1">"结果"</span>, {})
+    <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">not</span> <span style="color:#cdd6f4">isinstance</span>(data, dict):
+        <span style="color:#cdd6f4">return</span> <span style="color:#cdd6f4">False</span>
+    values = <span style="color:#cdd6f4">list</span>(data.values())
+    <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">not</span> values:
+        <span style="color:#cdd6f4">return</span> <span style="color:#cdd6f4">False</span>
+    <span style="color:#a6adc8"># 检查1：是否有负数（金额通常不该为负）</span>
+    <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">any</span>(v &lt; 0 <span style="color:#cdd6f4">for</span> v <span style="color:#cdd6f4">in</span> values):
+        <span style="color:#cdd6f4">return</span> <span style="color:#cdd6f4">True</span>
+    <span style="color:#a6adc8"># 检查2：是否有极端值（超过均值 10 倍）</span>
+    mean_val = sum(values) / len(values)
+    <span style="color:#cdd6f4">if</span> mean_val > 0 <span style="color:#cdd6f4">and</span> <span style="color:#cdd6f4">any</span>(v > mean_val * 10 <span style="color:#cdd6f4">for</span> v <span style="color:#cdd6f4">in</span> values):
+        <span style="color:#cdd6f4">return</span> <span style="color:#cdd6f4">True</span>
+    <span style="color:#cdd6f4">return</span> <span style="color:#cdd6f4">False</span></code></pre>
+
+<div class="callout">
+  <strong>📌 什么时候该报警？</strong>不是所有「看起来奇怪」的数都是错的。比如退款金额是负数——这恰恰是正确的。关键是：<strong>你要知道数据的业务含义</strong>，才能判断什么是「异常」。
+</div>
+
+<h3>策略 3：口径一致性检查</h3>
+
+<p>同一个问题，两次问得到不同数字——口径可能变了。</p>
+
+<pre><code><span style="color:#a6adc8"># 口径检查：两次 group_sum 的 filter_status 是否一致</span>
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">_check_consistency</span>(result, expected_status):
+    <span style="color:#a6adc8">"""检查实际使用的口径是否与预期一致"""</span>
+    actual_status = result.get(<span style="color:#a6e3a1">"filter_status"</span>)
+    <span style="color:#cdd6f4">if</span> actual_status != expected_status:
+        <span style="color:#cdd6f4">return</span> <span style="color:#cdd6f4">False</span>, {
+            <span style="color:#a6e3a1">"expected"</span>: expected_status,
+            <span style="color:#a6e3a1">"actual"</span>: actual_status
+        }
+    <span style="color:#cdd6f4">return</span> <span style="color:#cdd6f4">True</span>, <span style="color:#cdd6f4">None</span></code></pre>
+
+<h2>四、在 Agent 循环中嵌入验证</h2>
+
+<p>把上面三种检测串起来，嵌入到 ReAct 循环里：</p>
+
+<div class="diagram">
+<pre style="text-align:left;background:transparent;color:inherit;margin:0;">
+用户提问
+   │
+   ▼
+┌──────────────────────────────────────┐
+│  ReAct 循环（每步执行工具后）         │
+│                                      │
+│  1. 执行工具 → 得到 result           │
+│  2. 检查 _is_empty_result(result)    │
+│     → 空？提示 Agent 修正条件重试    │
+│  3. 检查 _has_anomaly(result)        │
+│     → 异常？提示 Agent 检查数据      │
+│  4. 检查 _check_consistency(result)  │
+│     → 口径不对？提示 Agent 重算      │
+│  5. 通过 → 继续下一步                │
+└──────────────────────────────────────┘
+   │
+   ▼
+出结论前调 verify（独立复算）
+   │
+   ▼
+最终答案
+</pre>
+</div>
+
+<h3>代码实现：包装工具调用</h3>
+
+<pre><code><span style="color:#a6adc8"># 在 core.py 里，执行工具后加一层验证</span>
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">_execute_and_validate</span>(tool_name, args, tool_func):
+    <span style="color:#a6adc8">"""执行工具并自动验证结果"""</span>
+    result = tool_func(**args)
+
+    <span style="color:#a6adc8"># 空结果检测</span>
+    <span style="color:#cdd6f4">if</span> _is_empty_result(result):
+        result[<span style="color:#a6e3a1">"_warning"</span>] = (
+            <span style="color:#a6e3a1">"⚠️ 结果为空，请检查：筛选条件是否正确？列名是否拼写正确？"</span>
+        )
+
+    <span style="color:#a6adc8"># 异常值检测</span>
+    <span style="color:#cdd6f4">if</span> _has_anomaly(result):
+        result[<span style="color:#a6e3a1">"_warning"</span>] = (
+            <span style="color:#a6e3a1">"⚠️ 结果包含异常值，请确认：数据是否需要清洗？"</span>
+        )
+
+    <span style="color:#cdd6f4">return</span> result</code></pre>
+
+<div class="callout green">
+  <strong>💡 关键设计：</strong>验证结果通过 <code>_warning</code> 字段附加到返回值里，<strong>不会中断 Agent 循环</strong>——Agent 会看到警告，然后自己决定是否重试或修正。<strong>这是「软约束」而非「硬中断」。</strong>
+</div>
+
+<h2>五、动手任务：给分组统计工具加自检</h2>
+
+<p>基于你 37 课的 <code>capstone_kit</code>，给 <code>group_sum</code> 工具加一个「结果为空/数量为 0」的自检：</p>
+
+<ol class="steps">
+  <li>打开 <code>agent/tools.py</code>，找到 <code>group_sum</code> 函数。</li>
+  <li>在返回结果之前，加一个空结果检查：
+    <pre><code><span style="color:#a6adc8"># 在 return 之前加</span>
+result = {<span style="color:#a6e3a1">"结果"</span>: {k: int(v) <span style="color:#cdd6f4">for</span> k, v <span style="color:#cdd6f4">in</span> s.items()}}
+<span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">len</span>(result[<span style="color:#a6e3a1">"结果"</span>]) == 0:
+    result[<span style="color:#a6e3a1">"_warning"</span>] = <span style="color:#a6e3a1">"结果为空：筛选条件下没有匹配的数据"</span>
+<span style="color:#cdd6f4">return</span> result</code></pre>
+  </li>
+  <li>同样给 <code>group_count</code> 加上相同的检查。</li>
+  <li>在 <code>tests/eval.py</code> 里加一个测试：用不存在的筛选条件调 group_sum，验证返回结果包含 <code>_warning</code>。</li>
+  <li>跑 <code>python main.py --selftest</code>，确认所有测试通过。</li>
+</ol>
+
+<div class="callout">
+  <strong>📌 为什么从空结果开始？</strong>空结果是最常见、最容易检测、也最容易被忽略的错误。一个「销售额为 0」的空结果如果没被发现，后面所有分析都是废的。<strong>先堵住最大的漏洞。</strong>
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>为什么需要验证</strong>：空结果、异常值、口径不一致——Agent 自信地报错数比「不知道」更危险</li>
+  <li>✅ <strong>verify 核验卡口</strong>：独立代码路径复算同一个数，34 课的核心增量</li>
+  <li>✅ <strong>三种验证策略</strong>：空结果检测 / 异常值检测 / 口径一致性检查</li>
+  <li>✅ <strong>嵌入 Agent 循环</strong>：工具执行后自动验证，通过 <code>_warning</code> 字段软约束</li>
+  <li>✅ <strong>动手任务</strong>：给 group_sum/group_count 加空结果自检</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>Agent 调用 <code>group_sum("品类", filter_status="已完成")</code> 返回结果为空。以下哪种处理方式最合适？</p>
+
+<ol type="A">
+  <li>直接告诉用户「该品类销售额为 0」</li>
+  <li>返回一个包含 <code>_warning</code> 的结果，让 Agent 自己决定是否重试</li>
+  <li>抛出异常中断整个 Agent 循环</li>
+  <li>自动去掉 filter_status 参数重新调用</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 想用你自己的业务数据试一下空结果检测？把数据文件路径改到 tools.py 的 DATA_FILE，然后用一个不存在的筛选条件调 group_sum，看看 warning 是否生效。任何不清楚的地方，都问你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0041-real-world-data-agent.html">← 上一课：真实世界数据 Agent</a>
+  <a href="0043-data-insight-agent-mvp.html">下一课：数据洞察 Agent 原型 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>B。<strong>返回包含 <code>_warning</code> 的结果，让 Agent 自己决定是否重试</strong>——这是「软约束」设计：不中断流程，但把信息传递给 Agent，让它有机会修正。A 错：空结果直接报 0 是最危险的情况，用户会信以为真。C 错：抛异常中断整个循环太激进——一个空结果不该让整个分析崩掉。D 错：自动去掉 filter_status 改变了用户意图——用户就是要看「已完成」的数据，你不能偷偷换口径。
+</p>
+</body>
+</html>

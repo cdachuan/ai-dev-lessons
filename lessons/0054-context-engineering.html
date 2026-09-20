@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0054 · 上下文工程：裁剪/压缩/记忆</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>🧠 上下文工程：裁剪 / 压缩 / 记忆</h1>
+<p class="meta">第 0054 课 · 选修线三 <span class="tag">Agent深水区 · 开篇</span> · 预计 20 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>上下文窗口是 Agent 最稀缺的资源。<strong>塞什么、留什么、扔什么</strong>——这门「上下文工程」决定 Agent 是聪明还是又贵又蠢。用你数据的真实数字算一笔账开场。
+</div>
+
+<h2>一、一笔账：上下文有多贵</h2>
+<p>你的 54 万行订单数据，如果把全量塞进上下文（每行约 8 token）：<strong>≈ 4.3M tokens——任何模型的窗口都装不下，装得下也贵到荒谬</strong>。而 34 课你做的 profile 画像卡片：<strong>约 50 词</strong>，却回答了「数据长什么样」这同一个问题。</p>
+<div class="callout">
+  <strong>📌 核心认知</strong>：上下文不是「越多越好」的仓库，是<strong>每一步都要付费的工作内存</strong>。模型只能看见窗口里的东西——塞噪音，它就被噪音带偏；裁剪得当，它又快又准。
+</div>
+
+<h2>二、裁剪：什么值得留在窗口里</h2>
+<table>
+<thead><tr><th>留</th><th>扔</th></tr></thead>
+<tbody>
+<tr><td>系统提示（角色+规则+口径）</td><td>完整历史对话（多轮后只留摘要）</td></tr>
+<tr><td>当前任务相关的问题与约束</td><td>工具返回的大块原始数据</td></tr>
+<tr><td>数据画像/摘要卡片</td><td>已确认无误的中间计算过程</td></tr>
+<tr><td>最近 2-3 轮关键交互</td><td>试错过程中的失败输出</td></tr>
+</tbody>
+</table>
+<p>你的 <code>insight_agent_mvp</code> 已经在这么做了：<strong>profile 返回画像而非数据、verify 只返回结论而非全部中间值、每次提问的 trace 落盘而不回灌</strong>——回头看，34 课你已经在做上下文工程了。</p>
+
+<h2>三、压缩：三招处理「必须保留但要变小」</h2>
+<div class="flow">
+  <h3>1 · 摘要压缩</h3>
+  <span class="arrow">30轮对话 → [LLM摘要成5句话] → 继续对话</span>
+  <p>长会话定期把历史压成「任务目标+已做决定+当前状态」。摘要本身一次调用成本，换后续每轮都变小的窗口。</p>
+</div>
+<div class="flow">
+  <h3>2 · 结构化提炼</h3>
+  <span class="arrow">工具大结果 → [代码抽关键字段] → 只留JSON卡片</span>
+  <p>用代码（不花模型钱）从工具输出里抽需要的字段。查询结果 1000 行？抽成「行数+Top5+异常标记」。</p>
+</div>
+<div class="flow">
+  <h3>3 · 外置记忆（落盘）</h3>
+  <span class="arrow">不常用但会用到 → [写文件] → 需要时按需读回</span>
+  <p>你的 <code>runs/</code> 留痕就是外置记忆：不占窗口，随时可查。<strong>窗口是工作台，文件系统是仓库。</strong></p>
+</div>
+
+<h2>四、多步任务的上下文预算</h2>
+<p>ReAct 每一步都把「全部历史+工具结果」重新发一遍——步数越多，窗口涨得越快。实用的预算习惯：</p>
+<ul>
+  <li><strong>设步数上限</strong>（你的 MVP 是 10 步），逼近上限时触发「总结+重启会话」策略</li>
+  <li><strong>工具返回设大小上限</strong>：超过 N 行自动截断+提示「结果已截断，请缩小范围」</li>
+  <li><strong>分阶段重开</strong>：大任务拆成几个阶段，每阶段新会话只带上一阶段摘要</li>
+</ul>
+
+<h2>动手任务（20 分钟）</h2>
+<ol class="steps">
+  <li>算一笔账：你的 MVP 跑满 10 步、每步窗口膨胀 2000 tokens，总成本多少？画像卡片方案省多少？</li>
+  <li>给 <code>sql_query</code> 工具（48课）的返回加截断保护：超过 100 行自动摘要。</li>
+  <li>写一个「会话摘要器」prompt：输入 30 轮历史，输出 5 句结构化摘要（目标/决定/状态）。</li>
+</ol>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>上下文工程 = <strong>窗口里的每一寸都要挣自己的租金</strong>。塞进来的信息必须服务当前步的决策；不服务的，压缩、外置或扔掉。Agent 的聪明一半在模型，一半在你给它看了什么。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>窗口=付费工作内存</strong>：全量数据 4.3M tokens vs 画像 50 词</li>
+  <li>✅ <strong>裁剪清单</strong>：系统提示/画像/关键交互留，原始数据/失败尝试扔</li>
+  <li>✅ <strong>压缩三招</strong>：摘要、结构化提炼（代码不花钱）、外置落盘</li>
+  <li>✅ <strong>步数预算</strong>：上限+截断+分阶段重开</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>Agent 连续对话 40 轮后明显变笨、回答开始跑偏，最可能的原因和首选解法？</p>
+<ol type="A">
+  <li>模型变笨了，换个更强的模型</li>
+  <li>窗口里堆满历史噪音稀释了关键指令——压缩/裁剪历史，保住系统提示和当前任务状态</li>
+  <li>把系统提示再加长 3 倍</li>
+  <li>temperature 调高点</li>
+</ol>
+<p>（答案见底部）</p>
+
+<div class="nav-links">
+  <a href="0053-causality-intro.html">← 上一课：因果入门</a>
+  <a href="0055-cost-latency-control.html">下一课：成本与延迟控制 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);"><strong>小测答案：</strong>B。40 轮历史 + 各步工具输出把「关键指令」稀释成大海里的一滴水——模型注意力被噪音淹没（lost in the middle）。<strong>压缩历史、保住系统提示和任务状态，窗口立刻「变聪明」。</strong><br>
+A 错：换模型最贵，且治标不治本——再强的模型也会被噪音淹没。<br>
+C 错：火上浇油，窗口更挤，关键信息被稀释得更厉害。<br>
+D 错：temperature 管随机性，不管注意力分配。<strong>先修上下文，再谈换模型。</strong></p>
+
+</body>
+</html>

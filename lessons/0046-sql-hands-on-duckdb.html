@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0046 · SQL实战：用duckdb查真实电商数据</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>🗄️ SQL 实战：用 duckdb 查真实电商数据</h1>
+<p class="meta">第 0046 课 · 选修线一 <span class="tag">SQL与查询工程 · 开篇</span> · 预计 20 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>补上数分面试第一硬技能——<strong>SQL</strong>。不装数据库：用 <code>duckdb</code> 让 pandas 直接跑 SQL，54 万行真实电商数据（你 39 课那个数据集）就是练习场。学完你能用 SQL 写出此前用 pandas 写的所有查询。
+</div>
+
+<h2>一、为什么数分必须会 SQL</h2>
+<p>公司里的数据几乎都住在数据库里，不在 CSV 里。你入职第一天面对的就是：一个 SQL 客户端 + 一堆表 + 一份指标口径文档。pandas 是你本地的分析工具，SQL 是你取数的语言——<strong>两者互补，不是二选一</strong>。</p>
+<table>
+<thead><tr><th></th><th>SQL</th><th>pandas</th></tr></thead>
+<tbody>
+<tr><td><strong>跑在哪</strong></td><td>数据库/查询引擎里（靠近数据）</td><td>你的内存里（把数据拉过来）</td></tr>
+<tr><td><strong>强项</strong></td><td>取数、聚合、join 大表</td><td>灵活变换、可视化、机器学习</td></tr>
+<tr><td><strong>面试</strong></td><td class="good">第一硬技能，笔试必考</td><td class="good">实操常考</td></tr>
+</tbody>
+</table>
+
+<h2>二、duckdb：零安装的 SQL 练习场</h2>
+<p><code>pip install duckdb</code> 即可。它是「进程内」分析型数据库——不装服务、不起端口，直接对 CSV/DataFrame 跑 SQL，而且比 pandas 快。</p>
+
+<pre><code>import duckdb
+df = duckdb.read_csv('online_retail_2010_2011.csv', header=True)
+
+# 你的第一条 SQL：先摸清盘子（对应 39 课的 profile）
+duckdb.sql("""
+  SELECT COUNT(*) AS n,
+         MIN(InvoiceDate) AS first_order,
+         MAX(InvoiceDate) AS last_order
+  FROM df
+""").show()
+--&gt; 541909 行，2010-12-01 ~ 2011-12-09</code></pre>
+
+<div class="callout">
+  <strong>📌 阅读顺序</strong>：<code>SELECT</code> 要什么列 → <code>FROM</code> 哪张表 → <code>WHERE</code> 过滤行 → <code>GROUP BY</code> 分组 → <code>ORDER BY</code> 排序 → <code>LIMIT</code> 取前几。每个查询都按这个顺序读，再复杂的 SQL 也不慌。
+</div>
+
+<h2>三、逐个过关：从 GROUP BY 到 JOIN 到窗口</h2>
+
+<h3>3.1 聚合：国家 GMV Top3</h3>
+<pre><code>duckdb.sql("""
+  SELECT Country,
+         ROUND(SUM(Quantity * UnitPrice), 0) AS gmv
+  FROM df
+  WHERE CustomerID IS NOT NULL AND UnitPrice &gt; 0   -- 清洗口径，和 39 课一致
+  GROUP BY Country
+  ORDER BY gmv DESC
+  LIMIT 3
+""").show()
+-- United Kingdom  6767873
+-- Netherlands       284662
+-- EIRE              250285</code></pre>
+<p>对照 39 课：和 <code>ecommerce_toolkit.groupby_agg</code> 算出来的一模一样。<strong>SQL 的 GROUP BY = pandas 的 groupby，同一个概念两套语法。</strong></p>
+
+<h3>3.2 JOIN：两张表拼起来</h3>
+<p>真实工作里数据分居多表（订单表 + 客户表 + 商品表）。JOIN 按 key 把它们横向拼接：</p>
+<pre><code>-- 假设有 orders 和 customers 两张表
+SELECT o.InvoiceNo, c.Segment, SUM(o.Quantity * o.UnitPrice) AS gmv
+FROM orders o
+JOIN customers c ON o.CustomerID = c.CustomerID   -- 按 key 对上
+GROUP BY o.InvoiceNo, c.Segment</code></pre>
+<p><strong>面试高频坑</strong>：<code>INNER JOIN</code> 只留两边都有的行；<code>LEFT JOIN</code> 保左表全量、右边填 NULL。join 后行数暴涨/骤降是新手第一天就会犯的错——<strong>join 前后各数一遍行数</strong>。</p>
+
+<h3>3.3 窗口函数初见：不折叠行的「分组计算」</h3>
+<p>GROUP BY 把很多行折成一行；窗口函数<strong>保留每一行</strong>，只是在旁边多一列计算结果。这是 SQL 入门和进阶的分水岭，下一课专练，这里先见个面：</p>
+<pre><code>WITH m AS (
+  SELECT date_trunc('month', InvoiceDate) AS mo,
+         SUM(Quantity * UnitPrice) AS rev
+  FROM df WHERE CustomerID IS NOT NULL AND UnitPrice &gt; 0
+  GROUP BY 1
+)
+SELECT mo, ROUND(rev, 0) AS rev,
+       ROUND(rev / LAG(rev) OVER (ORDER BY mo) - 1, 3) AS mom  -- 环比
+FROM m LIMIT 5
+-- 2010-12  554604   (首月无环比)
+-- 2011-01  475074   -0.143
+-- 2011-02  436546   -0.081
+-- 2011-03  579965   +0.329</code></pre>
+<p><code>LAG(rev) OVER (ORDER BY mo)</code> = 「按月份排好队，把我上个月的 rev 放到我这行」。一行 SQL 算出环比——窗口函数的威力。</p>
+
+<h2>四、SQL 与 pandas 互通</h2>
+<p>duckdb 最妙的一点：<strong>DataFrame 和 SQL 互通</strong>。SQL 取数 → pandas 出图 → SQL 再汇总，各用所长：</p>
+<pre><code>import pandas as pd
+pdf = duckdb.sql("...复杂查询...").fetchdf()   # SQL 结果变 DataFrame
+pdf.plot()                                     # pandas 画图
+duckdb.sql("SELECT * FROM pdf WHERE ...")      # DataFrame 又能直接被 SQL 查</code></pre>
+
+<h2>五、动手任务（20 分钟）</h2>
+<ol class="steps">
+  <li>装 duckdb，跑通「国家 GMV Top3」，数字对上课文里的三个。</li>
+  <li>写 SQL 回答：每月有多少<strong>不同客户</strong>购买？（提示：<code>COUNT(DISTINCT CustomerID)</code> + <code>date_trunc</code>）</li>
+  <li>把 40 课算过的复购率（64.1%）用 SQL 重新算一遍——同口径不同语法，数字必须一致。</li>
+  <li>找出 2011 年 11 月 GMV 最高的 5 个商品。</li>
+</ol>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>SQL 不是另一门语言，是同一套分析思维（过滤/分组/聚合/排序）的另一种语法。<strong>面试考 SQL，考的是你能不能把业务问题翻译成「过滤谁、按什么分组、算什么」</strong>——这个能力你 39-40 课已经练过了。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>SQL 与 pandas 互补</strong>：SQL 取数（靠近数据），pandas 变换（灵活分析）</li>
+  <li>✅ <strong>duckdb 零安装练习场</strong>：CSV/DataFrame 直接跑 SQL，结果互通</li>
+  <li>✅ <strong>SELECT 阅读顺序</strong>：SELECT→FROM→WHERE→GROUP BY→ORDER BY→LIMIT</li>
+  <li>✅ <strong>JOIN 的坑</strong>：INNER vs LEFT，join 前后数行数</li>
+  <li>✅ <strong>窗口函数初见</strong>：不折叠行旁边加一列，<code>LAG</code> 一行算环比</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>用 SQL 统计「每个国家购买过的客户数」，哪条是对的？</p>
+<ol type="A">
+  <li><code>SELECT Country, COUNT(CustomerID) FROM df GROUP BY Country</code></li>
+  <li><code>SELECT Country, COUNT(DISTINCT CustomerID) FROM df WHERE CustomerID IS NOT NULL GROUP BY Country</code></li>
+  <li><code>SELECT Country, SUM(CustomerID) FROM df GROUP BY Country</code></li>
+  <li><code>SELECT Country, COUNT(*) FROM df WHERE CustomerID IS NOT NULL GROUP BY Country</code></li>
+</ol>
+<p>（答案见底部）</p>
+
+<div class="nav-links">
+  <a href="0045-agent-engineering-advanced.html">← P6 收官课</a>
+  <a href="0047-sql-advanced-patterns.html">下一课：SQL 进阶模式 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);"><strong>小测答案：</strong>B。<strong>COUNT(DISTINCT CustomerID)</strong> 才是「去重后的客户数」——同一客户买 100 单只算 1，COUNT(*) 会算成 100 行。<br>
+A 错：没有 DISTINCT，数出来是行数不是人数；<br>
+C 错：SUM 对客户 ID 求和毫无意义；<br>
+D 错：COUNT(*) 数明细行数，一个客户多行被重复计。<strong>数人数用 DISTINCT，数行数用 COUNT(*)——SQL 第一课。</strong></p>
+
+</body>
+</html>

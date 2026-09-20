@@ -1,0 +1,27 @@
+task: 构建电商数据分析工具箱（P6第39课配套代码，可复用的规范工具集）
+context: |
+  这是 AI 应用开发课程 P6 的实操代码。工作区 D:\学习\ai-dev\lessons\code\
+  数据集（已就位，真实UK电商54万行）: D:\学习\ai-dev\data\ecommerce\online_retail_2010_2011.csv
+  字段: InvoiceNo, StockCode, Description, Quantity(可为负=退货), InvoiceDate, UnitPrice, CustomerID(约25%缺失), Country
+  参考已有代码风格: D:\学习\ai-dev\lessons\code\capstone_kit\agent\tools.py（结构化返回、docstring、参数校验）
+goal: |
+  在 D:\学习\ai-dev\lessons\code\ecommerce_toolkit\ 下创建:
+  1. tools.py — 封装成规范工具函数，每个函数配: docstring说明+参数类型标注+统一返回格式{"ok":bool,"data":...,"error":...}
+     工具清单:
+     - read_orders(path, usecols=None) 读CSV，InvoiceDate转datetime
+     - clean_orders(df) 清洗: 剔除CustomerID缺失可选、拆分退货单(InvoiceNo以C开头或Quantity<0)、剔除UnitPrice<=0、加revenue列
+     - kpi_summary(df, start=None, end=None) 总GMV/订单数/客单价/购买客户数/退货率
+     - groupby_agg(df, group_col, value_col, agg='sum', top_n=None) 通用分组聚合
+     - monthly_trend(df, metric='revenue') 月度趋势（注意2011-12数据不完整需标注）
+     - country_top(df, n=10) 国家GMV排名
+     - rfm_table(df) RFM客户分层表（按CustomerID，R/F/M各打分1-5，输出分层标签）
+     - bar_chart(items, values, title, out_html) pyecharts横向柱状图存HTML
+     - line_chart(x_items, series_dict, title, out_html) pyecharts折线图
+  2. demo.py — 不需任何API key即可跑通：加载CSV→清洗→输出KPI摘要+月度趋势CSV+Top10商品图HTML到 output/ 子目录
+  3. README.md — 工具清单表+每个工具的参数说明+demo运行方法
+constraints:
+  - Python 3.11，pandas/pyecharts/openpyxl 已安装
+  - 数据文件只读，不改 D:\学习\ai-dev\data\ 下任何文件
+  - demo.py 必须实跑验证通过后才算完成，把实际输出数字写进README末尾「实跑记录」
+  - 清洗逻辑要能讲清业务含义（如退货为什么按负revenue计入而不是直接删行）
+not_to_do: 不要动 curriculum.json、不要git操作、不要联网下载数据、不要读任何 API key/config

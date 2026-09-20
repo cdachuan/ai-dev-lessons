@@ -1,0 +1,18 @@
+task: 生成选修线一「SQL与查询工程」第46-49课HTML课件（4个文件）
+context: |
+  AI应用开发课程选修线，工作区 D:\学习\ai-dev\lessons\
+  样式模板: 0038-agent-workflow-design.html（视觉风格/交互/小测结构严格模仿）
+  课程表权威定义: D:\学习\ai-dev\curriculum.json 第46-49课 topic/title/note（先读）
+  贯穿数据集: D:\学习\ai-dev\data\ecommerce\online_retail_2010_2011.csv（UK电商54万行，字段InvoiceNo/StockCode/Description/Quantity/InvoiceDate/UnitPrice/CustomerID/Country）
+  代码参考: lessons\code\ecommerce_toolkit\ 和 insight_agent_mvp\
+goal: |
+  生成四个课件:
+  - 0046-sql-hands-on-duckdb.html: duckdb是什么/为何pandas+SQL互补/SELECT-WHERE-GROUP BY-JOIN-窗口函数入门，全部用贯穿数据集真实查询示例（可运行duckdb代码）
+  - 0047-sql-advanced-patterns.html: 四大业务模式——留存(自join)、转化漏斗(路径拆步)、TopN per group(ROW_NUMBER/DENSE_RANK区别)、同环比(LAG/LEAD)，每个模式配电商业务解释+SQL
+  - 0048-text-to-sql-agent.html: Text-to-SQL架构——schema感知/prompt设计/生成SQL/执行/verify用pandas独立复算/SQL注入与只读防护；呼应43课MVP和34课verify
+  - 0049-sql-modeling-basics.html: 星型模型/事实表维度表/为什么宽表好查/索引直觉/何时该建汇总表
+  每课末尾小测（3-4选项，答案底部折叠），风格与0038一致。
+constraints:
+  - 纯HTML/CSS/原生JS单文件，无外部CDN，离线可开
+  - SQL示例必须语法正确且逻辑上能在该数据集上运行（列名对得上）；不确定的写原理不编参数
+not_to_do: 不要git；不要读key/config；不要改其他课件

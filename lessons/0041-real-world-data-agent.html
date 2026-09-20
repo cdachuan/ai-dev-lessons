@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0041 · 真实世界数据 Agent</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+  details { margin: 1rem 0; }
+  details summary {
+    cursor: pointer; font-weight: 600; color: var(--accent);
+    padding: 0.5rem 0; font-size: 0.95rem;
+  }
+  details summary:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<h1>🌍 真实世界数据 Agent</h1>
+<p class="meta">第 0041 课 · P6 电商锚点 <span class="tag">容错实战课</span> · 预计 20 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>让 Agent 能处理<strong>真实世界的脏数据和不靠谱接口</strong>——API 超时、格式不一致、字段缺失、异常值。用 UCI Online Retail 数据集的退货单和缺失 CustomerID 当真实案例，给 Agent 加一个<strong>失败重试护栏</strong>。动手任务=给 Agent 工具链加超时重试。
+</div>
+
+<h2>一、为什么 demo 能跑，生产会炸？</h2>
+
+<p>37-38 课你的 Agent 在干净数据上跑得很好。但真实世界的数据长这样：</p>
+
+<table>
+  <thead><tr><th>Demo 世界</th><th>真实世界</th></tr></thead>
+  <tbody>
+    <tr><td>CSV 字段名整齐</td><td>列名有空格、大小写不一致、甚至有中文/英文混用</td></tr>
+    <tr><td>数据类型正确</td><td>数字列里混着字符串，日期格式不统一</td></tr>
+    <tr><td>没有缺失值</td><td>关键字段（如 CustomerID）25% 缺失</td></tr>
+    <tr><td>所有行都是有效数据</td><td>退货单的 Quantity 是负数，免费赠品 UnitPrice 为 0</td></tr>
+    <tr><td>API 永远返回 200</td><td>超时、429 限流、500 服务器错误、返回格式变了</td></tr>
+  </tbody>
+</table>
+
+<div class="callout red">
+  <strong>⚠️ 最常见的翻车场景：</strong>Agent 调了一个 API，返回的 JSON 字段名从 <code>total_amount</code> 变成了 <code>totalAmount</code>——就这一处变化，Agent 就挂了。不是模型不行，是<strong>你的工具层没有容错</strong>。
+</div>
+
+<h2>二、三层防御：工具层 → Agent 层 → 人兜底</h2>
+
+<p>容错不是在某一个地方做，而是<strong>每一层都有自己的防线</strong>：</p>
+
+<h3>第一层：工具层（代码兜底）</h3>
+<p>工具函数自己处理最常见的异常，不让错误传到 Agent 层。</p>
+
+<pre><code><span style="color:#a6adc8"># 39 课的 calc_gmv 已经做了输入校验——这就是第一层</span>
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">calc_gmv</span>(df, exclude_returns=<span style="color:#cdd6f4">True</span>, group_by=<span style="color:#cdd6f4">None</span>):
+    <span style="color:#cdd6f4">if</span> <span style="color:#a6e3a1">"Quantity"</span> <span style="color:#cdd6f4">not in</span> df.columns <span style="color:#cdd6f4">or</span> <span style="color:#a6e3a1">"UnitPrice"</span> <span style="color:#cdd6f4">not in</span> df.columns:
+        <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">"数据缺少 Quantity 或 UnitPrice 列"</span>}
+    <span style="color:#a6adc8"># ... 正常计算</span></code></pre>
+
+<p>再加一个<strong>数据清洗工具</strong>，处理真实世界最常见的坑：</p>
+
+<pre><code><span style="color:#a6adc8"># ecommerce_toolkit/cleaners.py</span>
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">clean_ecommerce_data</span>(df):
+    <span style="color:#a6adc8">"""清洗电商数据，返回 (clean_df, report)。</span>
+<span style="color:#a6adc8">    report 记录了每一步处理了什么，供 Agent 和人核验。</span>
+<span style="color:#a6adc8">    """</span>
+    report = {<span style="color:#a6e3a1">"原始行数"</span>: <span style="color:#cdd6f4">len</span>(df)}
+    work = df.copy()
+
+    <span style="color:#a6adc8"># 1. 列名标准化：去空格、统一大写</span>
+    work.columns = work.columns.str.strip()
+
+    <span style="color:#a6adc8"># 2. CustomerID 缺失 → 标记但不删（让调用者决定）</span>
+    work[<span style="color:#a6e3a1">"CustomerID_missing"</span>] = work[<span style="color:#a6e3a1">"CustomerID"</span>].isna()
+    report[<span style="color:#a6e3a1">"CustomerID缺失数"</span>] = <span style="color:#cdd6f4">int</span>(work[<span style="color:#a6e3a1">"CustomerID_missing"</span>].sum())
+
+    <span style="color:#a6adc8"># 3. Quantity 异常：负数 = 退货，标记</span>
+    work[<span style="color:#a6e3a1">"is_return"</span>] = work[<span style="color:#a6e3a1">"InvoiceNo"</span>].astype(<span style="color:#cdd6f4">str</span>).str.startswith(<span style="color:#a6e3a1">"C"</span>)
+    report[<span style="color:#a6e3a1">"退货单数"</span>] = <span style="color:#cdd6f4">int</span>(work[<span style="color:#a6e3a1">"is_return"</span>].sum())
+
+    <span style="color:#a6adc8"># 4. UnitPrice = 0 → 免费赠品，标记</span>
+    work[<span style="color:#a6e3a1">"is_free"</span>] = work[<span style="color:#a6e3a1">"UnitPrice"</span>] == <span style="color:#fab387">0</span>
+    report[<span style="color:#a6e3a1">"免费赠品行数"</span>] = <span style="color:#cdd6f4">int</span>(work[<span style="color:#a6e3a1">"is_free"</span>].sum())
+
+    <span style="color:#a6adc8"># 5. Description 缺失 → 填"未知商品"</span>
+    work[<span style="color:#a6e3a1">"Description"</span>] = work[<span style="color:#a6e3a1">"Description"</span>].fillna(<span style="color:#a6e3a1">"未知商品"</span>)
+
+    report[<span style="color:#a6e3a1">"清洗后行数"</span>] = <span style="color:#cdd6f4">len</span>(work)
+    <span style="color:#cdd6f4">return</span> work, report</code></pre>
+
+<h3>第二层：Agent 层（重试 + 降级）</h3>
+<p>工具层处理不了的错误（如 API 超时），由 Agent 层的重试逻辑兜底。</p>
+
+<pre><code><span style="color:#a6adc8"># 29 课学的 HTTP API 工具，加上重试护栏</span>
+<span style="color:#cdd6f4">import</span> time, requests
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">call_api_with_retry</span>(url, params=<span style="color:#cdd6f4">None</span>, max_retries=<span style="color:#fab387">3</span>, timeout=<span style="color:#fab387">10</span>):
+    <span style="color:#a6adc8">"""调 API，自带超时 + 重试 + 指数退避。</span>
+<span style="color:#a6adc8">    用途：Agent 调外部数据源时的统一入口。</span>
+<span style="color:#a6adc8">    返回：{ok: True, data: ...} 或 {ok: False, error: ...}。</span>
+<span style="color:#a6adc8">    """</span>
+    last_error = <span style="color:#cdd6f4">None</span>
+    <span style="color:#cdd6f4">for</span> attempt <span style="color:#cdd6f4">in</span> <span style="color:#cdd6f4">range</span>(max_retries):
+        <span style="color:#cdd6f4">try</span>:
+            resp = requests.get(url, params=params, timeout=timeout)
+            resp.raise_for_status()
+            <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"ok"</span>: <span style="color:#cdd6f4">True</span>, <span style="color:#a6e3a1">"data"</span>: resp.json()}
+        <span style="color:#cdd6f4">except</span> requests.exceptions.Timeout:
+            last_error = <span style="color:#a6e3a1">"超时"</span>
+        <span style="color:#cdd6f4">except</span> requests.exceptions.HTTPError <span style="color:#cdd6f4">as</span> e:
+            <span style="color:#cdd6f4">if</span> e.response.status_code == <span style="color:#fab387">429</span>:
+                last_error = <span style="color:#a6e3a1">"限流"</span>
+                time.sleep(<span style="color:#fab387">2</span> ** attempt)   <span style="color:#a6adc8"># 指数退避：1s, 2s, 4s</span>
+                <span style="color:#cdd6f4">continue</span>
+            last_error = <span style="color:#a6e3a1">f"HTTP {e.response.status_code}"</span>
+        <span style="color:#cdd6f4">except</span> Exception <span style="color:#cdd6f4">as</span> e:
+            last_error = <span style="color:#cdd6f4">str</span>(e)
+    <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"ok"</span>: <span style="color:#cdd6f4">False</span>, <span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"重试{max_retries}次后失败: {last_error}"</span>}</code></pre>
+
+<h3>第三层：人兜底（日志 + 告警）</h3>
+<p>前两层都挡不住的问题，要<strong>记录下来让人知道</strong>——不能静默失败。</p>
+
+<pre><code><span style="color:#a6adc8"># 工具层返回的 report / error 信息要能被看到</span>
+result = calc_gmv(df)
+<span style="color:#cdd6f4">if</span> <span style="color:#a6e3a1">"error"</span> <span style="color:#cdd6f4">in</span> result:
+    <span style="color:#cdd6f4">print</span>(<span style="color:#a6e3a1">f"⚠️ 工具返回错误: {result['error']}"</span>)
+    <span style="color:#a6adc8"># Agent 应该把这个错误告诉用户，而不是假装算出了结果</span></code></pre>
+
+<div class="callout">
+  <strong>📌 三层防御的核心思想：</strong>工具层处理能预见的异常（字段缺失、类型错误）；Agent 层处理运行时异常（超时、重试）；人兜底处理未知异常（日志+告警）。<strong>任何一层都不该假设"数据一定是好的"或"接口一定是通的"。</strong>
+</div>
+
+<h2>三、用本数据集练容错</h2>
+
+<p>UCI Online Retail 数据集自带两个经典脏数据场景：</p>
+
+<h3>场景 1：退货单（InvoiceNo 以 C 开头）</h3>
+<pre><code><span style="color:#a6adc8"># 退货单的 Quantity 是负数——不处理会怎样？</span>
+<span style="color:#a6adc8"># 如果 Agent 不知道这个规则，直接算 GMV：</span>
+df[<span style="color:#a6e3a1">"Revenue"</span>] = df[<span style="color:#a6e3a1">"Quantity"</span>] * df[<span style="color:#a6e3a1">"UnitPrice"</span>]
+gmv_wrong = df[<span style="color:#a6e3a1">"Revenue"</span>].sum()   <span style="color:#a6adc8"># 被退货拉低了 ~45万</span>
+
+<span style="color:#a6adc8"># 容错做法：工具层自动识别并标记退货</span>
+df[<span style="color:#a6e3a1">"is_return"</span>] = df[<span style="color:#a6e3a1">"InvoiceNo"</span>].astype(<span style="color:#cdd6f4">str</span>).str.startswith(<span style="color:#a6e3a1">"C"</span>)
+<span style="color:#a6adc8"># Agent 调工具时可以选择是否排除退货——口径透明</span></code></pre>
+
+<h3>场景 2：CustomerID 缺失（约 25%）</h3>
+<pre><code><span style="color:#a6adc8"># 如果 Agent 不处理缺失值直接算复购率：</span>
+orders_per = df.groupby(<span style="color:#a6e3a1">"CustomerID"</span>)[<span style="color:#a6e3a1">"InvoiceNo"</span>].nunique()
+<span style="color:#a6adc8"># 报错：CustomerID 有 NaN，groupby 会把 NaN 当成一个分组</span>
+
+<span style="color:#a6adc8"># 容错做法：先 dropna 再分析，report 里记录了多少行被跳过</span>
+valid = df.dropna(subset=[<span style="color:#a6e3a1">"CustomerID"</span>])
+skipped = <span style="color:#cdd6f4">len</span>(df) - <span style="color:#cdd6f4">len</span>(valid)
+<span style="color:#cdd6f4">print</span>(<span style="color:#a6e3a1">f"跳过 {skipped} 行（CustomerID 缺失），占比 {skipped/len(df):.1%}"</span>)</code></pre>
+
+<div class="callout green">
+  <strong>💡 容错的最高境界：</strong>不是"遇到错误就报错"，而是<strong>优雅地处理 + 告诉用户发生了什么</strong>。比如 CustomerID 缺失时，不是简单地 <code>dropna()</code>，而是"跳过了 135080 行（占比 24.9%），这些行无法关联到具体客户，复购率计算基于剩余 75.1% 的有效数据"。
+</div>
+
+<h2>四、给 Agent 加一个失败重试护栏</h2>
+
+<p>把重试逻辑封装成一个<strong>通用护栏装饰器</strong>，任何工具函数都可以套用：</p>
+
+<pre><code><span style="color:#a6adc8"># ecommerce_toolkit/resilience.py</span>
+<span style="color:#cdd6f4">import</span> time, functools
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">retry_on_failure</span>(max_retries=<span style="color:#fab387">3</span>, delay=<span style="color:#fab387">1</span>, backoff=<span style="color:#fab387">2</span>):
+    <span style="color:#a6adc8">"""装饰器：工具函数失败时自动重试，指数退避。</span>
+<span style="color:#a6adc8">    用法：@retry_on_failure() 加在任何工具函数上。</span>
+<span style="color:#a6adc8">    """</span>
+    <span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">decorator</span>(func):
+        <span style="color:#a6adc8">@functools.wraps</span>(func)
+        <span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">wrapper</span>(*args, **kwargs):
+            last_err = <span style="color:#cdd6f4">None</span>
+            <span style="color:#cdd6f4">for</span> i <span style="color:#cdd6f4">in</span> <span style="color:#cdd6f4">range</span>(max_retries):
+                <span style="color:#cdd6f4">try</span>:
+                    <span style="color:#cdd6f4">return</span> func(*args, **kwargs)
+                <span style="color:#cdd6f4">except</span> Exception <span style="color:#cdd6f4">as</span> e:
+                    last_err = e
+                    <span style="color:#cdd6f4">if</span> i &lt; max_retries - <span style="color:#fab387">1</span>:
+                        time.sleep(delay * (backoff ** i))
+            <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">f"重试{max_retries}次后失败"</span>, <span style="color:#a6e3a1">"最后错误"</span>: <span style="color:#cdd6f4">str</span>(last_err)}
+        <span style="color:#cdd6f4">return</span> wrapper
+    <span style="color:#cdd6f4">return</span> decorator
+
+<span style="color:#a6adc8"># 使用示例</span>
+<span style="color:#a6adc8">@retry_on_failure</span>(max_retries=<span style="color:#fab387">3</span>, delay=<span style="color:#fab387">1</span>)
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">fetch_exchange_rate</span>(currency):
+    <span style="color:#a6adc8">"""从外部 API 获取汇率——可能超时、可能限流。"""</span>
+    <span style="color:#cdd6f4">import</span> requests
+    resp = requests.get(<span style="color:#a6e3a1">f"https://api.exchangerate-api.com/v4/latest/{currency}"</span>, timeout=<span style="color:#fab387">10</span>)
+    resp.raise_for_status()
+    <span style="color:#cdd6f4">return</span> resp.json()</code></pre>
+
+<h2>五、动手任务：给 Agent 加一个失败重试护栏</h2>
+
+<div class="callout">
+  <strong>🎯 任务（15 分钟）：</strong>选一个你 39 课写的工具函数（如 <code>calc_gmv</code>），给它加上重试护栏。具体步骤：
+</div>
+
+<ol class="steps">
+  <li>把 <code>retry_on_failure</code> 装饰器复制到你的工具文件</li>
+  <li>在 <code>calc_gmv</code> 上加 <code>@retry_on_failure(max_retries=2)</code></li>
+  <li>模拟失败场景：在函数里加一行 <code>if some_condition: raise ConnectionError("模拟网络错误")</code></li>
+  <li>测试：第一次调用抛异常，第二次自动重试成功</li>
+  <li>观察重试日志（你可以在装饰器里加 <code>print(f"第{i+1}次尝试...")</code>）</li>
+</ol>
+
+<p>进阶挑战：如果重试 3 次都失败了，让 Agent 自动<strong>降级</strong>——比如从"精确计算"降为"用缓存的上次结果"，并在结论里标注"本次数据可能不是最新的"。</p>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>真实世界的坑</strong>：字段名变了、数据类型混杂、缺失值普遍、接口不稳定</li>
+  <li>✅ <strong>三层防御</strong>：工具层（输入校验）→ Agent 层（重试+降级）→ 人兜底（日志+告警）</li>
+  <li>✅ <strong>用数据集练容错</strong>：退货单（InvoiceNo 以 C 开头）、CustomerID 缺失（25%）是两个经典场景</li>
+  <li>✅ <strong>重试护栏</strong>：<code>retry_on_failure</code> 装饰器，指数退避，任何工具函数可套用</li>
+  <li>✅ <strong>容错的最高境界</strong>：优雅处理 + 告诉用户发生了什么，而不是静默失败</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>你的 Agent 调用一个外部 API 获取实时汇率，第一次超时了。正确的做法是什么？</p>
+
+<ol type="A">
+  <li>立即重试 3 次，每次都一样超时</li>
+  <li>第一次超时后等 1 秒再重试，如果还超时等 2 秒再试，3 次都失败则返回错误信息</li>
+  <li>超时就超时了，返回一个硬编码的默认汇率</li>
+  <li>把超时异常吞掉，假装没发生过</li>
+</ol>
+
+<details>
+  <summary>点击展开答案与解析</summary>
+  <div style="padding:0.8rem 1rem;background:#f0fdf4;border-radius:6px;margin-top:0.5rem;">
+    <strong>答案：B。</strong>指数退避重试（等 1s → 2s → 4s）是处理瞬时故障的标准做法——可能只是网络抖动，重试几次就好了。A 错：不等待直接重试大概率还是超时（对方服务器还没缓过来），还可能加重对方负担。C 错：硬编码汇率是<strong>数据造假</strong>——错误的实时数据比没有数据更危险；如果要用缓存值，必须在结论里标注"使用了缓存数据，非实时"。D 错：吞掉异常 = Agent 假装成功了但给了错误结果，这是最危险的行为。
+  </div>
+</details>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 想给你的 Agent 项目加一个完整的错误处理体系？把你的工具链结构告诉我，我帮你设计每一层的防御策略。任何不清楚的地方，都问你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0040-ecommerce-data-analysis.html">← 上一课：电商数据分析实战</a>
+  <a>下一课：结果验证与自我修正（0042）→</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+</body>
+</html>

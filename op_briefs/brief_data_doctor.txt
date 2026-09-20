@@ -1,0 +1,19 @@
+task: 写"数据体检器"可复用工具（任意CSV一键体检）
+context: |
+  这是求职作品集的可复用工具，工作区 D:\学习\ai-dev\lessons\code\
+  风格参考: insight_agent_mvp\agent\tools.py（结构化返回/docstring/参数校验）和 resilience_demo\（护栏思想）
+goal: |
+  新建 D:\学习\ai-dev\lessons\code\data_doctor\：
+  1. doctor.py — 核心库，函数式API:
+     - profile(path) 数据画像: 行列数/内存/每列类型/缺失率/唯一值数
+     - quality_report(path) 质量报告: 缺失率TOP列/疑似重复行/混合类型列/疑似ID列/常数列/高基数警告
+     - outliers(path, col, method='iqr') 异常检测: IQR或zscore，返回上下界+越界行样本
+     - suggest_clean(path) 清洗建议: 每个问题给建议动作（不自动执行，只建议）
+     - full_check(path) 一键全检: 上述全部+总体健康分(0-100)
+     所有函数返回结构化dict {"ok":bool,"data":...,"error":...}
+  2. cli.py — 命令行: python cli.py <csv路径> [--full] 输出可读体检报告
+  3. README.md — 用法+输出示例（用真实运行输出）
+  4. 实跑验证: 用 D:\学习\ai-dev\data\ecommerce\online_retail_2010_2011.csv 全量跑通，输出贴进README
+constraints:
+  - Python 3.11只依赖pandas；数据只读；大文件友好(分块读取可选)
+not_to_do: 不要git；不要读key；不要动其他项目文件

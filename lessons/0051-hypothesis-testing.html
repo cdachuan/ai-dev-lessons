@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0051 · 假设检验与置信区间</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>🧪 假设检验与置信区间（电商场景）</h1>
+<p class="meta">第 0051 课 · 选修线二 <span class="tag">统计与实验</span> · 预计 25 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>用<strong>置换检验</strong>和<strong>bootstrap</strong>这两个「靠洗牌和抽样就能懂」的方法建立检验直觉——不推公式，代码 10 行。跑的是你的真实数据：荷兰客单 £2,847 vs 德国 £368，这差异是真的大还是运气？
+</div>
+
+<h2>一、检验在回答什么问题</h2>
+<p>你观察到差异（£2,479）。但<strong>任何两组数据几乎都会有差异</strong>——问题永远是：<strong>「如果两国客单其实一样，纯靠抽样的运气，能不能凑出这么大差异？」</strong></p>
+<ul>
+  <li>能轻易凑出来 → 差异不稀奇 → 别下结论</li>
+  <li>凑不出来（概率极小）→ 差异是真的 → 可以报告</li>
+</ul>
+<p><strong>p 值 = 「纯运气凑出这么大差异」的概率。</strong>p 很小（惯例 &lt; 0.05）→ 运气解释不通 → 我们说「统计显著」。</p>
+
+<h2>二、置换检验：洗牌 2000 次的暴力美学</h2>
+<p>思路朴素到不像统计：把两国所有订单<strong>混在一起洗牌，随机重新分成两组</strong>，算一次「组均值差」；重复 2000 次，看看「纯洗牌能产生多大差异」的分布：</p>
+<pre><code>import random
+random.seed(42)
+pooled = list(nl) + list(de)        # 荷兰100单 + 德国603单的金额
+n = len(nl)
+diffs = []
+for _ in range(2000):
+    s = random.sample(pooled, len(pooled))   # 洗牌
+    diffs.append(sum(s[:n])/n - sum(s[n:])/len(s[n:]))  # 重算组间差
+
+obs = nl.mean() - de.mean()          # 真实观察差 = 2479
+extreme = sum(1 for d in diffs if abs(d) >= abs(obs)) / len(diffs)
+# → p ≈ 0.0000（2000次洗牌没有一次凑出这么大差异）</code></pre>
+<p><strong>真实结果</strong>：观察差 £2,479，2000 次洗牌<strong>一次都没接近过</strong> → p≈0.0000 → 荷兰客单显著高于德国。注意 p 不会真是 0，只能说「&lt; 1/2000」，想更精确就多洗几轮。</p>
+<div class="callout">
+  <strong>📌 置换检验的好处</strong>：不假设分布形状（50 课说过金额右偏，t 检验的假设勉强）、逻辑透明可讲给业务听（「洗牌 2000 次都凑不出」）、代码 10 行。<strong>面试讲这个比背 t 检验公式加分。</strong>
+</div>
+
+<h2>三、置信区间：「均值 ± 多大误差」的诚实版</h2>
+<p>「荷兰客单 £2,847」是 100 单算出来的点估计。<strong>换 100 单可能就是 £2,600</strong>。bootstrap：从这 100 单里<strong>有放回抽样</strong> 100 单算均值，重复 3000 次，看均值的波动范围：</p>
+<pre><code>for _ in range(3000):
+    s = [random.choice(inv) for _ in inv]   # 有放回抽样
+    means.append(sum(s)/len(s))
+# 95% CI ≈ [P2.5, P97.5] = [2044, 3762]</code></pre>
+<p><strong>真实结果</strong>：荷兰客单 £2,847，95% 置信区间 <strong>[£2,044, £3,762]</strong>。含义：「如果重复取样，95% 的样本会算出这个区间内的均值」——区间这么宽是因为<strong>只有 100 单</strong>。报数时带上区间，比光秃一个点诚实十倍。</p>
+
+<h2>四、三个必答的坑</h2>
+<table>
+<thead><tr><th>坑</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><strong>p&lt;0.05 ≠ 差异大</strong></td><td>样本够大时极小差异也显著。p 管真假，<strong>效果量管大小</strong>，两个都要报</td></tr>
+<tr><td><strong>不显著 ≠ 没差异</strong></td><td>可能只是样本不够（荷兰才 100 单，CI 宽成 £1700 就是证据）</td></tr>
+<tr><td><strong>多重比较</strong></td><td>38 个国家两两比一遍，总有「碰巧显著」的——检验次数越多，假阳性越多（下节课细讲）</td></tr>
+</tbody>
+</table>
+
+<h2>动手任务（25 分钟）</h2>
+<ol class="steps">
+  <li>跑通置换检验，对上 p≈0.0000；把洗牌次数改成 200 次再看 p 的稳定性。</li>
+  <li>把荷兰样本<strong>随机抽 30 单</strong>重跑 bootstrap，观察 CI 变宽多少——体会样本量的代价。</li>
+  <li>挑两个相邻国家（如法国 vs 德国）做置换检验，找一个「不显著」的例子并解释。</li>
+</ol>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>假设检验回答「差异能不能用运气解释」：置换检验=洗牌造出「运气分布」，bootstrap=重抽样造出「均值波动范围」。<strong>报结论时三件套：点估计 + 区间 + p 值</strong>，缺一个都不完整。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>p 值直觉</strong>：纯运气凑出现察差异的概率</li>
+  <li>✅ <strong>置换检验</strong>：洗牌 2000 次，暴力但不依赖分布假设</li>
+  <li>✅ <strong>bootstrap CI</strong>：荷兰客单 [2044, 3762]，区间宽度暴露样本量</li>
+  <li>✅ <strong>显著≠大，不显著≠无</strong>：p 值和效果量是两回事</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>某次实验 p=0.04，另一个实验 p=0.20 但样本量大 10 倍。哪个说法对？</p>
+<ol type="A">
+  <li>p=0.04 的实验效果一定更大</li>
+  <li>p=0.20 的实验可能效果一样大，只是样本还不够；p=0.04 的效果也可能很小</li>
+  <li>p=0.20 说明两个版本完全一样</li>
+  <li>直接看 p 值大小排序效果即可</li>
+</ol>
+<p>（答案见底部）</p>
+
+<div class="nav-links">
+  <a href="0050-stats-thinking.html">← 上一课：统计思维</a>
+  <a href="0052-ab-testing.html">下一课：A/B 测试全流程 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);"><strong>小测答案：</strong>B。<strong>p 值混合了「效果大小」和「样本量」两个信息</strong>，单独解读没有意义：大样本下微小差异也会 p&lt;0.05；效果一样大时小样本 p 会更大。<br>
+A 错：p 小可能只是样本大。正确姿势是算效果量（差多少、相对提升多少）。<br>
+C 错：不显著只说明「证据不足」，不是「证明相同」—— absence of evidence is not evidence of absence。<br>
+D 错：同 A。比较效果看效果量，p 值只回答「是不是运气」。<strong>报结果永远：效果量 + CI + p 值三件套。</strong></p>
+
+</body>
+</html>

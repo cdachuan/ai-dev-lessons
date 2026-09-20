@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0055 · 成本与延迟控制</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>💰 成本与延迟：分档调用 / 缓存 / 批处理</h1>
+<p class="meta">第 0055 课 · 选修线三 <span class="tag">Agent深水区</span> · 预计 20 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>把 38 课那句「便宜模型+好架构 &gt; 强模型+裸奔」落成工程手段：<strong>分档调用、缓存、批处理</strong>三招，外加延迟预算的意识。
+</div>
+
+<h2>一、分档调用：不是所有步都配得起强模型</h2>
+<p>Agent 的一趟任务里，各步难度天差地别：</p>
+<table>
+<thead><tr><th>步骤</th><th>难度</th><th>配置档位</th></tr></thead>
+<tbody>
+<tr><td>理解用户问题、拆解任务</td><td>高（语义判断）</td><td>强模型</td></tr>
+<tr><td>选工具、定参数</td><td>中</td><td>中档</td></tr>
+<tr><td>SQL 生成、代码生成</td><td>中高</td><td>中档+校验</td></tr>
+<tr><td>结果摘要、格式转换</td><td>低（模板化）</td><td>便宜模型甚至纯代码</td></tr>
+<tr><td>算术、聚合、排序</td><td>零</td><td class="good">不调模型——代码写死</td></tr>
+</tbody>
+</table>
+<p><strong>最便宜的一档永远是「不调模型」</strong>：能用 pandas 算的绝不让模型算，能用正则抽的绝不调接口。38 课划的线在这里变成省钱的艺术。</p>
+
+<h2>二、缓存：同一问题第二次就该是免费的</h2>
+<p>三层缓存，从粗到细：</p>
+<ul>
+  <li><strong>结果缓存</strong>：问题归一化后（去停用词/同义词映射）哈希存答案。用户问「各月销售额趋势」和「月度GMV走势」应该命中同一条</li>
+  <li><strong>数据缓存</strong>：工具层的中间结果（清洗后的 DataFrame）落盘复用，别每次重洗 54 万行</li>
+  <li><strong>提示缓存</strong>：系统提示+schema 是固定前缀，选支持 prompt caching 的服务，前缀部分按折扣计费</li>
+</ul>
+<div class="callout">
+  <strong>📌 缓存的坑</strong>：数据更新后缓存必须失效——给缓存键加「数据版本号」（如数据文件 hash 前 8 位）。<strong>脏缓存比没有缓存糟糕得多</strong>，这又是 42 课 verify 思想的变体。
+</div>
+
+<h2>三、批处理与并发：结构性省时省钱</h2>
+<ul>
+  <li><strong>批处理 API</strong>：离线任务（如批量评估 15 题）用 batch 接口，通常半价，只要不急</li>
+  <li><strong>并发评估</strong>：评估集题目互相独立，并发跑，总时长 = 最慢一题而非总和</li>
+  <li><strong>合并调用</strong>：5 个独立小问题合成 1 次调用批量问，省 4 次固定开销——但别合并有依赖的问题</li>
+</ul>
+
+<h2>四、延迟预算：用户体感表</h2>
+<table>
+<thead><tr><th>等待时长</th><th>用户体感</th><th>设计对策</th></tr></thead>
+<tbody>
+<tr><td>&lt; 1s</td><td>即时</td><td>缓存命中、纯代码路径</td></tr>
+<tr><td>1-5s</td><td>可等</td><td>单次模型调用</td></tr>
+<tr><td>5-30s</td><td>需要反馈</td><td>流式输出/进度提示（「正在查询数据…」）</td></tr>
+<tr><td>&gt; 30s</td><td>流失区</td><td>异步任务+完成通知，或拆阶段</td></tr>
+</tbody>
+</table>
+<p>你的 Streamlit 界面里 <code>st.spinner("Agent 分析中…")</code> 就是最朴素的延迟对策——<strong>不能缩短等待时，至少让等待可见</strong>。</p>
+
+<h2>动手任务（20 分钟）</h2>
+<ol class="steps">
+  <li>给你的 MVP 记账：在 core.py 加一个 token 计数器，跑 3 个评估问题，看每题花在哪一步。</li>
+  <li>实现结果缓存：问题 hash → 答案，跑同一问题两次对比延迟。</li>
+  <li>把评估集改成并发执行，测总时长变化。</li>
+</ol>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>成本优化的优先级：<strong>不调模型 &gt; 调便宜模型 &gt; 缓存 &gt; 减少步数 &gt; 换强模型</strong>。延迟优化优先级：缓存 &gt; 流式反馈 &gt; 并发 &gt; 异步。两张清单贴在工位上，比什么优化技巧都值钱。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>分档调用</strong>：按步骤难度配模型，最便宜档是「不调模型」</li>
+  <li>✅ <strong>三层缓存</strong>：结果/数据/提示，缓存键带数据版本防脏</li>
+  <li>✅ <strong>批处理</strong>：离线评估半价，独立任务并发跑</li>
+  <li>✅ <strong>延迟预算</strong>：1s/5s/30s 三条体感线，各有对策</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>Agent 每次回答前都重新清洗一遍 54 万行 CSV（约 20 秒），最优改造是？</p>
+<ol type="A">
+  <li>换更快的电脑</li>
+  <li>数据缓存：清洗结果落盘（带数据版本号的键），第二次起直接加载</li>
+  <li>让模型写更快的清洗代码</li>
+  <li>改用流式输出让用户等得不无聊</li>
+</ol>
+<p>（答案见底部）</p>
+
+<div class="nav-links">
+  <a href="0054-context-engineering.html">← 上一课：上下文工程</a>
+  <a href="0056-multi-agent-intro.html">下一课：多 Agent 协作入门 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);"><strong>小测答案：</strong>B。<strong>重复的确定性计算结果必须缓存</strong>——这是零风险零成本的结构性优化（注意键里带数据版本号防脏缓存）。<br>
+A 错：硬件是逃避架构问题的昂贵解法，换台慢的还得再还债。<br>
+C 错：清洗是确定性代码，快慢与模型无关——这是「能代码解决的不调模型」的反面教材。<br>
+D 错：流式输出只是让等待「看起来」短，20 秒还是 20 秒；缓存才能让它真的变 0.1 秒。<strong>先缓存，再谈体验补偿。</strong></p>
+
+</body>
+</html>

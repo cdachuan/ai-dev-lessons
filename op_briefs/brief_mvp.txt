@@ -1,0 +1,20 @@
+task: 构建数据洞察 Agent MVP（P6第43课求职作品主体的代码骨架）
+context: |
+  这是求职作品的核心项目。工作区 D:\学习\ai-dev\lessons\code\
+  两份现成代码可直接复用/参考:
+  - capstone_kit\（ReAct循环+verify核验+留痕，小数据60行示例，agent/core.py的ReAct骨架最成熟）
+  - ecommerce_toolkit\（电商分析工具集，真实54万行UK电商数据已验证）
+  贯穿数据集: D:\学习\ai-dev\data\ecommerce\online_retail_2010_2011.csv（字段: InvoiceNo, StockCode, Description, Quantity, InvoiceDate, UnitPrice, CustomerID, Country）
+goal: |
+  在 D:\学习\ai-dev\lessons\code\insight_agent_mvp\ 下构建完整MVP:
+  1. agent/core.py — 复用capstone_kit的ReAct循环思路: LLM决策→调工具→观察→循环，最多10步，每步落盘runs/留痕
+  2. agent/tools.py — 注册工具: 数据画像/分组聚合/月度趋势/RFM/柱状图/折线图/结果自检verify（空结果/异常值检测后可重试），工具实现可import或改造ecommerce_toolkit的函数，返回统一{"ok":bool,"data":...,"error":...}
+  3. main.py — 命令行入口: python main.py "各月销售额趋势如何？" 即可跑；--selftest 离线自测（不调LLM，固定问题集核对工具口径）
+  4. README.md — 定位"数据洞察Agent: 上传数据→自然语言提问→自主分析→图表报告→数据依据"；含架构简图、工具清单、运行方法、与capstone_kit的演进关系
+  5. tests/eval.py — 固定评估问题集5个以上，标准答案用pandas离线算
+  设计要求: LLM API key只从环境变量读（DEEPSEEK_API_KEY，OpenAI兼容base_url=https://api.deepseek.com），代码与配置文件里绝不出现任何真实key；无key时--selftest必须能完整跑通
+constraints:
+  - Python 3.11，依赖只有 pandas/pyecharts/openai，requirements.txt写明
+  - 数据只读；runs/目录gitignore
+  - --selftest 实跑验证7项以上全PASS后才算完成，把自测输出贴进README「实跑记录」
+not_to_do: 不要改capstone_kit和ecommerce_toolkit的任何现有文件（可import）；不要动curriculum.json；不要git操作；不要读任何API key/config.yaml

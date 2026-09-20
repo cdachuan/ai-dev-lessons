@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0050 · 统计思维：分布/波动/异常</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>📐 统计思维：分布 / 波动 / 异常</h1>
+<p class="meta">第 0050 课 · 选修线二 <span class="tag">统计与实验 · 开篇</span> · 预计 20 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>建立三个统计直觉——<strong>均值会说谎、波动是信号、异常要分方法</strong>。全部用你的 54 万行数据实测，不背公式。
+</div>
+
+<h2>一、均值 vs 中位数：右偏分布的第一课</h2>
+<p>你 40 课见过的数，现在换个视角看。客户全年消费金额（真实计算）：</p>
+<table>
+<thead><tr><th>指标</th><th>客户级 GMV</th><th>订单级 金额</th></tr></thead>
+<tbody>
+<tr><td><strong>均值</strong></td><td>£1,899</td><td>£374.11</td></tr>
+<tr><td><strong>中位数</strong></td><td class="good">£648</td><td class="good">£241.68</td></tr>
+<tr><td><strong>偏度</strong></td><td colspan="2">均 > 0（右偏）：少数大客户/大单把均值拉高了</td></tr>
+</tbody>
+</table>
+<div class="callout">
+  <strong>📌 判断规则</strong>：均值和中位数差得远 = 分布偏 = <strong>对「典型个体」说话用中位数，对「总量盘子」说话用均值</strong>。「我们的客户平均消费 £1899」是错的（多数客户不到 £648）；「客户贡献的均值是 £1899，但中位数只有 £648，少数大客户拉高」才是对的。
+</div>
+
+<h2>二、异常检测：IQR vs 3σ，选错方法会误伤</h2>
+<p>订单金额的异常订单怎么找？两种方法在你的数据上结果差很远：</p>
+<table>
+<thead><tr><th>方法</th><th>规则</th><th>标记为异常</th></tr></thead>
+<tbody>
+<tr><td><strong>IQR 法</strong></td><td>超出 [Q1-1.5×IQR, Q3+1.5×IQR]（上界 £912.83）</td><td class="bad">6.9%</td></tr>
+<tr><td><strong>3σ 法</strong></td><td>偏离均值超过 3 个标准差</td><td>0.41%</td></tr>
+</tbody>
+</table>
+<p>不是哪个「更准」——<strong>3σ 假设分布近似对称，右偏数据下它太宽松，大额异常全漏掉</strong>；IQR 基于分位数，不假设分布形状，对偏态更稳健。经验法则：</p>
+<ul>
+  <li>金额/消费类（天然右偏）→ <strong>IQR 或分位数法</strong></li>
+  <li>测量误差类（近似正态，如传感器）→ 3σ 可以</li>
+  <li>业务驱动的阈值（单价 &gt; £5000 必异常）→ 直接规则，最可解释</li>
+</ul>
+
+<h2>三、波动不是噪音：先问「这个差异有多大」</h2>
+<p>「荷兰客单 £2,847 vs 德国 £368」——先别激动，问两个问题：</p>
+<ol>
+  <li><strong>差多少倍 vs 样本多少</strong>：荷兰只有 100 单，德国 603 单。小样本的均值本身就不稳（下一课教你怎么量化这个「不稳」）。</li>
+  <li><strong>波动来源</strong>：是客户构成不同（批发商 vs 散户）还是真需求差异？均值差异背后永远有结构问题。</li>
+</ol>
+
+<h2>四、小样本陷阱：一个直觉实验</h2>
+<p>抛 10 次硬币得 7 次正面，能说硬币不公平吗？期望 5，观察到 7，看着差 40%——但 n=10 时这个波动<strong>纯属正常</strong>。换成 1000 次里出现 700 次，那就真是异常了。<strong>「差异大不大」永远要相对「样本量」判断</strong>——这就是下一课假设检验要形式化的直觉。</p>
+
+<h2>动手任务（20 分钟）</h2>
+<ol class="steps">
+  <li>算出客户级 GMV 的均值/中位数/偏度，对上课文数字（1899/648/右偏）。</li>
+  <li>用 IQR 法找出「异常大额订单」，人工看 5 条：是真异常还是批发大单？</li>
+  <li>把 3σ 法跑一遍，数数它「放过」了哪些 IQR 抓到的订单。</li>
+  <li>换一个指标（如 Quantity）重算偏度，判断该用哪种异常检测。</li>
+</ol>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>报数前先看分布形状：<strong>偏态用中位数讲典型、用 IQR 抓异常</strong>；任何「A 比 B 高」的判断先问样本量。这三个习惯能拦下 80% 的统计事故。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>均值 vs 中位数</strong>：右偏分布两数差很远，讲典型用中位数</li>
+  <li>✅ <strong>IQR vs 3σ</strong>：偏态数据用 IQR，3σ 会漏掉大额异常</li>
+  <li>✅ <strong>差异 vs 样本量</strong>：小样本均值天然不稳</li>
+  <li>✅ <strong>业务阈值</strong>：可解释的规则有时比统计方法更好用</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>向老板汇报「典型客户消费水平」，数据右偏（均值£1899/中位£648），应该报？</p>
+<ol type="A">
+  <li>均值 £1899，均值信息量最大</li>
+  <li>中位数 £648，并说明均值被少数大客户拉高到 £1899</li>
+  <li>只报均值，别提中位数免得混乱</li>
+  <li>报最大值，展示潜力</li>
+</ol>
+<p>（答案见底部）</p>
+
+<div class="nav-links">
+  <a href="0049-sql-modeling-basics.html">← 上一课：数据建模</a>
+  <a href="0051-hypothesis-testing.html">下一课：假设检验与置信区间 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);"><strong>小测答案：</strong>B。<strong>中位数回答「典型客户长什么样」，均值回答「总量盘子里平均每份多少」</strong>，两者都报并解释差异原因（大客户拉高），是既诚实又完整的信息呈现。<br>
+A/C 错：只报均值会让老板以为「一般客户也花 1899」，误导资源分配（比如按这个数设计拉新预算）。<br>
+D 错：最大值是极端个体，没有代表性。<strong>右偏数据单报均值 = 主动制造误读。</strong></p>
+
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0048 · Text-to-SQL Agent：让LLM写SQL你来验</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>🤖 Text-to-SQL Agent：让 LLM 写 SQL，你来验</h1>
+<p class="meta">第 0048 课 · 选修线一 <span class="tag">SQL与查询工程 · 收官</span> · 预计 25 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>把 46-47 课的 SQL 能力和 34/43 课的 verify 思想合体，做出<strong>「数据智能体岗」JD 里最热的一个技能点</strong>：用户说人话 → LLM 生成 SQL → 引擎执行 → <strong>独立路径复算校验</strong> → 才给结论。你的求职作品从此多一个杀手级模块。
+</div>
+
+<h2>一、为什么 Text-to-SQL 必须配 verify</h2>
+<p>LLM 写 SQL 的水平参差：语法错误是小事（引擎会报错），<strong>语法对但口径错</strong>是大事——它不知道你们家「客单价」分母含不含退货单。直接把 LLM 的 SQL 结果端给老板，等于把 34 课拦截过的「模型算错数」换了个入口又放进来。</p>
+<div class="callout red">
+  <strong>⚠️ 铁律：</strong>Text-to-SQL 的产出永远经过两道关：①<strong>只读防护</strong>（引擎只许 SELECT）；②<strong>verify 独立复算</strong>（同一问题用 pandas 另算一遍，两边一致才出口）。少一道，就退回「裸奔 LLM」。
+</div>
+
+<h2>二、架构：四段流水线</h2>
+<div class="flow">
+  <h3>Text-to-SQL 流水线</h3>
+  <span class="arrow">用户问题 → [①schema感知] → [②LLM生成SQL] → [③duckdb只读执行] → [④pandas独立复算verify] → 结论</span>
+  <p>①②是模型/提示的活，③④是代码写死的活——38 课「划线」思想的标准应用：<strong>确定的步骤写死，只有生成 SQL 一步交给模型。</strong></p>
+</div>
+
+<h3>2.1 schema 感知：先让模型「看见」表结构</h3>
+<p>LLM 不在你机器上，它不知道你的列名。生成 SQL 前必须把 schema 塞进 prompt：</p>
+<pre><code>SCHEMA = """表 df，54万行电商订单：
+  InvoiceNo(发票号,C开头=退货), StockCode, Description, Quantity(负=退货),
+  InvoiceDate, UnitPrice, CustomerID(25%缺失), Country
+  业务口径: 客单价=净GMV/有购买行为的发票数; 退货记负收入不删行"""</code></pre>
+<div class="callout">
+  <strong>📌 口径写进 schema</strong>：注意最后一句——把你的口径字典（见 <code>lessons/code/metric_guard</code>）里的关键口径直接喂给模型。<strong>prompt 里写口径，比事后发现算错便宜一百倍。</strong>
+</div>
+
+<h3>2.2 生成：带约束的 prompt</h3>
+<pre><code>prompt = f"""你是一个 SQL 生成器。根据表结构与口径，把用户问题转成一条 duckdb SQL。
+要求:
+1. 只生成 SELECT 语句，禁止任何修改数据的操作
+2. 在注释里标注你用了口径字典的哪一条
+3. 输出后预估: 结果大概几行、什么量级（供人工/程序核验）
+
+表结构与口径:
+{SCHEMA}
+
+用户问题: {question}"""</code></pre>
+<p>第 3 条是故意的：让模型自己报「预期形态」，你就可以写断言——<strong>结果 10000 行 vs 预期「约5行」当场暴露</strong>。</p>
+
+<h3>2.3 执行：只读防护写死在代码层</h3>
+<pre><code>import duckdb, re
+def safe_execute(sql: str, conn) -> "pd.DataFrame | None":
+    s = sql.strip().rstrip(';').lower()
+    if not s.startswith('select') and not s.startswith('with'):
+        return None                        # 拒绝非查询
+    if re.search(r'(insert|update|delete|drop|create|alter)', s):
+        return None                        # 双保险：关键词黑名单
+    try:
+        return conn.execute(sql).fetchdf()
+    except Exception as e:
+        return None                        # 执行失败≠答案，交回上层</code></pre>
+
+<h3>2.4 verify：pandas 独立复算</h3>
+<p>同一个问题，让模型<strong>额外生成一段等价的 pandas 代码</strong>（或固定走你的工具箱），两边数字逐位比对。<strong>真实双路径实验</strong>（本课在你数据上实跑）：</p>
+<pre><code>-- LLM 生成的 SQL（五国 GMV，排除英国本土）
+SELECT Country, ROUND(SUM(Quantity*UnitPrice),2) AS gmv,
+       COUNT(DISTINCT InvoiceNo) AS orders
+FROM df
+WHERE CustomerID IS NOT NULL AND UnitPrice &gt; 0 AND Country != 'United Kingdom'
+GROUP BY Country ORDER BY gmv DESC LIMIT 5</code></pre>
+<table>
+<thead><tr><th>Country</th><th>SQL路径 gmv</th><th>pandas路径 gmv</th><th>一致</th></tr></thead>
+<tbody>
+<tr><td>Netherlands</td><td>284661.54</td><td>284661.54</td><td class="good">✓</td></tr>
+<tr><td>EIRE</td><td>250285.22</td><td>250285.22</td><td class="good">✓</td></tr>
+<tr><td>Germany</td><td>221698.21</td><td>221698.21</td><td class="good">✓</td></tr>
+<tr><td>France</td><td>196712.84</td><td>196712.84</td><td class="good">✓</td></tr>
+<tr><td>Australia</td><td>137077.27</td><td>137077.27</td><td class="good">✓</td></tr>
+</tbody>
+</table>
+<p>双路径一致才输出。不一致？<strong>宁可不给答案，也不给错的</strong>。</p>
+
+<h2>三、接到你的 MVP 上（43 课作品的升级路线）</h2>
+<ol class="steps">
+  <li><code>insight_agent_mvp</code> 加一个 <code>sql_query</code> 工具：入参=自然语言问题，内部走四段流水线。</li>
+  <li>评估集加 SQL 题：固定 5 个问题 + 标准答案（你手写 SQL 算），每次改 prompt 全量回归。</li>
+  <li>给 <code>metric_guard</code> 接上：LLM 的 SQL 算出 GMV/AOV 后，用口径字典再校一次——三重防线。</li>
+</ol>
+
+<h2>动手任务（30 分钟）</h2>
+<p>把上面四段代码拼成 <code>text2sql.py</code>，对「每个国家客户数排名」这个问题完整跑一遍：打印 LLM 的 SQL、pandas 复算结果、比对结论。故意把 prompt 里的口径说明删掉重跑，观察它会不会算出「含退货单的订单数」——<strong>亲眼看到口径漂移，才算真的懂了为什么要 verify。</strong></p>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>Text-to-SQL 的价值不在「LLM 会写 SQL」，在<strong>工程化围栏</strong>：schema+口径喂饱、只读防护、双路径 verify、评估集回归。这四样做齐，你面试讲这个模块时，讲的是「我如何保证 AI 算的数可信」——这正是数据岗和 AI 岗都想要的人。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>四段流水线</strong>：schema感知 → LLM生成 → 只读执行 → verify复算</li>
+  <li>✅ <strong>口径进 prompt</strong>：把 metric_guard 的口径喂给模型，防患于未然</li>
+  <li>✅ <strong>只读双保险</strong>：白名单(必须SELECT开头) + 黑名单关键词</li>
+  <li>✅ <strong>预期形态断言</strong>：让模型自报「大概几行」，程序可校验</li>
+  <li>✅ <strong>双路径实验</strong>：SQL 与 pandas 结果逐位一致（真实跑过）</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>LLM 生成的 SQL 语法正确、跑出了结果，但忘记排除退货单（Quantity&lt;0 的行被 SUM 进了 GMV）。哪道防线<strong>本来能拦住</strong>它？</p>
+<ol type="A">
+  <li>只读防护（禁止非 SELECT）</li>
+  <li>pandas 独立复算 verify（口径不同源，数字对不上会暴露）</li>
+  <li>把 temperature 调到 0</li>
+  <li>换更强的模型</li>
+</ol>
+<p>（答案见底部）</p>
+
+<div class="nav-links">
+  <a href="0047-sql-advanced-patterns.html">← 上一课：SQL 进阶模式</a>
+  <a href="0049-sql-modeling-basics.html">下一课：数据建模与查询性能 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);"><strong>小测答案：</strong>B。语法对、口径错——只有<strong>独立实现路径的复算</strong>能抓住：pandas 版按正确口径算出不同的数，两边对不上，差异暴露口径问题。<br>
+A 错：只读防的是「改数据」，防不了「读数读错口径」。<br>
+C 错：temperature=0 只减少随机性，模型对口径的理解错不会因此消失。<br>
+D 错：更强的模型依然不知道「你们家」的口径定义——这不是智力问题是信息问题，口径必须显式喂给它（schema/口径字典）。<strong>错误能穿过语法层，但穿不过独立复算。</strong></p>
+
+</body>
+</html>

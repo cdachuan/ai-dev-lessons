@@ -1,0 +1,15 @@
+task: 给数据洞察Agent MVP加Streamlit参考实现（P6第44课配套）
+context: |
+  工作区 D:\学习\ai-dev\lessons\code\insight_agent_mvp\（已验收：ReAct循环+8工具+selftest 7/7 PASS）
+  数据: D:\学习\ai-dev\data\ecommerce\online_retail_2010_2011.csv
+goal: |
+  在 insight_agent_mvp\ 下新增 app.py（不动现有任何文件）:
+  - Streamlit页面: 侧边栏上传CSV(默认加载内置数据集)+API key输入框(仅存session_state,不落盘)+对话式提问区
+  - 用户提问→调用现有agent核心→展示: 结论文本+数据表+图表(pyecharts用st.components.v1.html嵌入)
+  - 会话历史st.session_state保存+侧边栏展示; 报告下载按钮(把本次问答整理成markdown下载)
+  - 无key时给出友好提示而非报错
+  - 完成后用 streamlit run 冒烟测试: 启动无异常、页面能渲染(可用 curl localhost 验证HTTP 200)后杀掉进程
+constraints:
+  - Python 3.11, streamlit已安装; 若未装则 pip install streamlit
+  - 不改现有文件; key绝不写入任何文件或日志
+not_to_do: 不要动 curriculum.json; 不要git操作; 不要读config.yaml/.env

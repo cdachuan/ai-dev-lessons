@@ -1,0 +1,18 @@
+task: 生成P6第42-45课的HTML课件（4个文件）
+context: |
+  AI应用开发课程，工作区 D:\学习\ai-dev\lessons\
+  样式模板（严格模仿其视觉风格/交互/结构）: 0031-pandas-foundation.html 和 0038-agent-workflow-design.html
+  课程表权威定义在 D:\学习\ai-dev\curriculum.json 第42-45课的 topic/title/note
+  P6整体规划: D:\学习\ai-dev\P6_规划_20260820_定稿.md（先读，对齐"求职作品"定位）
+  贯穿数据集与代码: lessons/code/ecommerce_toolkit/（真实UK电商54万行）+ lessons/code/capstone_kit/（ReAct Agent脚手架，含verify核验）
+goal: |
+  生成四个课件文件:
+  - 0042-result-verification-self-correction.html「结果验证与自我修正」: Agent检查SQL/Python结果；空结果/异常值检测后重试；verify核验卡口思想（呼应34课）；重点是可落地而非复杂推理；动手任务=给一个分组统计工具加"结果为空/数量为0"的自检
+  - 0043-data-insight-agent-mvp.html「数据洞察Agent原型（求职作品主体）」: 上传CSV→自然语言提问→Agent自主分析→图表报告→数据依据说明；架构图（复用capstone_kit的ReAct+verify+工具箱）；README/架构图/效果展示=简历价值；动手任务=挑3个业务问题写出预期答案作为评估集
+  - 0044-user-facing-agent-app.html「面向用户的Agent应用」: Streamlit界面化——文件上传、会话记录、报告下载；从命令行脚本变成可试用产品；动手任务=跑通一个最小Streamlit页面
+  - 0045-agent-engineering-advanced.html「Agent工程化进阶+部署」: 配置管理/权限控制/日志/评估集/成本记录/监控/部署；让作品可部署可给别人试用；阶梯式部署路径（0元可复现仓库→免费托管→国内云，呼应36课）；动手任务=写一份作品部署checklist
+  每课末尾带小测（3-4选项选择题，答案底部折叠），风格与0038一致。
+constraints:
+  - 纯HTML/CSS/原生JS单文件，无外部CDN依赖，离线可开
+  - 技术事实不确定时写原理不编造参数；不编造截图；代码示例以 lessons/code/ 真实代码为准
+not_to_do: 不要动 curriculum.json、不要git操作、不要改其他课件、不要读任何API key/config

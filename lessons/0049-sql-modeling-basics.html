@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0049 · 数据建模与查询性能入门</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>🏗️ 数据建模与查询性能入门</h1>
+<p class="meta">第 0049 课 · 选修线一 <span class="tag">SQL与查询工程 · 延伸</span> · 预计 20 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>看懂公司数仓的「星级模型」「宽表」「汇总表」这些词，理解<strong>为什么表要那样组织</strong>，以及用你自己的数据实测一次「汇总表到底快多少」。不教你建数仓，教你<strong>会读会用</strong>。
+</div>
+
+<h2>一、两种表的角色：事实表与维度表</h2>
+<table>
+<thead><tr><th></th><th>事实表 Fact</th><th>维度表 Dimension</th></tr></thead>
+<tbody>
+<tr><td><strong>装什么</strong></td><td>一行=一次事件（一单/一detail行）</td><td>一行=一个对象（一个客户/一个商品）</td></tr>
+<tr><td><strong>特征</strong></td><td>行数巨大、不断追加</td><td>行数少、偶尔变化</td></tr>
+<tr><td><strong>你的数据里</strong></td><td>54万行订单明细</td><td>38个国家、4371个客户</td></tr>
+</tbody>
+</table>
+<p>「星型模型」= 一张事实表在中心，若干维度表环绕，靠 key 相连，画出来像星星。为什么这样设计？<strong>事件不断追加（事实）而属性很少变（维度），分开存才不冗余。</strong></p>
+
+<h2>二、为什么「宽表/汇总表」查询快：实测</h2>
+<p>你的数据上做过一个真实验：54 万行明细聚合 vs 预聚合好的 298 行汇总表，算各国 GMV：</p>
+<table>
+<thead><tr><th></th><th>明细表（541,909行）</th><th>汇总表（298行）</th></tr></thead>
+<tbody>
+<tr><td><strong>建表</strong></td><td>—</td><td><code>CREATE TABLE sales_agg AS SELECT 月,国家,SUM(gmv),COUNT(订单) GROUP BY 1,2</code></td></tr>
+<tr><td><strong>「各国GMV」查询耗时</strong></td><td>83.3 ms</td><td class="good">&lt; 0.1 ms</td></tr>
+<tr><td><strong>结果</strong></td><td colspan="2">Top3 完全一致：UK 6,767,873.39 / 荷兰 284,661.54 / EIRE 250,285.22</td></tr>
+</tbody>
+</table>
+<div class="callout">
+  <strong>📌 一句话原理</strong>：查询成本 ≈ 扫描行数。汇总表把「反复扫 54 万行」变成「扫 298 行」，<strong>用一次预计算的存储换无数次查询的时间</strong>。真实数仓里这个差距是分钟级 vs 毫秒级。
+</div>
+<p>两个注意事项（都实测过）：</p>
+<ul>
+  <li><strong>浮点比对要 ROUND</strong>：明细 SUM 和汇总 SUM 的浮点误差可能让「直接 == 判断」翻车，比数字先 round。</li>
+  <li><strong>汇总表有损</strong>：只能答「预聚合维度内」的问题。想按商品再拆？明细表还得在。</li>
+</ul>
+
+<h2>三、索引直觉：为什么不用讲深</h2>
+<p>索引 = 给表加一本「目录」，按 key 找行从「翻整本书」变成「查目录」。但你的场景里它排第二位：<strong>分析型查询（GROUP BY 全表聚合）主要靠扫描和预聚合，索引对 OLAP 帮助有限；它救的是「按 key 点查」的 OLTP 场景。</strong>面试能说清这句话就够了：</p>
+<blockquote>OLTP（业务系统）在乎单行快 —— 索引是主角；OLAP（分析）在乎全表聚合快 —— 预聚合/列存是主角。数分岗daily面对的是 OLAP。</blockquote>
+
+<h2>四、你会在入职第一周遇到的东西（速查）</h2>
+<table>
+<thead><tr><th>黑话</th><th>人话</th></tr></thead>
+<tbody>
+<tr><td>ODS / DWD / DWS / ADS</td><td>贴源层→明细层→汇总层→应用层，越往后越「宽」越「聚合」</td></tr>
+<tr><td>宽表</td><td>把常用维度冗余进一张大表，换查询方便</td></tr>
+<tr><td>拉链表</td><td>记录属性每次变化的表（客户地址改了留历史）</td></tr>
+<tr><td>T+1</td><td>数据每天凌晨跑批，今天看到的是昨天的</td></tr>
+<tr><td>数据倾斜</td><td>某个 key 数据量畸大，group by 时它一个组拖慢全局</td></tr>
+</tbody>
+</table>
+
+<h2>动手任务（20 分钟）</h2>
+<ol class="steps">
+  <li>照课文在你的数据上建 <code>sales_agg</code> 汇总表，复现 83ms → &lt;0.1ms 的对比。</li>
+  <li>用 ROUND 后比对两种路径的各国 GMV，确认一致。</li>
+  <li>提一个汇总表<strong>答不了</strong>的问题（如「荷兰 Top3 商品」），体会「有损」的含义。</li>
+  <li>设计：如果要每天看「新客 vs 老客」的 GMV，你的汇总表该长什么样（哪些列）？</li>
+</ol>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>建模的本质是<strong>预先安排好「数据最常被怎么问」</strong>：事实/维度分离管不冗余，预汇总管查询快，宽表管取数方便。你入职不用建数仓，但要<strong>看得懂别人为什么这样建</strong>，以及知道手里的表适合答什么问题。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>事实表 vs 维度表</strong>：事件大而追加，对象少而稳定，分开存</li>
+  <li>✅ <strong>预汇总的威力</strong>：54万行 83ms → 298行 0.1ms，存储换时间</li>
+  <li>✅ <strong>汇总表有损</strong>：只能答预聚合维度内的问题，明细必须保留</li>
+  <li>✅ <strong>OLTP/OLAP 分野</strong>：索引救点查，预聚合救聚合</li>
+  <li>✅ <strong>数仓黑话速查</strong>：ODS/DWD/DWS/ADS、宽表、拉链表、T+1</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>老板要「实时大屏：今天每小时的 GMV」，而你数仓里只有昨天之前的 T+1 明细表。最合理的说法是？</p>
+<ol type="A">
+  <li>用汇总表凑一下，数字差不多就行</li>
+  <li>T+1 明细表给不了「今天」的数据——需要接入实时数据源，先如实说明限制</li>
+  <li>拿昨天的数据假装是今天的</li>
+  <li>把明细表查快一点就能实时了</li>
+</ol>
+<p>（答案见底部）</p>
+
+<div class="nav-links">
+  <a href="0048-text-to-sql-agent.html">← 上一课：Text-to-SQL Agent</a>
+  <a href="0050-stats-thinking.html">下一课：统计思维（线二开篇）→</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);"><strong>小测答案：</strong>B。数据都不在，查得再快也是空的——<strong>先讲清楚数据边界，再谈方案</strong>，这是数分的职业底线，也是面试在考你的「数据敏感度」。<br>
+A/C 错：用错误数据支撑大屏，比没有大屏糟糕得多——决策者会基于假数字行动。<br>
+D 错：查询速度解决不了「数据还没到」的问题，T+1 的瓶颈在采集管道不在查询。<strong>「拿不到的数据不要编」= 42 课 verify 思想的另一面。</strong></p>
+
+</body>
+</html>

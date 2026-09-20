@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0040 · 电商数据分析实战</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+  details { margin: 1rem 0; }
+  details summary {
+    cursor: pointer; font-weight: 600; color: var(--accent);
+    padding: 0.5rem 0; font-size: 0.95rem;
+  }
+  details summary:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<h1>📊 电商数据分析实战</h1>
+<p class="meta">第 0040 课 · P6 电商锚点 <span class="tag">数分实战课</span> · 预计 25 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>用 UCI Online Retail 真实数据集，讲清<strong>GMV / 客单价 / 复购率 / RFM</strong> 四个电商核心指标的<strong>口径定义</strong>和<strong>业务含义</strong>。重点不是「会跑 pandas」，而是<strong>能读懂数据、核验 AI 结果</strong>——知道一个指标该怎么算、算出来的数字对不对、背后说明什么业务问题。
+</div>
+
+<h2>一、为什么「指标口径」比代码更重要？</h2>
+
+<p>31 课我们已经说过「指标口径先于代码」。到了电商实战，这句话的分量更重——同一个 GMV，不同口径算出来的数字可以差 30% 以上。</p>
+
+<div class="callout">
+  <strong>📌 真实场景：</strong>面试官问你"这家电商的复购率是多少？" 你说"68%"。面试官追问："口径是什么？" 你说"不知道，Agent 跑出来的"。<strong>对话结束。</strong><br>
+  但如果你说"排除退货、去掉 CustomerID 缺失的行、按 InvoiceNo 去重后是 68%——不过要注意这个数据集有约 25% 的 CustomerID 缺失，实际复购率可能更高"。<strong>这就是数分能力。</strong>
+</div>
+
+<h2>二、四个核心指标：口径 + 业务含义</h2>
+
+<h3>① GMV（总成交金额）</h3>
+
+<table>
+  <thead><tr><th>维度</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><strong>定义</strong></td><td>GMV = Σ(Quantity × UnitPrice)，即所有成交订单的金额总和</td></tr>
+    <tr><td><strong>口径陷阱</strong></td><td>退货单（InvoiceNo 以 C 开头）的 Quantity 是负数——不剔除的话 GMV 会被拉低</td></tr>
+    <tr><td><strong>业务含义</strong></td><td>衡量平台/店铺的<strong>流水规模</strong>，但不等于利润（未扣成本）</td></tr>
+    <tr><td><strong>常见变体</strong></td><td>净 GMV = GMV - 退货金额；有效 GMV = 只算已完成订单</td></tr>
+  </tbody>
+</table>
+
+<pre><code><span style="color:#a6adc8"># GMV 计算：必须先排除退货单</span>
+df[<span style="color:#a6e3a1">"Revenue"</span>] = df[<span style="color:#a6e3a1">"Quantity"</span>] * df[<span style="color:#a6e3a1">"UnitPrice"</span>]
+<span style="color:#a6adc8"># 排除退货：InvoiceNo 以 C 开头的行</span>
+valid = df[~df[<span style="color:#a6e3a1">"InvoiceNo"</span>].astype(<span style="color:#cdd6f4">str</span>).str.startswith(<span style="color:#a6e3a1">"C"</span>)]
+gmv = valid[<span style="color:#a6e3a1">"Revenue"</span>].sum()   <span style="color:#a6adc8"># ~ 818万（UK为主）</span>
+
+<span style="color:#a6adc8"># 如果不排除退货会怎样？</span>
+gmv_with_returns = df[<span style="color:#a6e3a1">"Revenue"</span>].sum()  <span style="color:#a6adc8"># ~ 773万，差了约 45万</span></code></pre>
+
+<div class="callout red">
+  <strong>⚠️ 面试考点：</strong>"GMV 是多少？" 这个问题看似简单，但<strong>不给口径的数字没有意义</strong>。面试时主动说"我用的口径是 XX"，是加分项。
+</div>
+
+<h3>② 客单价（Average Order Value）</h3>
+
+<table>
+  <thead><tr><th>维度</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><strong>定义</strong></td><td>客单价 = GMV / 订单数（注意：是订单数，不是客户数）</td></tr>
+    <tr><td><strong>口径陷阱</strong></td><td>一个 InvoiceNo 可能包含多行商品——必须先按 InvoiceNo 汇总金额，再除以去重后的订单数</td></tr>
+    <tr><td><strong>业务含义</strong></td><td>衡量每笔交易的<strong>平均消费水平</strong>，指导定价策略和促销设计</td></tr>
+    <tr><td><strong>常见错误</strong></td><td>用 <code>df["Revenue"].mean()</code>——这是行均值，不是订单均值（一个订单有多行）</td></tr>
+  </tbody>
+</table>
+
+<pre><code><span style="color:#a6adc8"># ✅ 正确：先按订单汇总，再算平均</span>
+order_totals = valid.groupby(<span style="color:#a6e3a1">"InvoiceNo"</span>)[<span style="color:#a6e3a1">"Revenue"</span>].sum()
+aov = order_totals.mean()
+
+<span style="color:#a6adc8"># ❌ 错误：直接对行求平均（把一个订单的多行拆开算了）</span>
+aov_wrong = valid[<span style="color:#a6e3a1">"Revenue"</span>].mean()  <span style="color:#a6adc8"># 结果偏小</span></code></pre>
+
+<h3>③ 复购率</h3>
+
+<table>
+  <thead><tr><th>维度</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><strong>定义</strong></td><td>复购率 = 下过 2 单及以上的客户数 / 总客户数 × 100%</td></tr>
+    <tr><td><strong>口径陷阱</strong></td><td>CustomerID 约 25% 缺失——这些行必须剔除，否则分母虚高、复购率偏低</td></tr>
+    <tr><td><strong>业务含义</strong></td><td>衡量<strong>客户粘性</strong>——复购率越高，说明产品/服务留得住人</td></tr>
+    <tr><td><strong>行业参考</strong></td><td>电商复购率一般在 30%-70% 之间；快消品偏高，耐用品偏低</td></tr>
+  </tbody>
+</table>
+
+<pre><code><span style="color:#a6adc8"># 复购率计算</span>
+valid_customers = valid.dropna(subset=[<span style="color:#a6e3a1">"CustomerID"</span>])
+orders_per_customer = valid_customers.groupby(<span style="color:#a6e3a1">"CustomerID"</span>)[<span style="color:#a6e3a1">"InvoiceNo"</span>].nunique()
+total = <span style="color:#cdd6f4">len</span>(orders_per_customer)
+repeat = <span style="color:#cdd6f4">len</span>(orders_per_customer[orders_per_customer >= <span style="color:#fab387">2</span>])
+repeat_rate = repeat / total * <span style="color:#fab387">100</span>   <span style="color:#a6adc8"># ~ 68%（UK 数据）</span>
+
+<span style="color:#a6adc8"># 如果不排除 CustomerID 缺失的行会怎样？</span>
+all_customers = valid.groupby(<span style="color:#a6e3a1">"InvoiceNo"</span>).first()  <span style="color:#a6adc8"># 错误：不是按客户聚合</span>
+<span style="color:#a6adc8"># 结果会完全不同——这就是口径的重要性</span></code></pre>
+
+<h3>④ RFM 模型</h3>
+
+<table>
+  <thead><tr><th>维度</th><th>定义</th><th>业务含义</th></tr></thead>
+  <tbody>
+    <tr><td><strong>R（Recency）</strong></td><td>客户最后一次购买距今的天数</td><td>越近越活跃</td></tr>
+    <tr><td><strong>F（Frequency）</strong></td><td>客户的总订单数（去重 InvoiceNo）</td><td>越多越忠诚</td></tr>
+    <tr><td><strong>M（Monetary）</strong></td><td>客户的总消费金额</td><td>贡献越大</td></tr>
+  </tbody>
+</table>
+
+<p>RFM 的核心思想：<strong>用三个维度把客户分成不同群体</strong>，针对不同群体制定不同策略（如对高价值低活跃的客户发挽留券）。</p>
+
+<pre><code><span style="color:#a6adc8"># RFM 计算（以数据集最后一天为基准日）</span>
+import datetime <span style="color:#cdd6f4">as</span> dt
+
+snapshot = valid[<span style="color:#a6e3a1">"InvoiceDate"</span>].max() + dt.timedelta(days=<span style="color:#fab387">1</span>)
+
+rfm = valid.groupby(<span style="color:#a6e3a1">"CustomerID"</span>).agg({
+    <span style="color:#a6e3a1">"InvoiceDate"</span>: <span style="color:#cdd6f4">lambda</span> x: (snapshot - x.max()).days,   <span style="color:#a6adc8"># R: 最后购买距今天数</span>
+    <span style="color:#a6e3a1">"InvoiceNo"</span>:   <span style="color:#a6adc8">"nunique"</span>,                             <span style="color:#a6adc8"># F: 订单数</span>
+    <span style="color:#a6e3a1">"Revenue"</span>:     <span style="color:#a6adc8">"sum"</span>                                   <span style="color:#a6adc8"># M: 总金额</span>
+})
+rfm.columns = [<span style="color:#a6e3a1">"Recency"</span>, <span style="color:#a6e3a1">"Frequency"</span>, <span style="color:#a6e3a1">"Monetary"</span>]
+
+<span style="color:#a6adc8"># 简单分箱：用中位数二分</span>
+rfm[<span style="color:#a6e3a1">"R_Score"</span>] = (rfm[<span style="color:#a6e3a1">"Recency"</span>] &lt;= rfm[<span style="color:#a6e3a1">"Recency"</span>].median()).astype(<span style="color:#cdd6f4">int</span>)
+rfm[<span style="color:#a6e3a1">"F_Score"</span>] = (rfm[<span style="color:#a6e3a1">"Frequency"</span>] &gt;= rfm[<span style="color:#a6e3a1">"Frequency"</span>].median()).astype(<span style="color:#cdd6f4">int</span>)
+rfm[<span style="color:#a6e3a1">"M_Score"</span>] = (rfm[<span style="color:#a6e3a1">"Monetary"</span>] &gt;= rfm[<span style="color:#a6e3a1">"Monetary"</span>].median()).astype(<span style="color:#cdd6f4">int</span>)</code></pre>
+
+<div class="callout">
+  <strong>📌 RFM 的业务价值：</strong>不是算完三个数就结束了——关键是<strong>用 RFM 分群后采取行动</strong>。比如 R 高（很久没来）+ F 高（以前常买）= 沉睡客户 → 发召回优惠券。这才是 RFM 被称为"电商最经典客户分层模型"的原因。
+</div>
+
+<h2>三、漏斗与转化思维</h2>
+
+<p>电商分析不只是算指标，还要看<strong>转化路径</strong>：浏览 → 加购 → 下单 → 付款 → 复购。每一步都有流失，找到流失最大的环节就是业务突破口。</p>
+
+<pre><code><span style="color:#a6adc8"># 漏斗分析思路（本数据集的简化版）</span>
+<span style="color:#a6adc8"># 原始数据没有浏览/加购数据，但可以用现有字段构造一个简单漏斗：</span>
+
+<span style="color:#a6adc8"># 1. 全部下单客户（有 InvoiceNo 的）</span>
+all_customers = valid[<span style="color:#a6e3a1">"CustomerID"</span>].dropna().nunique()
+
+<span style="color:#a6adc8"># 2. 付费客户（排除金额为 0 的订单）</span>
+paid = valid[valid[<span style="color:#a6e3a1">"Revenue"</span>] &gt; <span style="color:#fab387">0</span>]
+paid_customers = paid[<span style="color:#a6e3a1">"CustomerID"</span>].dropna().nunique()
+
+<span style="color:#a6adc8"># 3. 复购客户（2 单及以上）</span>
+repeat_customers = orders_per_customer[orders_per_customer &gt;= <span style="color:#fab387">2</span>].shape[<span style="color:#fab387">0</span>]
+
+<span style="color:#a6adc8"># 转化率</span>
+<span style="color:#cdd6f4">print</span>(<span style="color:#a6e3a1">f"下单→付费: {paid_customers/all_customers:.1%}"</span>)
+<span style="color:#cdd6f4">print</span>(<span style="color:#a6e3a1">f"付费→复购: {repeat_customers/paid_customers:.1%}"</span>)</code></pre>
+
+<div class="callout green">
+  <strong>💡 漏斗思维的本质：</strong>不是数据有没有的问题，而是<strong>「在哪个环节丢了人、为什么丢」</strong>的问题。即使数据集字段有限，也要养成"看转化"的习惯——这是面试中"业务理解"的核心展示点。
+</div>
+
+<h2>四、核验 AI 结果：你怎么判断 Agent 算对了？</h2>
+
+<p>34 课学的 verify 核验卡口，在电商分析中怎么用？</p>
+
+<ol class="steps">
+  <li><strong>交叉验证</strong>：Agent 算了一个 GMV，你自己用不同方式复算（比如按月汇总再求和 vs 直接求和，结果应该一样）</li>
+  <li><strong>量级校验</strong>：54万行数据，GMV 在百万量级才合理——如果 Agent 返回几十万或几千万，肯定哪里算错了</li>
+  <li><strong>边界检查</strong>：复购率不可能超过 100%；客单价不可能是负数；客户数不可能超过总行数</li>
+  <li><strong>口径一致性</strong>：Agent 这次算 GMV 排除了退货，下次算也必须排除——口径不一致的数字不能放在一起比较</li>
+</ol>
+
+<pre><code><span style="color:#a6adc8"># 你自己的快速核验脚本（不依赖 Agent）</span>
+df = load_data()
+valid = df[~df[<span style="color:#a6e3a1">"InvoiceNo"</span>].astype(<span style="color:#cdd6f4">str</span>).str.startswith(<span style="color:#a6e3a1">"C"</span>)]
+valid[<span style="color:#a6e3a1">"Rev"</span>] = valid[<span style="color:#a6e3a1">"Quantity"</span>] * valid[<span style="color:#a6e3a1">"UnitPrice"</span>]
+
+<span style="color:#a6adc8"># 快速看分布</span>
+<span style="color:#cdd6f4">print</span>(valid[<span style="color:#a6e3a1">"Rev"</span>].describe())   <span style="color:#a6adc8"># mean/std/min/max</span>
+<span style="color:#cdd6f4">print</span>(valid[<span style="color:#a6e3a1">"Rev"</span>].sum())       <span style="color:#a6adc8"># 你心中的 GMV</span>
+<span style="color:#cdd6f4">print</span>(valid[<span style="color:#a6e3a1">"CustomerID"</span>].dropna().nunique())  <span style="color:#a6adc8"># 有效客户数</span></code></pre>
+
+<h2>五、动手任务：自己算一次复购率并核对口径</h2>
+
+<div class="callout">
+  <strong>🎯 任务（15 分钟）：</strong>用 UCI Online Retail 数据集，自己写 pandas 代码算一次复购率。要求：
+</div>
+
+<ol class="steps">
+  <li>先定口径：排除退货？排除 CustomerID 缺失？怎么定义"一单"？</li>
+  <li>写代码计算，把每一步的中间结果打印出来（总客户数、复购客户数、复购率）</li>
+  <li>用 39 课的 <code>calc_repeat_rate</code> 工具跑一遍，比对结果</li>
+  <li>如果结果不一致，找到口径差异——这比算对本身更有价值</li>
+</ol>
+
+<p>提示：你可能会发现 <code>calc_repeat_rate</code> 和你自己的代码算出来差几个百分点。别慌，大概率是 CustomerID 缺失的处理方式不同——<strong>找到差异原因就是本任务的核心收获</strong>。</p>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>GMV</strong>：= Quantity × UnitPrice，必须排除退货单（InvoiceNo 以 C 开头），衡量流水规模</li>
+  <li>✅ <strong>客单价</strong>：= GMV / 订单数（不是行均值！），衡量每单消费水平</li>
+  <li>✅ <strong>复购率</strong>：= 下过 2+ 单的客户 / 总客户，衡量客户粘性，注意 CustomerID 缺失的影响</li>
+  <li>✅ <strong>RFM</strong>：Recency + Frequency + Monetary，经典客户分层模型，核心是分群后采取行动</li>
+  <li>✅ <strong>核验能力</strong>：交叉验证、量级校验、边界检查、口径一致性——能判断 AI 算的对不对</li>
+</ul>
+
+<h2>📖 本课主要资源</h2>
+<p class="src">UCI Online Retail 数据集 —— 54万行UK电商订单，2010-12 至 2011-12，含退货/缺失CustomerID，是练数分的真实好素材。Kaggle 搜 "Online Retail" 即可下载。</p>
+
+<h2>🤔 小测</h2>
+
+<p>Agent 跑了一个 RFM 分析，输出"平均 Recency 为 92 天，平均 Frequency 为 4.2 单，平均 Monetary 为 2037"。你怎么核验这个结果？</p>
+
+<ol type="A">
+  <li>直接看输出是否是三个数字——是的话就对了</li>
+  <li>自己用 pandas 分别算 R/F/M 的均值，与 Agent 结果比对</li>
+  <li>问 Agent 这三个数字的口径是什么，看它能不能回答</li>
+  <li>B 和 C 都要做——先自己算一遍，再追问口径</li>
+</ol>
+
+<details>
+  <summary>点击展开答案与解析</summary>
+  <div style="padding:0.8rem 1rem;background:#f0fdf4;border-radius:6px;margin-top:0.5rem;">
+    <strong>答案：D（B 和 C 都要做）。</strong>光看格式没用（A 错）。B 是硬核验——自己算一遍就知道数字对不对；C 是口径核验——确认 Agent 用的口径（比如有没有排除退货、CustomerID 缺失怎么处理）是否与你的预期一致。<strong>数字对 + 口径对 = 结果可信</strong>。这是 34 课 verify 核验卡口在电商分析中的具体应用。
+  </div>
+</details>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 拿你自己电商数据（淘宝/拼多多导出的订单表）算一次这几个指标？字段名告诉我，我帮你对口径。任何不清楚的地方，都问你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0039-ecommerce-data-toolkit.html">← 上一课：电商数据工具箱</a>
+  <a href="0041-real-world-data-agent.html">下一课：真实世界数据 Agent →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+task: 生成P6第39、40、41课的HTML课件
+context: |
+  AI应用开发课程，工作区 D:\学习\ai-dev\lessons\
+  样式模板（严格模仿其视觉风格/交互/结构）: 0031-pandas-foundation.html 和 0038-agent-workflow-design.html
+  课程表权威定义在 D:\学习\ai-dev\curriculum.json 第39-41课的 topic/title/note
+  P6整体规划: D:\学习\ai-dev\P6_规划_20260820_定稿.md（先读它，对齐"电商锚点"定位）
+  贯穿数据集: UCI Online Retail（54万行UK电商订单，2010-12到2011-12，字段含退货/缺失客户ID），代码已在 lessons/code/ecommerce_toolkit/
+goal: |
+  生成三个课件文件:
+  - 0039-ecommerce-data-toolkit.html「电商数据工具箱」: pandas/清洗/聚合/图表封装成规范工具；工具描述、参数设计、结构化返回、错误反馈；演示工具函数签名+调用示例；动手任务=给现有工具箱加一个新工具
+  - 0040-ecommerce-data-analysis.html「电商数据分析实战」: 用贯穿数据集讲 GMV/客单价/复购率/RFM 的指标口径与业务含义；漏斗/转化思想；强调"能读懂数据、核验AI结果"而非只会跑包；动手任务=自己算一个复购率并核对口径
+  - 0041-real-world-data-agent.html「真实世界数据 Agent」: Agent调HTTP API/本地文件；数据格式不稳定、接口失败、超时重试、脏数据容错；用本数据集的退货单/缺失CustomerID当容错案例；动手任务=给Agent加一个失败重试护栏
+  每课末尾带一个小测（选择题，3-4个选项，答案放页面底部折叠区），风格与0038一致。
+constraints:
+  - 纯HTML/CSS/原生JS单文件，无外部CDN依赖，离线可开
+  - 技术事实不确定时写原理不编造具体参数；不编造运行截图，代码示例以 lessons/code/ 里的真实代码为准
+not_to_do: 不要动 curriculum.json、不要git操作、不要改其他课件、不要读任何API key/config

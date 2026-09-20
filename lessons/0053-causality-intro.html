@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0053 · 因果入门：相关≠因果与辛普森悖论</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>⚖️ 因果入门：相关 ≠ 因果与辛普森悖论</h1>
+<p class="meta">第 0053 课 · 选修线二 <span class="tag">统计与实验 · 收官</span> · 预计 20 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>建立数分的科学性防线——三个必须刻进本能的反射：<strong>找混杂变量、警惕幸存者偏差、分段复核辛普森</strong>。全部用你的真实数据演示。
+</div>
+
+<h2>一、混杂变量：相关系数 0.948 的真相</h2>
+<p>你的数据里，月度 GMV 与订单数相关系数 <strong>0.948</strong>——几乎完美相关。能说「订单多导致 GMV 高」吗？</p>
+<div class="callout">
+  <strong>📌 两者都是结果，不是因果</strong>：真正的原因是「旺季」——圣诞备货季（9-11月）同时推高订单量和 GMV。旺季来了 → 订单多 <em>且</em> 客单结构变化 → 两者齐涨。<strong>相关系数再高，也分不清「A导致B」还是「C同时导致A和B」。</strong>
+</div>
+<p>观察性数据的通病：<strong>你控制不了谁被「处理」</strong>。买会员的用户本来就更活跃——你观察到的「会员更活跃」没法证明会员制有效。这就是为什么 A/B 测试（随机分流）是数分手里的因果王牌（52 课）。</p>
+
+<h2>二、辛普森悖论：分组全胜，合计反输</h2>
+<p>构造一个最小案例（数字已验证）：</p>
+<table>
+<thead><tr><th>版本</th><th>群体</th><th>访问</th><th>转化</th><th>转化率</th></tr></thead>
+<tbody>
+<tr><td rowspan="2">A</td><td>新客</td><td>1000</td><td>50</td><td class="good">5.0%</td></tr>
+<tr><td>老客</td><td>4000</td><td>80</td><td class="good">2.0%</td></tr>
+<tr><td rowspan="2">B</td><td>新客</td><td>4000</td><td>160</td><td>4.0%</td></tr>
+<tr><td>老客</td><td>1000</td><td>15</td><td>1.5%</td></tr>
+</tbody>
+</table>
+<p>分组内看：<strong>A 在新客 5%&gt;4%、在老客 2%&gt;1.5%，全胜</strong>。合计看：</p>
+<table>
+<thead><tr><th>版本</th><th>总访问</th><th>总转化</th><th>合计转化率</th></tr></thead>
+<tbody>
+<tr><td>A</td><td>5000</td><td>130</td><td class="bad">2.6%</td></tr>
+<tr><td>B</td><td>5000</td><td>175</td><td class="good">3.5%</td></tr>
+</tbody>
+</table>
+<p><strong>A 全胜却总输</strong>——因为 B 的流量集中在高转化的新客群。这就是辛普森悖论：合计数据被「人群结构」污染。<strong>解法：看加权前的分组结论，问「人群结构是否可比」。</strong>52 课让你 A/B 分段复核，防的就是它。</p>
+
+<h2>三、幸存者偏差：高估 85% 的客户价值</h2>
+<p>真实数据实测：只看「11 月还在活跃」的客户，其全年人均消费 <strong>£3,392</strong>；全体客户只有 <strong>£1,838</strong>——<strong>高估 85%</strong>。</p>
+<div class="callout red">
+  <strong>⚠️ 这个偏差无处不在</strong>：「我们的老用户满意度高」（不满意的早走了）、「爆款商品好评率高」（失望的人不写评论）、「名校毕业生都成功」（没成功的你看不到）。<strong>问自己：我没看到的样本去哪了？</strong>
+</div>
+
+<h2>四、数分的因果反射清单</h2>
+<ol class="steps">
+  <li>看到强相关 → 先找<strong>混杂变量 C</strong>（什么同时推高 A 和 B？）</li>
+  <li>看到「X 用户表现更好」→ 先问<strong>自选择</strong>（是他们本来就好，还是 X 让他们好？）</li>
+  <li>看到合计结论 → <strong>分段复核</strong>，查辛普森</li>
+  <li>看到漂亮的样本统计 → 问<strong>没出现的样本去哪了</strong>（幸存者）</li>
+  <li>真要因果结论 → <strong>随机实验</strong>（A/B），或至少倾向得分/双重差分等准实验方法（P7 延伸）</li>
+</ol>
+
+<h2>动手任务（20 分钟）</h2>
+<ol class="steps">
+  <li>算月度 GMV 与订单数的相关系数，对上 0.948；再画散点图，标出旺季月份。</li>
+  <li>复现幸存者偏差：对比「近期活跃客户」与「全体客户」的全年人均消费。</li>
+  <li>在 RFM 分层里找一个「自选择」例子：VIP 更活跃是会员制的效果吗？</li>
+  <li>用课文辛普森表做基础，改流量分配比例，看合计结论什么时候翻转。</li>
+</ol>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>观察性数据只能提示相关，<strong>因果要靠随机化或额外的假设与论证</strong>。五个反射（混杂/自选择/分段复核/幸存者/上实验）是你区别于「会跑数的人」的核心素养——面试聊到任何业务数字，主动用它们审视一遍，层次立刻不同。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>混杂变量</strong>：GMV 与订单数 0.948 的共同原因是旺季</li>
+  <li>✅ <strong>辛普森悖论</strong>：组内 A 全胜、合计 A 反输的构造与识别</li>
+  <li>✅ <strong>幸存者偏差</strong>：只看活跃客户，人均消费高估 85%（实测）</li>
+  <li>✅ <strong>随机化是王牌</strong>：A/B 测试是观察数据给不了的因果能力</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>运营说：「用了新推送的用户 7 日留存 60%，没用的人只有 40%，推送效果显著！」最该先问什么？</p>
+<ol type="A">
+  <li>p 值是多少？</li>
+  <li>这两组用户是怎么分的——是随机分的，还是「愿意接收推送」的用户本身就更活跃？</li>
+  <li>推送内容是什么？</li>
+  <li>把推送停了看看留存会不会掉</li>
+</ol>
+<p>（答案见底部）</p>
+
+<div class="nav-links">
+  <a href="0052-ab-testing.html">← 上一课：A/B 测试</a>
+  <a href="0054-context-engineering.html">下一课：上下文工程（线三开篇）→</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);"><strong>小测答案：</strong>B。<strong>典型的自选择混杂</strong>：爱互动的用户本来就留存高，推送只是「标记」了他们，未必「造就」了他们。分组机制不搞清，p 值再漂亮都是空中楼阁。<br>
+A 错：p 值在分组就偏了的样本上没有意义——它只保证「差异非运气」，不保证「差异来自推送」。<br>
+C 错：内容再好也绕不开分组偏差，是第二步的事。<br>
+D 错：方向对（实验思维），但「停推送」仍不是随机实验——高活跃用户可能根本不会真的停用。<strong>先问分组怎么来的，再谈效果——因果第一反射。</strong></p>
+
+</body>
+</html>

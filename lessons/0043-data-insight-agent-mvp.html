@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0043 · 数据洞察 Agent 原型（求职作品主体）</title>
+<style>
+
+:root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+
+</style>
+</head>
+<body>
+<h1>📊 数据洞察 Agent 原型（求职作品主体）</h1>
+<p class="meta">第 0043 课 · P6 求职产物 <span class="tag">核心课</span> · 预计 20 分钟</p>
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>把前面 38-42 课的所有零件<strong>组装成一个完整的、可以写进简历的求职作品</strong>——上传 CSV → 自然语言提问 → Agent 自主分析 → 图表报告 → 说明数据依据。这不只是一个练习，这是一个<strong>别人能试用、面试官能看懂</strong>的完整产品。
+</div>
+
+<h2>一、为什么这课是 P6 的主菜？</h2>
+
+<p>P6 的定位是<strong>「求职作品」</strong>——不是学更多技术，而是把已有的能力变成<strong>能被看懂的资产</strong>。面试官不会问你「会不会 ReAct」，他会问：</p>
+
+<blockquote>「你做过什么 AI 项目？给我看看。」</blockquote>
+
+<p>你需要的不是一堆零散的 demo，而是一个<strong>有完整链路、有 README、有架构图、有效果展示</strong>的作品。43 课就是做这件事。</p>
+
+<h2>二、作品全景：上传 → 提问 → 分析 → 报告</h2>
+
+<div class="flow">
+  <h3>完整链路</h3>
+  <pre style="text-align:left;background:transparent;color:inherit;margin:0;font-size:0.85rem;">
+用户上传 CSV/Excel
+        │
+        ▼
+┌─────────────────┐
+│  profile 数据画像 │  ← 自动：行数/列/类型/取值/前3行
+└────────┬────────┘
+         │
+         ▼
+用户自然语言提问（如"各品类销售额排名"）
+         │
+         ▼
+┌─────────────────┐
+│  ReAct 循环     │  ← Agent 自主选工具、规划步骤
+│  38课工作流设计  │
+└────────┬────────┘
+         │ 调用工具
+         ▼
+┌─────────────────────────────────┐
+│  工具层（34课）                  │
+│  profile / group_sum /          │
+│  count_distinct / verify        │
+└────────┬────────────────────────┘
+         │ 结果 + 42课验证
+         ▼
+┌─────────────────┐
+│  图表生成       │  ← pyecharts 交互式图表
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  报告输出       │  ← 文字结论 + 数据依据 + 图表
+└─────────────────┘</pre>
+</div>
+
+<h2>三、架构图（简历级）</h2>
+
+<p>这幅图可以直接放进你的 README 和简历项目描述里：</p>
+
+<div class="flow">
+  <h3>数据洞察 Agent · 系统架构</h3>
+  <pre style="text-align:left;background:transparent;color:inherit;margin:0;font-size:0.85rem;">
+┌──────────────────────────────────────────────────┐
+│                  用户界面层                        │
+│          上传文件 / 输入问题 / 查看报告            │
+└───────────────────┬──────────────────────────────┘
+                    │
+┌───────────────────▼──────────────────────────────┐
+│              Agent 决策层（ReAct）                 │
+│  系统提示词 → 理解问题 → 选工具 → 看结果 → 组织回答 │
+│  42课：每步执行后自动验证（空结果/异常值检测）      │
+└───────────────────┬──────────────────────────────┘
+                    │ 工具调用
+┌───────────────────▼──────────────────────────────┐
+│                 工具层（纯 Python）                │
+│  profile  │ group_sum │ count_distinct │ verify   │
+│           │ group_count │ chart        │          │
+└───────────────────┬──────────────────────────────┘
+                    │ 只读
+┌───────────────────▼──────────────────────────────┐
+│              数据层 + 留痕层                       │
+│  data/*.csv（只读）    runs/*.json（过程记录）     │
+└──────────────────────────────────────────────────┘</pre>
+</div>
+<div class="callout">
+  <strong>📌 简历怎么写这段？</strong>不要写「用 Python 做了一个数据分析工具」——太模糊。要写：<strong>「基于 ReAct 架构的数据洞察 Agent：用户上传 CSV 后用自然语言提问，Agent 自主选择分析工具、执行计算、生成图表报告，内置结果验证机制（空值/异常值自动检测），过程完整留痕」</strong>——具体、可验证、有技术深度。
+</div>
+
+<h2>四、README 模板（面试官第一眼看的东西）</h2>
+
+<pre><code># 数据洞察 Agent
+
+上传 CSV/Excel 数据，用自然语言提问，Agent 自主分析并生成图表报告。
+
+## 功能
+- 📂 支持上传 CSV/Excel 文件
+- 💬 自然语言提问（如"各品类销售额排名"、"退款率最高的渠道"）
+- 📊 自动生成交互式图表（柱状图、饼图、趋势图）
+- ✅ 内置结果验证（空值检测、异常值告警、独立复算核验）
+- 📝 每次分析生成完整过程记录（runs/*.json）
+
+## 架构
+ReAct 循环 + 5 个分析工具 + 结果验证卡口
+
+## 快速开始
+pip install -r requirements.txt
+python main.py "各品类销售额（剔除退款）"
+
+## 技术栈
+Python · pandas · OpenAI API · pyecharts</code></pre>
+
+<h2>五、评估集：3 个业务问题 + 预期答案</h2>
+
+<p>面试官会问：「你怎么知道你的 Agent 算的是对的？」答案就是<strong>评估集</strong>——一组固定问题 + 你手动算好的标准答案。</p>
+
+<p>35 课你已经做过类似的（<code>tests/eval.py</code>）。现在把它扩展到<strong>业务问题级别</strong>：</p>
+
+<table>
+  <thead><tr><th>#</th><th>业务问题</th><th>预期答案（口径）</th><th>验证方式</th></tr></thead>
+  <tbody>
+    <tr><td>Q1</td><td>各品类销售额排名（剔除退款）</td><td>数码 &gt; 家居 &gt; 服饰 &gt; 食品</td><td>group_sum + verify 独立复算</td></tr>
+    <tr><td>Q2</td><td>哪个渠道的退款率最高？</td><td>抖音退款率最高（已退款数/全部订单数）</td><td>group_count 两次 + 手动除法</td></tr>
+    <tr><td>Q3</td><td>一共有多少个不同客户？</td><td>nunique() 的值（非 count）</td><td>count_distinct + 独立 nunique 验证</td></tr>
+  </tbody>
+</table>
+
+<div class="callout red">
+  <strong>⚠️ 评估集的核心：</strong>标准答案必须是你<strong>用独立代码手动算出来的</strong>，不能是 Agent 自己算的——否则就是「自己批改自己的卷子」。
+</div>
+<h2>六、动手任务：写出 3 个评估问题</h2>
+
+<ol class="steps">
+  <li><strong>挑 3 个业务问题</strong>——从电商场景出发，比如「各渠道销售额」、「退款率对比」、「客户数」。</li>
+  <li><strong>用独立代码手动算出预期答案</strong>——不用 Agent 的工具，直接用 pandas 写一遍，把结果写死在 EXPECTED 字典里。</li>
+  <li><strong>写测试函数</strong>——调用 Agent 工具，比对结果和 EXPECTED，打印 PASS/FAIL。</li>
+  <li><strong>跑 selftest</strong>——<code>python main.py --selftest</code>，确认全部 PASS。</li>
+</ol>
+
+<pre><code># tests/eval.py 里新增业务问题评估
+EXPECTED = {
+    "各品类销售额_剔除退款": {"数码": 15750, "家居": 6150, ...},
+    "各渠道退款率": {"天猫": 3.4, "抖音": 17.6, ...},
+    "不同客户数": 42,  # 用 nunique 算的
+}</code></pre>
+
+<div class="callout green">
+  <strong>💡 评估集 = 简历加分项：</strong>面试官看到你有「固定测试问题集 + 自动化验证」，会立刻明白你不是只会调 API 的人——你懂<strong>工程质量</strong>。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>求职作品定位</strong>：不是学更多技术，是把能力变成能被看懂的资产</li>
+  <li>✅ <strong>完整链路</strong>：上传 → 提问 → Agent分析 → 图表报告</li>
+  <li>✅ <strong>架构图 + README</strong>：简历级产出物</li>
+  <li>✅ <strong>评估集</strong>：固定问题 + 标准答案 + 自动化验证</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>面试官问你：「你的 Agent 怎么保证算出的数据是对的？」以下哪个回答最能体现工程思维？</p>
+
+<ol type="A">
+  <li>因为我用的是大模型，大模型算得准</li>
+  <li>我有固定测试问题集，每次发布前自动跑一遍验证</li>
+  <li>我让 Agent 自己检查自己的答案</li>
+  <li>我把代码发给别人帮我 review</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 想拿你自己的数据试一下完整链路？把你的 CSV 文件放到 data/ 目录，改 tools.py 里的 DATA_FILE，然后问几个业务问题看看 Agent 的回答。任何不清楚的地方，都问你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0042-result-verification-self-correction.html">← 上一课：结果验证与自我修正</a>
+  <a href="0044-user-facing-agent-app.html">下一课：面向用户的 Agent 应用 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>B。<strong>「有固定测试问题集，每次发布前自动跑一遍验证」</strong>——这是工程质量的体现：可重复、可自动化、有标准。A 错：大模型也会算错，「信任大模型」不是工程保证。C 错：Agent 自己检查自己等于没有检查——需要独立的验证。D 错：人工 review 不可重复、不可自动化，不如固定测试集可靠。
+</p>
+</body>
+</html>

@@ -1,0 +1,21 @@
+task: 扩充数据洞察Agent的评估集（新文件，不改现有文件）
+context: |
+  工作区 D:\学习\ai-dev\lessons\code\insight_agent_mvp\
+  现有 tests\eval.py（7个固定问题+标准答案，--selftest 7/7 PASS，严禁修改它）
+  数据: D:\学习\ai-dev\data\ecommerce\online_retail_2010_2011.csv（InvoiceNo/StockCode/Description/Quantity/InvoiceDate/UnitPrice/CustomerID/Country）
+  可复用的工具在 agent\tools.py（profile/groupby_agg/monthly_trend/rfm_table/bar_chart/line_chart/verify）
+goal: |
+  新建 tests\eval_extended.py：
+  1. 8个以上新固定问题+标准答案（pandas离线独立算），覆盖: 
+     - TopN per group（每个国家Top3商品）
+     - 留存/复购类（跨月复购客户数）
+     - 时间窗口类（某季度GMV、工作日vs周末订单占比）
+     - 异常类问题（某商品退货量、客单价异常月份）
+     - 组合类（VIP客户 RFM 分层的GMV贡献占比）
+  2. 每题标准答案必须用与 agent/tools.py 不同的独立代码路径算（verify思想）
+  3. main函数可独立运行: python tests/eval_extended.py 直接跑全部断言输出 PASS/FAIL
+  4. 跑通后把真实输出写进文件末尾注释「实跑记录」
+constraints:
+  - 严禁改 eval.py / main.py / agent/ 下任何文件
+  - 清洗口径与现有一致: CustomerID非空+UnitPrice>0，退货记负收入
+not_to_do: 不要git；不要读key；不要动 curriculum.json

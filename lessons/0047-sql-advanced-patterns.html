@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0047 · SQL进阶模式：留存/漏斗/TopN/同环比</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>🧮 SQL 进阶模式：留存 / 漏斗 / TopN / 同环比</h1>
+<p class="meta">第 0047 课 · 选修线一 <span class="tag">SQL与查询工程</span> · 预计 25 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>掌握四个<strong>面试笔试出现率最高</strong>的 SQL 业务模式。它们难不在语法，在「把业务语言翻译成 SQL 结构」的套路。每个模式都用你的 54 万行数据真跑过，数字可直接对照。
+</div>
+
+<h2>模式一：留存分析（自 JOIN / 队列）</h2>
+<p><strong>业务问题</strong>：12 月第一次来的客户，1 月、2 月还在买的有多少？——先给每个客户打上「首购月份」标签（队列 cohort），再看后续每个月还有谁活跃。</p>
+<pre><code>WITH first_purchase AS (          -- 每个客户的首购月 = 队列标签
+  SELECT CustomerID,
+         date_trunc('month', MIN(InvoiceDate)) AS cohort
+  FROM df WHERE CustomerID IS NOT NULL AND UnitPrice &gt; 0
+  GROUP BY 1
+),
+activity AS (                     -- 每个客户的每次活跃月
+  SELECT DISTINCT f.CustomerID, f.cohort,
+         date_trunc('month', d.InvoiceDate) AS act_m
+  FROM first_purchase f JOIN df d USING (CustomerID)
+  WHERE d.CustomerID IS NOT NULL AND d.UnitPrice &gt; 0
+)
+SELECT cohort,
+       COUNT(DISTINCT CustomerID) AS cohort_size,
+       COUNT(DISTINCT CASE WHEN act_m = cohort + INTERVAL 1 MONTH
+                           THEN CustomerID END) AS m1,   -- 次月还活跃
+       COUNT(DISTINCT CASE WHEN act_m = cohort + INTERVAL 2 MONTH
+                           THEN CustomerID END) AS m2    -- 隔月还活跃
+FROM activity GROUP BY cohort ORDER BY cohort LIMIT 4</code></pre>
+<p><strong>真实结果</strong>（你的数据）：</p>
+<table>
+<thead><tr><th>队列</th><th>队列人数</th><th>次月留存</th><th>留存率</th><th>隔月</th></tr></thead>
+<tbody>
+<tr><td>2010-12</td><td>948</td><td>362</td><td class="good">38.2%</td><td>317</td></tr>
+<tr><td>2011-01</td><td>421</td><td>101</td><td>24.0%</td><td>119</td></tr>
+<tr><td>2011-02</td><td>380</td><td>94</td><td>24.7%</td><td>73</td></tr>
+<tr><td>2011-03</td><td>440</td><td>84</td><td>19.1%</td><td>112</td></tr>
+</tbody>
+</table>
+<div class="callout">
+  <strong>📌 读数</strong>：2010-12 队列留存异常高（38%）——那是圣诞备货季进来的<strong>批发客户</strong>，天然高复购。看留存必须<strong>按队列分开看</strong>，「总留存率」一个数会把好坏混在一起。
+</div>
+
+<h2>模式二：漏斗（每一步都数一遍）</h2>
+<p><strong>业务问题</strong>：订单里有几张是多品类单？客户里有多少跨月复购？——漏斗本质是<strong>每一步独立计数，再算相邻转化率</strong>：</p>
+<pre><code>WITH orders AS (
+  SELECT InvoiceNo, COUNT(DISTINCT StockCode) AS skus
+  FROM df
+  WHERE CustomerID IS NOT NULL AND UnitPrice &gt; 0 AND Quantity &gt; 0
+  GROUP BY 1
+)
+SELECT COUNT(*) AS total_orders,
+       COUNT(CASE WHEN skus &gt; 1 THEN 1 END) AS multi_item
+FROM orders
+-- 18532 单 → 17125 张多品单（92.4%）
+-- 第三步（跨月复购客户）单独算：2800 人</code></pre>
+<div class="callout red">
+  <strong>⚠️ 漏斗三大坑</strong>：① 各步的统计对象不同（单/人/次）直接相除会算错——先统一「算谁的转化」；② 步骤之间有<strong>时间顺序</strong>的（浏览→加购→支付），必须先按时间排序再判「后一步晚于前一步」；③ 分子分母口径不同源（一个用埋点一个用订单）是假漏斗。
+</div>
+
+<h2>模式三：TopN per Group（窗口函数经典）</h2>
+<p><strong>业务问题</strong>：每个国家卖得最好的 2 个商品。——<code>GROUP BY</code> 做不到（它只能给国家总排名），要用 <code>ROW_NUMBER</code>：</p>
+<pre><code>SELECT * FROM (
+  SELECT Country, Description,
+         ROUND(SUM(Quantity * UnitPrice), 0) AS gmv,
+         ROW_NUMBER() OVER (PARTITION BY Country
+                            ORDER BY SUM(Quantity * UnitPrice) DESC) AS rn
+  FROM df
+  WHERE CustomerID IS NOT NULL AND UnitPrice &gt; 0
+  GROUP BY Country, Description
+) WHERE rn &lt;= 2 AND Country IN ('Netherlands', 'Germany')
+ORDER BY Country, rn
+-- Netherlands  RABBIT NIGHT LIGHT               9568   rn=1
+-- Netherlands  ROUND SNACK BOXES SET OF4 ...    7991   rn=2
+-- Germany      POSTAGE                         20821   rn=1
+-- Germany      REGENCY CAKESTAND 3 TIER         8257   rn=2</code></pre>
+<p><strong>三个排名函数的区别</strong>（笔试常考）：销售额并列 100 的两个商品，下一个是 90：</p>
+<table>
+<thead><tr><th>函数</th><th>并列后</th><th>下一名</th></tr></thead>
+<tbody>
+<tr><td><code>ROW_NUMBER</code></td><td>强制分先后 1,2</td><td>3</td></tr>
+<tr><td><code>RANK</code></td><td>并列 1,1</td><td>3（跳号）</td></tr>
+<tr><td><code>DENSE_RANK</code></td><td>并列 1,1</td><td>2（不跳号）</td></tr>
+</tbody>
+</table>
+<div class="callout">
+  <strong>📌 数据又坑你了</strong>：德国 Top1 是 POSTAGE（邮费）——40 课讲过的非商品项。<strong>TopN 分析前先定义「商品」边界</strong>，不然榜单被邮费占领。
+</div>
+
+<h2>模式四：同环比（LAG / LEAD）</h2>
+<p><strong>业务问题</strong>：本月 GMV 比上月变化多少？比去年同期呢？</p>
+<pre><code>WITH m AS (
+  SELECT date_trunc('month', InvoiceDate) AS mo,
+         SUM(Quantity * UnitPrice) AS rev
+  FROM df WHERE CustomerID IS NOT NULL AND UnitPrice &gt; 0
+  GROUP BY 1
+)
+SELECT mo, ROUND(rev, 0) AS rev,
+       ROUND(rev / LAG(rev)     OVER (ORDER BY mo) - 1, 3) AS mom,   -- 环比(上月)
+       ROUND(rev / LAG(rev, 12) OVER (ORDER BY mo) - 1, 3) AS yoy    -- 同比(去年同月)
+FROM m
+-- 2011-01: mom=-0.143   2011-03: mom=+0.329
+-- LAG(x, 12) = 往上数 12 行，这就是同比；数据只有13个月，yoy 多数为 NULL，正常</code></pre>
+
+<h2>动手任务（25 分钟）</h2>
+<ol class="steps">
+  <li>跑通留存查询，对上课文表格里 2010-12 队列的 948/362/317。</li>
+  <li>把留存查询加一列 <code>m3</code>（隔两月），观察 2010-12 队列的留存曲线。</li>
+  <li>用 <code>DENSE_RANK</code> 重跑 TopN，构造一个并列场景，对比三种排名函数的差异。</li>
+  <li>算每周的订单量环比，找出 2011 年涨幅最大的一周（<code>date_trunc('week', ...)</code>）。</li>
+</ol>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>四个模式 = 四种「行集变形」：留存是<strong>自 JOIN 打队列标签</strong>，漏斗是<strong>分步独立计数</strong>，TopN 是<strong>PARTITION 内排名</strong>，同环比是<strong>LAG 错位引用</strong>。面试看到业务题，先判断它是哪个变形，再落 SQL。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>留存</strong>：首购队列 + 自 JOIN，按队列分开看不要算总账</li>
+  <li>✅ <strong>漏斗</strong>：每步独立计数，统一「算谁」的口径，警惕假漏斗</li>
+  <li>✅ <strong>TopN per Group</strong>：ROW_NUMBER/RANK/DENSE_RANK 并列行为不同</li>
+  <li>✅ <strong>同环比</strong>：LAG 一行搞定，LAG(x,12) 即同比</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>「每个品类销量第 2 的商品」该用什么？</p>
+<ol type="A">
+  <li><code>GROUP BY category ORDER BY sales LIMIT 2</code></li>
+  <li><code>ROW_NUMBER() OVER (PARTITION BY category ORDER BY sales DESC) = 2</code></li>
+  <li><code>DENSE_RANK() OVER (PARTITION BY category ORDER BY sales DESC) = 2</code></li>
+  <li><code>SELECT MAX(sales) FROM ... GROUP BY category</code></li>
+</ol>
+<p>（答案见底部）</p>
+
+<div class="nav-links">
+  <a href="0046-sql-hands-on-duckdb.html">← 上一课：SQL 实战</a>
+  <a href="0048-text-to-sql-agent.html">下一课：Text-to-SQL Agent →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);"><strong>小测答案：</strong>B。<strong>「每个品类第 2 名」= PARTITION 内按销量降序的第 2 行</strong>，ROW_NUMBER 给并列也强制编 1,2,3，「第 2 名」唯一确定。<br>
+A 错：LIMIT 是<strong>全局</strong>前 2，不是「每个品类各取第 2」，而且 LIMIT 2 取的是第 1、2 名不是第 2 名。<br>
+C 错：DENSE_RANK 遇并列会出现两个第 1、没有第 2 或两个第 2——「第 N 名」语义被并列破坏，除非业务明确要并列语义。<br>
+D 错：MAX 只给最高分，拿不到「第 2 名是谁」。<strong>窗口函数 = 「组内排名/错位」类问题的唯一正解。</strong></p>
+
+</body>
+</html>

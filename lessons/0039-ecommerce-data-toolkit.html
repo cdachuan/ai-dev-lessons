@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0039 · 电商数据工具箱</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+  .tool-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0;
+  }
+  .tool-card h3 { margin-top: 0; }
+  details { margin: 1rem 0; }
+  details summary {
+    cursor: pointer; font-weight: 600; color: var(--accent);
+    padding: 0.5rem 0; font-size: 0.95rem;
+  }
+  details summary:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<h1>🔧 电商数据工具箱</h1>
+<p class="meta">第 0039 课 · P6 电商锚点 <span class="tag">工具封装课</span> · 预计 20 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>把 pandas 清洗、聚合、图表封装成<strong>规范工具函数</strong>——有清晰的工具描述、参数设计、结构化返回和错误反馈。学完你能做到：Agent 调你的工具时，知道参数怎么传、返回值怎么读、出错了怎么反馈。动手任务=给工具箱加一个新工具。
+</div>
+
+<h2>一、为什么要封装成「工具」而不是散写脚本？</h2>
+
+<p>37 课你的 <code>capstone_kit</code> 已经有了 4 个工具函数（<code>profile</code>、<code>group_sum</code>、<code>count_distinct</code>、<code>group_count</code>），38 课我们讨论了 Agent 工作流设计。现在到了电商场景，数据量更大、指标更多——如果还是每次分析都从头写一遍 <code>pd.read_csv()</code>、清洗、分组，你会陷入「重复造轮子」的泥潭。</p>
+
+<p>封装成工具的核心好处：</p>
+
+<table>
+  <thead><tr><th>散写脚本</th><th>封装工具</th></tr></thead>
+  <tbody>
+    <tr><td>每次分析都重复读数据、清洗</td><td>读一次，复用多次</td></tr>
+    <tr><td>口径写在代码深处，容易遗忘</td><td>参数显式传入，调用时可见</td></tr>
+    <tr><td>出错时不知道哪一步炸了</td><td>结构化错误反馈，精确定位</td></tr>
+    <tr><td>Agent 不知道怎么调</td><td>函数签名 + docstring = Agent 的说明书</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>📌 关键认知：</strong>工具的「说明书」不是给人看的——是给 Agent（大模型）看的。模型通过函数名、参数名、docstring 来决定「这个问题该调哪个工具、传什么参数」。所以<strong>好的工具 = 好的 API 设计</strong>。
+</div>
+
+<h2>二、工具设计四要素</h2>
+
+<p>每个工具函数必须包含四样东西，缺一不可：</p>
+
+<h3>① 工具描述（docstring）</h3>
+<p>告诉 Agent「这个工具干什么、什么时候该用」。不是给人看的注释，是 Agent 的决策依据。</p>
+<pre><code><span style="color:#a6adc8"># 差的描述：人能懂，Agent 不知道什么时候该调</span>
+def calc_gmv():
+    """计算GMV"""
+
+<span style="color:#a6adc8"># 好的描述：Agent 知道用途、参数含义、调用时机</span>
+def calc_gmv(df, filter_status=None, group_by=None):
+    """计算 GMV（总成交金额）。
+    
+    用途：回答"总销售额是多少"、"某个品类/渠道卖了多少钱"这类问题。
+    口径：默认包含所有状态；传 filter_status="已完成" 只算成交订单。
+    返回：字典，含 total（总额）和明细（如有分组）。
+    """</code></pre>
+
+<h3>② 参数设计（显式、有默认值）</h3>
+<p>参数名要直白，带合理默认值。Agent 传参时不需要猜。</p>
+<pre><code><span style="color:#a6adc8"># 参数设计示例：group_by 是可选的，filter_status 默认不过滤</span>
+def calc_gmv(df, filter_status=None, group_by=None):
+    """..."""
+    if filter_status:
+        df = df[df["状态"] == filter_status]
+    total = df["金额"].sum()
+    if group_by:
+        detail = df.groupby(group_by)["金额"].sum().to_dict()
+        return {"total": float(total), "明细": detail}
+    return {"total": float(total)}</code></pre>
+
+<h3>③ 结构化返回（字典，不用 print）</h3>
+<p>返回一个干净的 Python 字典，Agent 可以直接解析。不要返回 DataFrame（模型不方便读），不要 print。</p>
+<pre><code><span style="color:#a6adc8"># ✅ 好：结构化字典</span>
+return {
+    "total": 54321.0,
+    "口径": "已完成订单",
+    "明细": {"数码": 32000.0, "服饰": 12000.0, "食品": 10321.0}
+}
+
+<span style="color:#a6adc8"># ❌ 差：print 出去，Agent 解析不了</span>
+print(f"GMV = {total}")</code></pre>
+
+<h3>④ 错误反馈（异常时返回有意义的信息）</h3>
+<p>工具出错时不要静默失败，要返回明确的错误信息，让 Agent 知道「哪一步出了什么问题」。</p>
+<pre><code><span style="color:#a6adc8"># 反面教材：出了错 Agent 只看到空结果</span>
+def calc_gmv(df, filter_status=None):
+    df = df[df["状态"] == filter_status]  <span style="color:#a6adc8"># filter_status=None 时这行不会出错</span>
+    return {"total": df["金额"].sum()}
+
+<span style="color:#a6adc8"># 正确做法：显式校验，返回错误信息</span>
+def calc_gmv(df, filter_status=None):
+    if "金额" not in df.columns:
+        return {"error": "数据中没有'金额'列", "可用列": list(df.columns)}
+    if "状态" not in df.columns and filter_status:
+        return {"error": "数据中没有'状态'列，无法按状态过滤"}
+    <span style="color:#a6adc8"># ... 正常计算</span></code></pre>
+
+<div class="callout red">
+  <strong>⚠️ 最常见的错误：</strong>把清洗逻辑藏在工具内部。比如 <code>calc_gmv</code> 里默默 <code>dropna()</code> 了——Agent 不知道数据被删了行，结论里可能少算了。<strong>清洗要么在工具外面做，要么作为参数让用户控制</strong>。
+</div>
+
+<h2>三、实战：电商工具箱完整示例</h2>
+
+<p>以下是基于 UCI Online Retail 数据集（54万行UK电商订单）设计的工具箱。这个数据集的字段：</p>
+
+<table>
+  <thead><tr><th>字段</th><th>含义</th><th>常见坑</th></tr></thead>
+  <tbody>
+    <tr><td><code>InvoiceNo</code></td><td>订单号</td><td>以 C 开头的 = 退货单</td></tr>
+    <tr><td><code>StockCode</code></td><td>商品编码</td><td>部分是特殊编码（如 POST = 邮费）</td></tr>
+    <tr><td><code>Description</code></td><td>商品名</td><td>有缺失、有拼写不一致</td></tr>
+    <tr><td><code>Quantity</code></td><td>数量</td><td>退货单是负数</td></tr>
+    <tr><td><code>InvoiceDate</code></td><td>开票日期</td><td>需要 to_datetime 转换</td></tr>
+    <tr><td><code>UnitPrice</code></td><td>单价</td><td>有 0 值（免费赠品）</td></tr>
+    <tr><td><code>CustomerID</code></td><td>客户ID</td><td>约 25% 缺失——这是容错重点</td></tr>
+    <tr><td><code>Country</code></td><td>国家</td><td>主要是 UK</td></tr>
+  </tbody>
+</table>
+
+<pre><code><span style="color:#a6adc8"># ecommerce_toolkit/tools.py — 电商数据工具箱</span>
+<span style="color:#a6adc8"># 贯穿数据集：UCI Online Retail（54万行，2010-12 ~ 2011-12）</span>
+<span style="color:#cdd6f4">import</span> pandas <span style="color:#cdd6f4">as</span> pd
+<span style="color:#cdd6f4">from</span> pathlib <span style="color:#cdd6f4">import</span> Path
+
+DATA_FILE = Path(__file__).resolve().parent.parent / <span style="color:#a6e3a1">"data"</span> / <span style="color:#a6e3a1">"Online Retail.csv"</span>
+
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">load_data</span>(encoding=<span style="color:#a6e3a1">"utf-8"</span>):
+    <span style="color:#a6adc8">"""读取电商数据集，自动处理日期列。返回 DataFrame。</span>
+<span style="color:#a6adc8">    用途：所有分析的第一步。返回前 5 行摘要供 Agent 快速了解数据。</span>
+<span style="color:#a6adc8">    """</span>
+    <span style="color:#cdd6f4">try</span>:
+        df = pd.read_csv(DATA_FILE, encoding=encoding, dtype={<span style="color:#a6e3a1">"CustomerID"</span>: <span style="color:#cdd6f4">str</span>})
+    <span style="color:#cdd6f4">except</span> UnicodeDecodeError:
+        df = pd.read_csv(DATA_FILE, encoding=<span style="color:#a6e3a1">"latin-1"</span>, dtype={<span style="color:#a6e3a1">"CustomerID"</span>: <span style="color:#cdd6f4">str</span>})
+    df[<span style="color:#a6e3a1">"InvoiceDate"</span>] = pd.to_datetime(df[<span style="color:#a6e3a1">"InvoiceDate"</span>])
+    <span style="color:#cdd6f4">return</span> {
+        <span style="color:#a6e3a1">"行数"</span>: <span style="color:#cdd6f4">len</span>(df),
+        <span style="color:#a6e3a1">"列"</span>: <span style="color:#cdd6f4">list</span>(df.columns),
+        <span style="color:#a6e3a1">"CustomerID缺失率"</span>: <span style="color:#cdd6f4">round</span>(df[<span style="color:#a6e3a1">"CustomerID"</span>].isna().mean() * <span style="color:#fab387">100</span>, <span style="color:#fab387">1</span>),
+        <span style="color:#a6e3a1">"日期范围"</span>: <span style="color:#cdd6f4">str</span>(df[<span style="color:#a6e3a1">"InvoiceDate"</span>].min()) + <span style="color:#a6e3a1">" ~ "</span> + <span style="color:#cdd6f4">str</span>(df[<span style="color:#a6e3a1">"InvoiceDate"</span>].max()),
+        <span style="color:#a6e3a1">"国家数"</span>: df[<span style="color:#a6e3a1">"Country"</span>].nunique(),
+        <span style="color:#a6e3a1">"前3行"</span>: df.head(<span style="color:#fab387">3</span>).to_dict(<span style="color:#a6e3a1">"records"</span>),
+    }
+
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">calc_gmv</span>(df, exclude_returns=<span style="color:#cdd6f4">True</span>, group_by=<span style="color:#cdd6f4">None</span>):
+    <span style="color:#a6adc8">"""计算 GMV（总成交金额）= Quantity × UnitPrice。</span>
+<span style="color:#a6adc8">    用途：回答"总销售额"、"某品类/国家卖了多少钱"。</span>
+<span style="color:#a6adc8">    口径：默认排除退货单（InvoiceNo 以 C 开头的行）。</span>
+<span style="color:#a6adc8">    返回：{total, 口径, 明细}。</span>
+<span style="color:#a6adc8">    """</span>
+    <span style="color:#cdd6f4">if</span> <span style="color:#a6e3a1">"Quantity"</span> <span style="color:#cdd6f4">not in</span> df.columns <span style="color:#cdd6f4">or</span> <span style="color:#a6e3a1">"UnitPrice"</span> <span style="color:#cdd6f4">not in</span> df.columns:
+        <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">"数据缺少 Quantity 或 UnitPrice 列"</span>}
+    work = df.copy()
+    work[<span style="color:#a6e3a1">"Revenue"</span>] = work[<span style="color:#a6e3a1">"Quantity"</span>] * work[<span style="color:#a6e3a1">"UnitPrice"</span>]
+    <span style="color:#cdd6f4">if</span> exclude_returns:
+        work = work[~work[<span style="color:#a6e3a1">"InvoiceNo"</span>].astype(<span style="color:#cdd6f4">str</span>).str.startswith(<span style="color:#a6e3a1">"C"</span>)]
+        note = <span style="color:#a6e3a1">"排除退货单"</span>
+    <span style="color:#cdd6f4">else</span>:
+        note = <span style="color:#a6e3a1">"包含退货单"</span>
+    result = {<span style="color:#a6e3a1">"total"</span>: <span style="color:#cdd6f4">round</span>(<span style="color:#cdd6f4">float</span>(work[<span style="color:#a6e3a1">"Revenue"</span>].sum()), <span style="color:#fab387">2</span>), <span style="color:#a6e3a1">"口径"</span>: note}
+    <span style="color:#cdd6f4">if</span> group_by <span style="color:#cdd6f4">and</span> group_by <span style="color:#cdd6f4">in</span> work.columns:
+        result[<span style="color:#a6e3a1">"明细"</span>] = {k: <span style="color:#cdd6f4">round</span>(<span style="color:#cdd6f4">float</span>(v), <span style="color:#fab387">2</span>) <span style="color:#cdd6f4">for</span> k, v <span style="color:#cdd6f4">in</span> work.groupby(group_by)[<span style="color:#a6e3a1">"Revenue"</span>].sum().sort_values(ascending=<span style="color:#cdd6f4">False</span>).items()}
+    <span style="color:#cdd6f4">return</span> result
+
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">calc_avg_order_value</span>(df, exclude_returns=<span style="color:#cdd6f4">True</span>):
+    <span style="color:#a6adc8">"""计算客单价 = GMV / 订单数（去重 InvoiceNo）。</span>
+<span style="color:#a6adc8">    用途：回答"平均每单多少钱"、"客单价是多少"。</span>
+<span style="color:#a6adc8">    注意：同一 InvoiceNo 包含多行商品，必须先按订单汇总再除。</span>
+<span style="color:#a6adc8">    """</span>
+    work = df.copy()
+    work[<span style="color:#a6e3a1">"Revenue"</span>] = work[<span style="color:#a6e3a1">"Quantity"</span>] * work[<span style="color:#a6e3a1">"UnitPrice"</span>]
+    <span style="color:#cdd6f4">if</span> exclude_returns:
+        work = work[~work[<span style="color:#a6e3a1">"InvoiceNo"</span>].astype(<span style="color:#cdd6f4">str</span>).str.startswith(<span style="color:#a6e3a1">"C"</span>)]
+    gmv = work[<span style="color:#a6e3a1">"Revenue"</span>].sum()
+    n_orders = work[<span style="color:#a6e3a1">"InvoiceNo"</span>].nunique()
+    <span style="color:#cdd6f4">if</span> n_orders == <span style="color:#fab387">0</span>:
+        <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">"过滤后无有效订单"</span>}
+    <span style="color:#cdd6f4">return</span> {
+        <span style="color:#a6e3a1">"客单价"</span>: <span style="color:#cdd6f4">round</span>(gmv / n_orders, <span style="color:#fab387">2</span>),
+        <span style="color:#a6e3a1">"GMV"</span>: <span style="color:#cdd6f4">round</span>(gmv, <span style="color:#fab387">2</span>),
+        <span style="color:#a6e3a1">"订单数"</span>: n_orders,
+    }
+
+
+<span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">calc_repeat_rate</span>(df, exclude_returns=<span style="color:#cdd6f4">True</span>):
+    <span style="color:#a6adc8">"""计算复购率 = 下过 2 单及以上的客户占比。</span>
+<span style="color:#a6adc8">    用途：回答"复购率"、"老客户占比"。</span>
+<span style="color:#a6adc8">    口径：CustomerID 非空、排除退货后，按客户统计订单数，再算比例。</span>
+<span style="color:#a6adc8">    """</span>
+    work = df.copy()
+    <span style="color:#cdd6f4">if</span> exclude_returns:
+        work = work[~work[<span style="color:#a6e3a1">"InvoiceNo"</span>].astype(<span style="color:#cdd6f4">str</span>).str.startswith(<span style="color:#a6e3a1">"C"</span>)]
+    work = work.dropna(subset=[<span style="color:#a6e3a1">"CustomerID"</span>])
+    <span style="color:#cdd6f4">if</span> <span style="color:#cdd6f4">len</span>(work) == <span style="color:#fab387">0</span>:
+        <span style="color:#cdd6f4">return</span> {<span style="color:#a6e3a1">"error"</span>: <span style="color:#a6e3a1">"过滤后无有效客户数据（CustomerID 全部缺失）"</span>}
+    orders_per_customer = work.groupby(<span style="color:#a6e3a1">"CustomerID"</span>)[<span style="color:#a6e3a1">"InvoiceNo"</span>].nunique()
+    total_customers = <span style="color:#cdd6f4">len</span>(orders_per_customer)
+    repeat_customers = <span style="color:#cdd6f4">len</span>(orders_per_customer[orders_per_customer >= <span style="color:#fab387">2</span>])
+    <span style="color:#cdd6f4">return</span> {
+        <span style="color:#a6e3a1">"复购率"</span>: <span style="color:#cdd6f4">round</span>(repeat_customers / total_customers * <span style="color:#fab387">100</span>, <span style="color:#fab387">2</span>),
+        <span style="color:#a6e3a1">"总客户数"</span>: total_customers,
+        <span style="color:#a6e3a1">"复购客户数"</span>: repeat_customers,
+    }</code></pre>
+
+<div class="callout green">
+  <strong>💡 注意看：</strong>每个工具都做了三件事——<strong>①校验输入列是否存在</strong>（缺列就返回错误）、<strong>②清洗逻辑写在参数里可控</strong>（<code>exclude_returns</code>）、<strong>③返回值是干净字典</strong>。这就是 30 课「工具设计与结构化输出」在电商场景的落地。
+</div>
+
+<h2>四、工具调用示例</h2>
+
+<p>Agent 拿到用户问题后，按以下流程调用工具：</p>
+
+<pre><code><span style="color:#a6adc8"># 用户问："英国的总销售额是多少？"</span>
+<span style="color:#a6adc8"># Agent 决策：需要先 load_data，再 calc_gmv，按 Country 过滤</span>
+
+df = load_data()
+uk_df = df[df[<span style="color:#a6e3a1">"Country"</span>] == <span style="color:#a6e3a1">"United Kingdom"</span>]
+result = calc_gmv(uk_df, group_by=<span style="color:#a6e3a1">"StockCode"</span>)
+<span style="color:#cdd6f4">print</span>(result)
+<span style="color:#a6adc8"># {
+#   "total": 3967982.54,
+#   "口径": "排除退货单",
+#   "明细": {"23843": 28548.0, "22423": 14618.28, ...}
+# }</span>
+
+<span style="color:#a6adc8"># 用户问："复购率怎么样？"</span>
+result = calc_repeat_rate(df)
+<span style="color:#cdd6f4">print</span>(result)
+<span style="color:#a6adc8"># {
+#   "复购率": 68.42,
+#   "总客户数": 4372,
+#   "复购客户数": 2991
+# }</span></code></pre>
+
+<h2>五、动手任务：给工具箱加一个新工具</h2>
+
+<div class="callout">
+  <strong>🎯 任务（15 分钟）：</strong>写一个 <code>calc_monthly_trend</code> 工具，计算<strong>月度 GMV 趋势</strong>——按月份汇总成交金额，返回 <code>{"2010-12": 54321.0, "2011-01": 67890.0, ...}</code> 这样的字典。
+</div>
+
+<p>要求：</p>
+<ol class="steps">
+  <li>函数签名：<code>calc_monthly_trend(df, country=None)</code></li>
+  <li>默认排除退货单（与 <code>calc_gmv</code> 口径一致）</li>
+  <li>支持按国家过滤（可选参数）</li>
+  <li>包含 <code>InvoiceDate</code> 列缺失的错误处理</li>
+  <li>返回字典，key 是 "YYYY-MM" 格式的字符串</li>
+</ol>
+
+<p>参考骨架：</p>
+<pre><code><span style="color:#cdd6f4">def</span> <span style="color:#89b4fa">calc_monthly_trend</span>(df, country=<span style="color:#cdd6f4">None</span>):
+    <span style="color:#a6adc8">"""计算月度 GMV 趋势。</span>
+<span style="color:#a6adc8">    用途：回答"每个月卖了多少钱"、"销售趋势怎么样"。</span>
+<span style="color:#a6adc8">    返回：{"YYYY-MM": 金额, ...}。</span>
+<span style="color:#a6adc8">    """</span>
+    <span style="color:#a6adc8"># 你的代码写这里</span>
+    <span style="color:#cdd6f4">pass</span></code></pre>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>工具封装的意义</strong>：复用、口径可见、错误可控、Agent 可调</li>
+  <li>✅ <strong>四要素</strong>：工具描述（docstring）、参数设计（显式+默认值）、结构化返回（字典）、错误反馈（有意义的错误信息）</li>
+  <li>✅ <strong>电商数据集字段</strong>：UCI Online Retail 的 8 个字段及常见坑（退货单、CustomerID 缺失、特殊编码）</li>
+  <li>✅ <strong>三个核心工具</strong>：load_data（读数据）、calc_gmv（GMV）、calc_avg_order_value（客单价）、calc_repeat_rate（复购率）</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>你写了一个 <code>calc_gmv</code> 工具，默认排除退货单。用户问："包含退货的话，英国的 GMV 是多少？" Agent 该怎么调用？</p>
+
+<ol type="A">
+  <li><code>calc_gmv(df, exclude_returns=True)</code> —— True 就是包含退货</li>
+  <li><code>calc_gmv(df, exclude_returns=False)</code> —— False 表示不排除退货</li>
+  <li><code>calc_gmv(df, include_returns=True)</code> —— 传一个新参数</li>
+  <li><code>calc_gmv(df[df["Country"]=="United Kingdom"])</code> —— 只需要过滤国家</li>
+</ol>
+
+<details>
+  <summary>点击展开答案与解析</summary>
+  <div style="padding:0.8rem 1rem;background:#f0fdf4;border-radius:6px;margin-top:0.5rem;">
+    <strong>答案：B。</strong><code>exclude_returns=False</code> 表示不排除退货，即包含退货单。A 错：<code>True</code> 是排除退货，与需求相反。C 错：函数参数叫 <code>exclude_returns</code>，不能凭空换名字——参数名是 API 契约，改了就调不通。D 错：只过滤了国家，没有处理退货排除的问题——需求是「包含退货 + 英国」，两个条件都要满足。
+  </div>
+</details>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 想把你自己工作中的数据封装成工具？把字段名告诉我，我帮你设计函数签名和返回格式。任何不清楚的地方，都问你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0038-agent-workflow-design.html">← 上一课：Agent 工作流设计</a>
+  <a href="0040-ecommerce-data-analysis.html">下一课：电商数据分析实战 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+</body>
+</html>

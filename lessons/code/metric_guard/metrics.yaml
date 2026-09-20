@@ -1,0 +1,35 @@
+# 指标口径字典 · 电商分析通用（YAML声明，一处定义处处校验）
+# formula 里只能用 df / pandas / 基础函数；列名必须与数据集一致
+# 适用: online_retail 风格订单明细(InvoiceNo/Quantity/UnitPrice/InvoiceDate/CustomerID)
+
+metrics:
+  gmv:
+    desc: 净GMV = 购买明细收入 + 退货负收入（不删行）；剔除缺失客户ID与零单价异常行
+    formula: "round(df[(df.CustomerID.notna()) & (df.UnitPrice>0)].assign(rev=lambda x: x.Quantity*x.UnitPrice).rev.sum(), 2)"
+
+  aov:
+    desc: 客单价 = 净GMV ÷ 有购买行为的发票数（退货单不计入订单数）
+    formula: "round(gmv / df[(df.CustomerID.notna()) & (df.UnitPrice>0) & (df.Quantity>0)].InvoiceNo.nunique(), 2)"
+    requires: [gmv]
+
+  arpu:
+    desc: 人均消费ARPU = 净GMV ÷ 客户数（与客单价严格区分）
+    formula: "round(gmv / df[(df.CustomerID.notna()) & (df.UnitPrice>0)].CustomerID.nunique(), 2)"
+    requires: [gmv]
+
+  return_amount:
+    desc: 退货金额绝对值（负收入取绝对值）
+    formula: "round(abs(df[(df.CustomerID.notna()) & (df.UnitPrice>0) & (df.Quantity<0)].assign(rev=lambda x: x.Quantity*x.UnitPrice).rev.sum()), 2)"
+
+  return_rate:
+    desc: 退货率 = 退货金额绝对值 ÷ 总流水绝对值
+    formula: "round(return_amount / df[(df.CustomerID.notna()) & (df.UnitPrice>0)].assign(rev=lambda x: (x.Quantity*x.UnitPrice).abs()).rev.sum() * 100, 2)"
+    requires: [return_amount]
+
+  customer_count:
+    desc: 购买客户数 = 清洗后CustomerID去重
+    formula: "int(df[(df.CustomerID.notna()) & (df.UnitPrice>0)].CustomerID.nunique())"
+
+  order_count:
+    desc: 订单数 = 有购买行为(Quantity>0)的发票去重数
+    formula: "int(df[(df.CustomerID.notna()) & (df.UnitPrice>0) & (df.Quantity>0)].InvoiceNo.nunique())"

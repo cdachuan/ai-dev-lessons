@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0044 · 面向用户的 Agent 应用</title>
+<style>
+
+:root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+
+</style>
+</head>
+<body>
+<h1>🎨 面向用户的 Agent 应用</h1>
+<p class="meta">第 0044 课 · P6 求职产物 <span class="tag">应用课</span> · 预计 15 分钟</p>
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>把命令行脚本变成<strong>一个别人打开浏览器就能试用的小产品</strong>——用 Streamlit 做一个界面，支持文件上传、会话记录、报告下载。从「能跑的代码」到「能用的产品」。
+</div>
+
+<h2>一、为什么需要界面？</h2>
+
+<p>你的 43 课作品已经是一个完整的 Agent——但它运行在命令行里。面试官或 HR 想试用，你得让他 <code>pip install</code> 再 <code>python main.py</code>——大部分人会在这一步放弃。</p>
+
+<p>一个简单的 Streamlit 界面，能让你的作品<strong>从「需要会 Python 才能用」变成「打开网页就能用」</strong>。</p>
+
+<div class="callout">
+  <strong>📌 Streamlit 是什么？</strong>一个 Python 库，让你用纯 Python 代码生成 Web 界面。不需要写 HTML/CSS/JS，几行代码就是一个可交互的页面。适合快速做 demo 和原型，不适合生产级产品——但对于求职作品，够了。
+</div>
+
+<h2>二、最小 Streamlit 页面（5 分钟跑通）</h2>
+
+<pre><code>import streamlit as st
+
+st.title("数据洞察 Agent")
+
+uploaded_file = st.file_uploader("上传 CSV 文件", type=["csv"])
+if uploaded_file:
+    st.success(f"已上传: {uploaded_file.name}")
+
+question = st.text_input("输入你的分析问题")
+if st.button("开始分析") and question:
+    st.info("正在分析...（这里调用 Agent）")
+    # TODO: 接入 Agent 逻辑
+    st.write("分析结果将显示在这里")</code></pre>
+
+<p>运行方式：</p>
+
+<pre><code>streamlit run app.py</code></pre>
+
+<p>浏览器自动打开 <code>http://localhost:8501</code>，一个可交互的页面就出来了。</p>
+
+<h2>三、从最小页面到完整产品</h2>
+
+<p>在最小页面基础上，加上 43 课的 Agent 逻辑：</p>
+
+<pre><code>import streamlit as st
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+
+st.title("数据洞察 Agent")
+st.caption("上传 CSV → 自然语言提问 → Agent 自主分析 → 图表报告")
+
+# 1. 文件上传
+uploaded_file = st.file_uploader("上传 CSV/Excel 文件", type=["csv", "xlsx"])
+
+if uploaded_file:
+    tmp_path = Path("data") / uploaded_file.name
+    tmp_path.parent.mkdir(exist_ok=True)
+    tmp_path.write_bytes(uploaded_file.getvalue())
+    st.success(f"已上传: {uploaded_file.name}")
+
+    # 2. 数据画像
+    if st.button("查看数据画像"):
+        from agent.tools import profile
+        result = profile()
+        st.json(result)
+
+    # 3. 会话记录
+    if "history" not in st.session_state:
+        st.session_state.history = []
+
+    question = st.text_input("输入你的分析问题")
+
+    if st.button("开始分析") and question:
+        with st.spinner("Agent 正在分析..."):
+            from agent.core import run_agent, save_trace
+            try:
+                answer, trace = run_agent(question)
+                st.session_state.history.append({"q": question, "a": answer})
+                st.markdown(answer)
+                save_trace(question, answer, trace)
+            except Exception as e:
+                st.error(f"分析失败: {e}")
+
+    # 4. 历史会话
+    if st.session_state.history:
+        st.subheader("历史会话")
+        for item in reversed(st.session_state.history):
+            st.markdown(f"**Q:** {item['q']}")
+            st.markdown(f"**A:** {item['a']}")
+            st.divider()</code></pre>
+<h2>四、关键设计决策</h2>
+
+<table>
+  <thead><tr><th>决策</th><th>选择</th><th>理由</th></tr></thead>
+  <tbody>
+    <tr><td>用什么做界面</td><td>Streamlit</td><td>纯 Python，5 分钟出原型，求职作品够用</td></tr>
+    <tr><td>文件存哪</td><td>本地 data/ 目录</td><td>简单直接，不用配云存储</td></tr>
+    <tr><td>会话存哪</td><td>st.session_state</td><td>重启会清空，但对 demo 来说够了</td></tr>
+    <tr><td>报告怎么下载</td><td>st.download_button</td><td>一行代码，用户点一下就下载</td></tr>
+  </tbody>
+</table>
+
+<h2>五、动手任务：跑通一个最小 Streamlit 页面</h2>
+
+<ol class="steps">
+  <li>安装 Streamlit：<code>pip install streamlit</code></li>
+  <li>在项目根目录创建 <code>app.py</code>，粘贴上面的最小页面代码。</li>
+  <li>运行 <code>streamlit run app.py</code>，浏览器会自动打开。</li>
+  <li>把 Agent 逻辑接入——参考上面的完整版代码。</li>
+  <li>跑通后截图放进 README，这就是你简历上的「效果展示」。</li>
+</ol>
+
+<div class="callout">
+  <strong>📌 注意：</strong>Streamlit 只是<strong>快速原型工具</strong>，不适合生产环境。如果面试官问「你会部署吗？」，你要说清楚：Streamlit 用于 demo，生产环境可以用 Flask/FastAPI + 前端框架，或者用 Streamlit Cloud 免费托管。45 课会详细讲部署路径。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>为什么需要界面</strong>：从「需要会 Python 才能用」到「打开浏览器就能用」</li>
+  <li>✅ <strong>Streamlit 最小页面</strong>：5 分钟出一个可交互的 demo</li>
+  <li>✅ <strong>完整产品要素</strong>：文件上传 / 会话记录 / 历史展示 / 数据画像</li>
+  <li>✅ <strong>动手任务</strong>：跑通最小 Streamlit 页面并接入 Agent</li>
+</ul>
+
+<h2>🤔 小测</h2>
+
+<p>你想给你的 Agent 作品加一个 Web 界面，让别人能直接试用。以下哪种方式最适合求职作品的快速演示？</p>
+
+<ol type="A">
+  <li>用 React 写一个完整的前端，部署到 Vercel</li>
+  <li>用 Streamlit 写一个 Python 脚本，<code>streamlit run</code> 即可</li>
+  <li>用 Flask 写一个 API，再写一个 HTML 页面调用</li>
+  <li>不做界面，直接把命令行工具发给别人</li>
+</ol>
+
+<p>（答案见底部）</p>
+
+<p style="margin-top:1rem;font-size:0.9rem;color:var(--muted);">
+  💬 想试一下 Streamlit？先跑通最小页面，然后把你的 Agent 接进去。5 分钟就能看到效果。任何不清楚的地方，都问你的 AI 教练。
+</p>
+
+<div class="nav-links">
+  <a href="0043-data-insight-agent-mvp.html">← 上一课：数据洞察 Agent 原型</a>
+  <a href="0045-agent-engineering-advanced.html">下一课：Agent 工程化进阶 + 部署 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);">
+<strong>小测答案：</strong>B。<strong>用 Streamlit 写一个 Python 脚本</strong>——最快、最省事，5 分钟出原型。A 错：React 前端开发成本太高，求职作品不需要这么重。C 错：Flask + 前端需要两套技术栈，投入产出比不划算。D 错：没有界面的作品，别人试用门槛太高，简历价值打折扣。
+</p>
+</body>
+</html>

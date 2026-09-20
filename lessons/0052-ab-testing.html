@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0052 · A/B测试全流程</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>🎲 A/B 测试全流程：设计 / 样本量 / 避坑</h1>
+<p class="meta">第 0052 课 · 选修线二 <span class="tag">统计与实验</span> · 预计 25 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>掌握 A/B 测试的<strong>完整生命周期</strong>和四个经典坑——其中「偷看结果」这个坑，用模拟实验亲手复现：假阳性率从 5% 飙到 38%。
+</div>
+
+<h2>一、A/B 测试是什么：受控实验的电商化</h2>
+<p>把用户<strong>随机</strong>分成两组：A 组看旧版页面，B 组看新版。跑一段时间，比转化率。<strong>「随机」是灵魂</strong>：它让两组在所有维度（新老客/渠道/设备）上分布均衡，剩下的差异只能来自改动本身——这是观察性数据永远给不了的能力（53 课因果课展开）。</p>
+
+<h2>二、先算样本量：不够就别开跑</h2>
+<p>「测一周看看」是外行话。<strong>样本量由四个参数决定，开跑前算清楚</strong>：</p>
+<table>
+<thead><tr><th>参数</th><th>含义</th><th>本例取值</th></tr></thead>
+<tbody>
+<tr><td>基线转化率 p₁</td><td>现在版本的水平</td><td>10%</td></tr>
+<tr><td>最小可检测提升</td><td>小到没意义的提升不想测</td><td>→ 10.5%（相对+5%）</td></tr>
+<tr><td>显著性 α</td><td>假阳性容忍度（没效果却报有效）</td><td>0.05</td></tr>
+<tr><td>功效 power</td><td>真有效时能测出来的概率</td><td>0.8</td></tr>
+</tbody>
+</table>
+<pre><code>from statistics import NormalDist
+z_a = NormalDist().inv_cdf(1 - alpha/2)     # 1.96
+z_b = NormalDist().inv_cdf(power)           # 0.84
+n = ceil((z_a*sqrt(2*pbar*(1-pbar)) + z_b*sqrt(p1*(1-p1)+p2*(1-p2)))**2 / (p2-p1)**2)</code></pre>
+<p><strong>实算结果：每组 57,763 个样本</strong>（10%→10.5% 这么小的提升，代价就是近 6 万样本/组）。若你的页面日 UV 5000，要跑 <strong>23 天</strong>——开跑前就该知道，而不是跑三天看「没效果」就下结论。</p>
+
+<h2>三、跑起来：流程与检查</h2>
+<ol class="steps">
+  <li><strong>定指标</strong>：主指标 1 个（转化率），护栏指标若干（客单价不许跌、退货率不许涨）</li>
+  <li><strong>随机分流</strong>：按用户 ID 哈希分流（同一人始终同组），不是按请求随机</li>
+  <li><strong>跑满预定期</strong>：样本量算出 23 天就跑 23 天，中途不看、不加单、不提前开香槟</li>
+  <li><strong>检验+效果量</strong>：p 值（真假）+ 效果量（大小）+ 分段检查（新老客是否一致，防辛普森）</li>
+</ol>
+
+<h2>四、四大坑（模拟复现第一个）</h2>
+
+<h3>坑1 · 偷看结果（peeking）—— 用模拟亲手复现</h3>
+<p>构造一个<strong>真实无差异</strong>的实验（两组真实转化率都是 10%），跑 300 次：</p>
+<table>
+<thead><tr><th>做法</th><th>假阳性率</th></tr></thead>
+<tbody>
+<tr><td>按规矩跑完一次检验（α=0.05）</td><td class="good">4.7% ≈ 理论值 5%</td></tr>
+<tr><td>每积累一段就偷看，任一次显著就宣布赢（10 个检查点）</td><td class="bad">38%</td></tr>
+</tbody>
+</table>
+<div class="callout red">
+  <strong>⚠️ 这就是「跑了三天看显著就停」的真相</strong>：你把 5% 的假阳性率偷换成了近 40%。<strong>止血法</strong>：固定样本量跑满再验一次；要中途看就用序贯检验（alpha spending）方案，别裸看。
+</div>
+
+<h3>坑2 · 辛普森悖论</h3>
+<p>整体显著≠分组一致。<strong>必须按新老客/渠道分段复核</strong>，方向不一致比不显著更危险（构造案例见 53 课）。</p>
+
+<h3>坑3 · 多重比较</h3>
+<p>同时测 20 个新版本，总有「碰巧显著」的：20 个检验全对的概率只有 0.95²⁰≈36%。对策：只测一个主假设，或用 Bonferroni 校正（α 除以检验次数）。</p>
+
+<h3>坑4 · 新奇效应</h3>
+<p>新版本头几天点击率高，因为「新鲜」，之后回落。对策：跑满整数周期（整周），或对比首周与末周的表现。</p>
+
+<h2>动手任务（30 分钟）</h2>
+<ol class="steps">
+  <li>跑通样本量计算：把期望提升改成 +20%（10%→12%），看样本量掉到多少——体会「检测越小差异越贵」。</li>
+  <li>复现偷看模拟：无差异实验 + 10 个检查点，对上 ~38% 假阳性。</li>
+  <li>把检查点减到 3 个，看假阳性率怎么变。</li>
+  <li>设计一个你司场景的 A/B：主指标、护栏指标、样本量、跑几天，写成一页纸。</li>
+</ol>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>A/B 测试 90% 的错误发生在<strong>开跑之前</strong>：没算样本量、没定主指标、没防偷看。跑起来之后反而简单——「随机分流 + 跑满周期 + 一次检验 + 分段复核」。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>样本量四参数</strong>：基线/最小提升/α/power，10%→10.5% 要 57763/组</li>
+  <li>✅ <strong>偷看灾难</strong>：10 个检查点把假阳性 5%→38%（模拟实测）</li>
+  <li>✅ <strong>主指标+护栏指标</strong>：防「转化涨了退货也涨」</li>
+  <li>✅ <strong>按用户哈希分流</strong>：不是按请求随机</li>
+  <li>✅ <strong>多重比较/新奇效应</strong>：一次一个假设，跑满整周期</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>实验跑到第 5 天（预定期 23 天），数据已经 p=0.03 了。正确做法？</p>
+<ol type="A">
+  <li>显著了，立刻全量上线，省 18 天</li>
+  <li>继续跑满 23 天，跑完做一次正式检验（或采用预设的序贯方案）</li>
+  <li>把 p=0.03 报给老板，让他决定</li>
+  <li>提前关实验，但多验几组指标找支撑</li>
+</ol>
+<p>（答案见底部）</p>
+
+<div class="nav-links">
+  <a href="0051-hypothesis-testing.html">← 上一课：假设检验</a>
+  <a href="0053-causality-intro.html">下一课：因果入门 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);"><strong>小测答案：</strong>B。样本量就是检验的「契约」——中途停 = 偷看 = 假阳性率 5%→38%（本课实测）。<br>
+A 错：正是偷看行为，这个 p=0.03 有近四成概率是运气。<br>
+C 错：把统计决策甩给不了解偷看风险的人，等于把错误合法化；正确做法是解释「为什么要跑满」。<br>
+D 错：挑指标找支撑 = p-hacking，比偷看更糟。<strong>实验的可信度建立在「规则先于数据」上。</strong></p>
+
+</body>
+</html>

@@ -2,7 +2,7 @@
   "meta": {
     "version": 3,
     "created": "2026-07-14",
-    "description": "AI应用开发学习课程表 - P1-P4已学完，P5实战篇进行中。2026-09-01方向校准：数分主线强化（SQL/业务指标/分析实战加码），Agent不降级为调包——维持一两个真项目托底（大赛时序负荷预测智能体+毕业项目），原理层以理解讲清为准，不追求从零手搓框架",
+    "description": "AI应用开发学习课程表 - P1-P4已学完，P5实战篇进行中。2026-09-01方向校准：数分主线强化（SQL/业务指标/分析实战加码），Agent不降级为调包——维持一两个真项目托底（大赛时序负荷预测智能体+毕业项目），原理层以理解讲清为准，不追求从零手搓框架；2026-09-20增补选修线三支(46-57)：SQL与查询工程/统计与实验/Agent深水区，接P6后按序推送",
     "direction_2026_09": {
       "primary": "数分强化：按面试考点+实战场景组织（31-34、39-40已覆盖主线）",
       "secondary": "Agent维持真项目深度，原理层够讲清楚即可，手搓框架类内容降为选学",
@@ -262,57 +262,141 @@
       "num": 38,
       "topic": "agent-workflow-design",
       "title": "Agent 工作流设计",
-      "status": "pushed",
+      "status": "done",
       "note": "P6开篇（承接P5巩固）：拆任务、选工具、规划步骤、控制上下文。从简单ReAct升级为可控多步任务流。09-14晚提前生成HTML（0038-agent-workflow-design.html，依据Anthropic Building Effective Agents；待推送）。09-19推送"
     },
     {
       "num": 39,
       "topic": "ecommerce-data-toolkit",
       "title": "电商数据工具箱",
-      "status": "pending",
-      "note": "P6电商锚点开篇：将pandas/SQL/图表/文件读取封装成规范工具。重点工具描述/参数设计/返回结果与错误反馈。数据用公开电商数据集(Kaggle)贯穿"
+      "status": "pushed",
+      "note": "P6电商锚点开篇：将pandas/SQL/图表/文件读取封装成规范工具。重点工具描述/参数设计/返回结果与错误反馈。数据用公开电商数据集(Kaggle)贯穿；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付09-20推送"
     },
     {
       "num": 40,
       "topic": "ecommerce-data-analysis",
       "title": "电商数据分析实战",
       "status": "pending",
-      "note": "用户问题→Agent选工具→分析数据→图表→结论。真实电商数据(Kaggle)贯穿，指标口径/漏斗/转化/复购/RFM。pandas和pyecharts服务于Agent。核心：数据洞察而非只会写SQL"
+      "note": "用户问题→Agent选工具→分析数据→图表→结论。真实电商数据(Kaggle)贯穿，指标口径/漏斗/转化/复购/RFM。pandas和pyecharts服务于Agent。核心：数据洞察而非只会写SQL；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付"
     },
     {
       "num": 41,
       "topic": "real-world-data-agent",
       "title": "真实世界数据 Agent",
       "status": "pending",
-      "note": "Agent调HTTP API/数据库或本地文件；处理数据格式不稳定、接口失败等真实世界问题"
+      "note": "Agent调HTTP API/数据库或本地文件；处理数据格式不稳定、接口失败等真实世界问题；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付"
     },
     {
       "num": 42,
       "topic": "result-verification-self-correction",
       "title": "结果验证与自我修正",
       "status": "pending",
-      "note": "Agent检查SQL/Python结果、发现空结果或异常值后重试。重点是可落地地完成任务，非追求复杂推理"
+      "note": "Agent检查SQL/Python结果、发现空结果或异常值后重试。重点是可落地地完成任务，非追求复杂推理；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付"
     },
     {
       "num": 43,
       "topic": "data-insight-agent-mvp",
       "title": "数据洞察 Agent 原型（求职作品主体）",
       "status": "pending",
-      "note": "P6求职作品核心：上传CSV/Excel或连接数据源→自然语言提问→Agent自主分析→图表与报告→说明数据依据。用电商数据完成完整链路"
+      "note": "P6求职作品核心：上传CSV/Excel或连接数据源→自然语言提问→Agent自主分析→图表与报告→说明数据依据。用电商数据完成完整链路；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付"
     },
     {
       "num": 44,
       "topic": "user-facing-agent-app",
       "title": "面向用户的 Agent 应用",
       "status": "pending",
-      "note": "Streamlit/简单Web界面、文件上传、会话记录、报告下载。把命令行脚本变成可试用小产品"
+      "note": "Streamlit/简单Web界面、文件上传、会话记录、报告下载。把命令行脚本变成可试用小产品；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付"
     },
     {
       "num": 45,
       "topic": "agent-engineering-advanced",
       "title": "Agent 工程化进阶 + 部署",
       "status": "pending",
-      "note": "配置管理、权限控制、日志、评估集、成本、监控与部署。让数据洞察Agent成为别人可试用、可部署的求职作品。电商经营驾驶舱为P7进阶货，不在P6"
+      "note": "配置管理、权限控制、日志、评估集、成本、监控与部署。让数据洞察Agent成为别人可试用、可部署的求职作品。电商经营驾驶舱为P7进阶货，不在P6；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付"
+    },
+    {
+      "num": 46,
+      "topic": "sql-hands-on-duckdb",
+      "title": "SQL实战：用duckdb查真实电商数据",
+      "status": "pending",
+      "note": "选修线一开篇：duckdb让pandas直接跑SQL，54万行贯穿数据集实战SELECT/WHERE/GROUP BY/JOIN/窗口函数入门。补齐课程体系最大缺口；课件已预生成(2026-09-20)，配套工具data_doctor/metric_guard已交付"
+    },
+    {
+      "num": 47,
+      "topic": "sql-advanced-patterns",
+      "title": "SQL进阶模式：留存/漏斗/TopN/同环比",
+      "status": "pending",
+      "note": "选修线一：窗口函数实战——留存(自join)、漏斗(路径)、TopN per group(ROW_NUMBER)、同环比(LAG)，全部电商业务场景；课件已预生成(2026-09-20)，配套工具data_doctor/metric_guard已交付"
+    },
+    {
+      "num": 48,
+      "topic": "text-to-sql-agent",
+      "title": "Text-to-SQL Agent：让LLM写SQL你来验",
+      "status": "pending",
+      "note": "选修线一收官+作品升维：LLM生成SQL→duckdb执行→verify用pandas独立复算校验。数据智能体岗最热技能点；课件已预生成(2026-09-20)，配套工具data_doctor/metric_guard已交付"
+    },
+    {
+      "num": 49,
+      "topic": "sql-modeling-basics",
+      "title": "数据建模与查询性能入门",
+      "status": "pending",
+      "note": "选修线一延伸：星型模型/维度事实表思想/为什么宽表好查/索引直觉。理解数仓怎么组织数据；课件已预生成(2026-09-20)，配套工具data_doctor/metric_guard已交付"
+    },
+    {
+      "num": 50,
+      "topic": "stats-thinking",
+      "title": "统计思维：分布/波动/异常",
+      "status": "pending",
+      "note": "选修线二开篇：均值vs中位数(呼应右偏GMV)、方差波动、异常检测、为什么小样本会骗人。用贯穿数据集；课件已预生成(2026-09-20)，配套工具data_doctor/metric_guard已交付"
+    },
+    {
+      "num": 51,
+      "topic": "hypothesis-testing",
+      "title": "假设检验与置信区间（电商场景）",
+      "status": "pending",
+      "note": "选修线二：p值/显著性/置信区间的直觉理解，电商场景：新页面转化率真的提升了吗；课件已预生成(2026-09-20)，配套工具data_doctor/metric_guard已交付"
+    },
+    {
+      "num": 52,
+      "topic": "ab-testing",
+      "title": "A/B测试全流程：设计/样本量/避坑",
+      "status": "pending",
+      "note": "选修线二：实验设计/样本量计算/显著性判断/常见坑(偷看结果/辛普森/多重比较)。面试第二硬技能；课件已预生成(2026-09-20)，配套工具data_doctor/metric_guard已交付"
+    },
+    {
+      "num": 53,
+      "topic": "causality-intro",
+      "title": "因果入门：相关≠因果与辛普森悖论",
+      "status": "pending",
+      "note": "选修线二收官：混杂变量/幸存者偏差/辛普森悖论真实案例。数分的科学性防线；课件已预生成(2026-09-20)，配套工具data_doctor/metric_guard已交付"
+    },
+    {
+      "num": 54,
+      "topic": "context-engineering",
+      "title": "上下文工程：裁剪/压缩/记忆",
+      "status": "pending",
+      "note": "选修线三开篇：上下文窗口管理——历史裁剪/摘要压缩/长期记忆。Agent深水区，P7铺垫；课件已预生成(2026-09-20)，配套工具data_doctor/metric_guard已交付"
+    },
+    {
+      "num": 55,
+      "topic": "cost-latency-control",
+      "title": "成本与延迟：分档调用/缓存/批处理",
+      "status": "pending",
+      "note": "选修线三：便宜模型+好架构(呼应38课)、结果缓存、批量调用、延迟优化。生产级Agent必修；课件已预生成(2026-09-20)，配套工具data_doctor/metric_guard已交付"
+    },
+    {
+      "num": 56,
+      "topic": "multi-agent-intro",
+      "title": "多Agent协作入门",
+      "status": "pending",
+      "note": "选修线三：编排者-执行者(38课第4种结构)落地、子Agent分工、结果汇总。什么时候值得多Agent；课件已预生成(2026-09-20)，配套工具data_doctor/metric_guard已交付"
+    },
+    {
+      "num": 57,
+      "topic": "agent-security-perms",
+      "title": "Agent安全与权限控制",
+      "status": "pending",
+      "note": "选修线三收官：最小权限/危险操作确认/注入防御/审计日志。呼应35课，把安全做成体系；课件已预生成(2026-09-20)，配套工具data_doctor/metric_guard已交付"
     }
   ]
 }

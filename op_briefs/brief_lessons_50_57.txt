@@ -1,0 +1,21 @@
+task: 生成选修线二「统计与实验」第50-53课 + 线三「Agent深水区」第54-57课HTML课件（8个文件）
+context: |
+  AI应用开发课程选修线，工作区 D:\学习\ai-dev\lessons\
+  样式模板: 0038-agent-workflow-design.html（严格模仿）
+  课程表权威定义: D:\学习\ai-dev\curriculum.json 第50-57课 topic/title/note（先读）
+  贯穿数据集: D:\学习\ai-dev\data\ecommerce\online_retail_2010_2011.csv
+goal: |
+  八个课件:
+  - 0050-stats-thinking.html: 均值vs中位数（用该数据GMV右偏实例：人均£1899 vs 中位£648）/方差波动/3σ异常检测/小样本陷阱
+  - 0051-hypothesis-testing.html: p值直觉/显著性/置信区间，电商场景贯穿（新页面转化率提升是否显著）
+  - 0052-ab-testing.html: 实验设计/样本量估算逻辑/显著性判断/四大坑（偷看/辛普森/多重比较/新奇效应）
+  - 0053-causality-intro.html: 相关≠因果/混杂变量/幸存者偏差/辛普森悖论真实案例
+  - 0054-context-engineering.html: 上下文窗口管理——历史裁剪/摘要压缩/长期记忆/什么信息值得留在上下文
+  - 0055-cost-latency-control.html: 分档调用(便宜模型+好架构)/结果缓存/批量/延迟预算
+  - 0056-multi-agent-intro.html: 编排者-执行者落地/子Agent分工/结果汇总/什么时候不值得多Agent
+  - 0057-agent-security-perms.html: 最小权限/危险操作确认/提示注入防御/审计日志，呼应35课做成体系
+  每课末尾小测（答案底部折叠）。
+constraints:
+  - 纯HTML/CSS/原生JS单文件，无外部CDN，离线可开
+  - 统计概念写直觉不堆公式；不确定的技术参数写原理不编造
+not_to_do: 不要git；不要读key/config；不要改其他课件

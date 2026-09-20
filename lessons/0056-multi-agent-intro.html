@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0056 · 多Agent协作入门</title>
+<style>
+  :root {
+    --text: #1a1a1a;
+    --muted: #555;
+    --accent: #2563eb;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e5e5e5;
+    --highlight: #fef3c7;
+    --code-bg: #f4f4f5;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; font-weight: 700;
+    margin-top: 2.2rem; margin-bottom: 0.8rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+  p, li { margin-bottom: 0.8rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em; background: var(--code-bg);
+    padding: 0.15em 0.4em; border-radius: 4px;
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 1rem 1.2rem; border-radius: 8px;
+    overflow-x: auto; font-size: 0.85rem;
+    line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .callout {
+    background: var(--highlight); border-left: 4px solid #f59e0b;
+    padding: 0.8rem 1rem; margin: 1.2rem 0;
+    border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout strong { color: #92400e; }
+  .callout.green { background: #f0fdf4; border-left-color: var(--green); }
+  .callout.green strong { color: #166534; }
+  .callout.red { background: #fef2f2; border-left-color: var(--red); }
+  .callout.red strong { color: #991b1b; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding-left: 1rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f5; font-weight: 600; }
+  .nav-links { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .nav-links a { margin-right: 1rem; }
+  .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+  .flow { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; background: var(--card-bg); }
+  .flow h3 { margin-top: 0; }
+  .arrow { font-family: "JetBrains Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); display: block; margin: 0.5rem 0 0.7rem; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 2.2rem; position: relative; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    background: var(--accent); color: white;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .good { color: var(--green); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .src { font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>🤖🤖 多 Agent 协作入门</h1>
+<p class="meta">第 0056 课 · 选修线三 <span class="tag">Agent深水区</span> · 预计 20 分钟</p>
+
+<div class="callout green">
+  <strong>🎯 本课目标：</strong>学会两个判断——<strong>什么时候值得拆多 Agent，什么时候单 Agent 更好</strong>；以及最实用的多 Agent 结构：编排者-执行者（38 课五种结构里的第 4 种）落地。
+</div>
+
+<h2>一、先泼冷水：多数场景不需要多 Agent</h2>
+<p>单 Agent（你的 MVP）= 一个循环 + 一组工具，简单可控。上多 Agent 的<strong>正当理由</strong>只有三个：</p>
+<ul>
+  <li><strong>上下文隔离</strong>：子任务的中间过程又臭又长（如爬网页），不想污染主 Agent 的窗口（54 课）</li>
+  <li><strong>并行加速</strong>：子任务互相独立且耗时（如同时分析 5 个国家）</li>
+  <li><strong>专业分化</strong>：不同子任务需要差别巨大的工具集或提示（如「读代码的」和「写报告的」）</li>
+</ul>
+<p>除此之外的「多 Agent」多半是把简单问题复杂化：调试难度翻倍、token 成本翻倍、错误传递链变长。<strong>先用单 Agent + 好工具做到极限，再谈拆分。</strong></p>
+
+<h2>二、编排者-执行者：最实用的落地结构</h2>
+<div class="flow">
+  <h3>Orchestrator-Workers</h3>
+  <span class="arrow">用户任务 → [编排者:拆解+分发] → [执行者A][执行者B][执行者C 并行] → [编排者:汇总校验] → 结论</span>
+  <p>编排者自己也可以只是代码：拆解规则固定时（如「5 个国家各出一份分析」）根本不需要 LLM 编排——38 课说的「能写死的写死」。</p>
+</div>
+<p>接到你的 MVP 上，一个真实可做的改造：<strong>「五国对比报告」任务</strong>——</p>
+<ol class="steps">
+  <li>编排者（代码）把任务拆成 5 个独立子任务：每个国家一份「KPI+趋势+RFM」</li>
+  <li>5 个执行者（同一个小模型，带不同参数）并行跑，各自只看自己国家的数据切片——<strong>上下文天然隔离</strong></li>
+  <li>汇总者（代码）拼接结果；verify 层（42 课）对 5 份结果的合计数与全量复算比对——<strong>拆了并行，数还要对得上</strong></li>
+</ol>
+
+<h2>三、多 Agent 的三条纪律</h2>
+<ol class="steps">
+  <li><strong>接口契约先行</strong>：每个执行者的输入输出写成结构化 schema（像你的工具返回 <code>{"ok":bool,...}</code>），编排者只依赖契约不依赖「它大概会返回什么」</li>
+  <li><strong>失败隔离</strong>：一个执行者挂了不能拖垮全局——超时、重试、降级（41 课护栏在子 Agent 层照常生效）</li>
+  <li><strong>结果必须核验</strong>：并行结果汇总是新引入的错误机会，合计数/去重数要和独立复算比对</li>
+</ol>
+
+<h2>四、什么时候值得：一张决策卡</h2>
+<table>
+<thead><tr><th>信号</th><th>决策</th></tr></thead>
+<tbody>
+<tr><td>子任务独立、可并行、各自输出短</td><td class="good">值得拆（并行+隔离双赢）</td></tr>
+<tr><td>子任务串行依赖、上下文共用多</td><td class="bad">别拆，单 Agent 流水线</td></tr>
+<tr><td>只是想「多个角色讨论」</td><td class="bad">别拆，一次调用多角色提示更省</td></tr>
+<tr><td>主任务窗口被某类脏活污染</td><td class="good">拆出去做上下文隔离</td></tr>
+</tbody>
+</table>
+
+<h2>动手任务（30 分钟）</h2>
+<ol class="steps">
+  <li>把「五国对比报告」用代码编排 + 单模型执行实现，测并行 vs 串行的总时长差。</li>
+  <li>给每个子结果加合计校验：5 国 GMV 加总 vs 全量去 UK 后复算，验证一致。</li>
+  <li>故意让一个执行者超时，验证失败隔离：其余 4 国照常出结果，坏的那份标记降级。</li>
+</ol>
+
+<div class="callout green">
+  <strong>🎯 本课核心结论：</strong>多 Agent 是<strong>工程手段不是架构信仰</strong>：为上下文隔离、并行加速、专业分化而拆；拆了就要有契约、有隔离、有核验。<strong>「能用单 Agent + 好工具解决就别拆」</strong>——这句话在面试里说出来，比讲十个多 Agent 框架更显得懂行。
+</div>
+
+<h2>本课学了什么</h2>
+<ul>
+  <li>✅ <strong>三个正当拆分理由</strong>：上下文隔离 / 并行加速 / 专业分化</li>
+  <li>✅ <strong>编排者-执行者</strong>：编排可以是纯代码，执行者并行+切片</li>
+  <li>✅ <strong>三条纪律</strong>：接口契约、失败隔离、结果核验</li>
+  <li>✅ <strong>决策卡</strong>：独立可并行才拆，串行依赖别拆</li>
+</ul>
+
+<h2>🤔 小测</h2>
+<p>任务：「分析 38 个国家各自的月度趋势并出图」。单 Agent 串行要 40 分钟、窗口爆满。最优方案？</p>
+<ol type="A">
+  <li>换超长上下文的模型，一次塞完</li>
+  <li>代码编排：按国家切片并行跑独立子 Agent，各自出小结，汇总层核验合计数</li>
+  <li>38 个任务串行但每步压缩上下文</li>
+  <li>随机挑 3 个国家分析，代表整体</li>
+</ol>
+<p>（答案见底部）</p>
+
+<div class="nav-links">
+  <a href="0055-cost-latency-control.html">← 上一课：成本与延迟</a>
+  <a href="0057-agent-security-perms.html">下一课：Agent 安全与权限 →</a>
+  <a href="../reference/glossary.html">📖 术语表</a>
+</div>
+<hr style="margin-top:2.5rem;border:none;border-top:1px dashed var(--border);">
+<p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);"><strong>小测答案：</strong>B。子任务独立+可并行+输出短——正是「值得拆」的三个信号全中：并行省时间，切片省上下文，汇总核验保数字。<br>
+A 错：窗口能塞下也贵到没意义，且注意力被 38 份结果稀释（54 课 lost in the middle）。<br>
+C 错：上下文工程救窗口，救不了 40 分钟的串行等待；并行才是结构性提速。<br>
+D 错：抽样是统计手段不是工程方案，「3 个代表 38 个」对大屏/对比场景是造假。<strong>先问「能不能并行+隔离」，再谈架构。</strong></p>
+
+</body>
+</html>
