@@ -4,17 +4,24 @@ import json
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-SESSIONS_DIR = ROOT / "data" / "sessions"
-STEPS_DIR = ROOT / "steps"
-SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
-STEPS_DIR.mkdir(parents=True, exist_ok=True)
+from data_agent.project import get_project_root
+
+
+def _get_dirs():
+    """延迟获取目录，避免模块加载时就要求项目根已设置。"""
+    root = get_project_root()
+    sessions_dir = root / "data" / "sessions"
+    steps_dir = root / "steps"
+    sessions_dir.mkdir(parents=True, exist_ok=True)
+    steps_dir.mkdir(parents=True, exist_ok=True)
+    return root, sessions_dir, steps_dir
 
 
 def save_session(agent, name: str = None):
     """会话级记忆：messages + trace 落盘，重启不丢。"""
+    _, sessions_dir, _ = _get_dirs()
     name = name or time.strftime("%Y%m%d_%H%M%S")
-    path = SESSIONS_DIR / f"{name}.json"
+    path = sessions_dir / f"{name}.json"
     with open(path, "w", encoding="utf-8") as f:
         json.dump({
             "messages": [m if isinstance(m, dict) else m for m in agent.messages],
@@ -25,8 +32,9 @@ def save_session(agent, name: str = None):
 
 def save_step(trace_entry: dict, answer: str, tag: str = None) -> Path:
     """执行留痕：一格=决策+代码(工具调用)+产出。下游可回溯。"""
+    _, _, steps_dir = _get_dirs()
     tag = tag or time.strftime("%Y%m%d_%H%M%S")
-    path = STEPS_DIR / f"step_{tag}.json"
+    path = steps_dir / f"step_{tag}.json"
     with open(path, "w", encoding="utf-8") as f:
         json.dump({"entry": trace_entry, "answer": answer}, f, ensure_ascii=False, indent=1, default=str)
     return path
@@ -34,7 +42,8 @@ def save_step(trace_entry: dict, answer: str, tag: str = None) -> Path:
 
 def append_blackboard(title: str, body: str, status: str = "待确认"):
     """黑板：Agent 只能写「待确认区」，人改成「已定区」——写权限设计。"""
-    bb = ROOT / "blackboard.md"
+    root, _, _ = _get_dirs()
+    bb = root / "blackboard.md"
     line = f"| {time.strftime('%Y-%m-%d %H:%M')} | {status} | {title} | {body} |\n"
     if not bb.exists():
         bb.write_text(
@@ -48,5 +57,6 @@ def append_blackboard(title: str, body: str, status: str = "待确认"):
 
 
 def read_blackboard() -> str:
-    bb = ROOT / "blackboard.md"
+    root, _, _ = _get_dirs()
+    bb = root / "blackboard.md"
     return bb.read_text(encoding="utf-8") if bb.exists() else "（黑板为空）"

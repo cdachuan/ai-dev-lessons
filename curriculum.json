@@ -269,15 +269,15 @@
       "num": 39,
       "topic": "ecommerce-data-toolkit",
       "title": "电商数据工具箱",
-      "status": "pushed",
-      "note": "P6电商锚点开篇：将pandas/SQL/图表/文件读取封装成规范工具。重点工具描述/参数设计/返回结果与错误反馈。数据用公开电商数据集(Kaggle)贯穿；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付09-20推送。09-24 cron 第1次提醒（未确认，未推40课）"
+      "status": "done",
+      "note": "P6电商锚点开篇：将pandas/SQL/图表/文件读取封装成规范工具。重点工具描述/参数设计/返回结果与错误反馈。数据用公开电商数据集(Kaggle)贯穿；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付09-20推送。09-24 cron 第1次提醒（未确认，未推40课）。09-25 cron 第2次提醒（09-22/23/24已3次提醒未确认），按19/20/30/34/37课先例兜底标记done，同晚顺延推送40课"
     },
     {
       "num": 40,
       "topic": "ecommerce-data-analysis",
       "title": "电商数据分析实战",
-      "status": "pending",
-      "note": "用户问题→Agent选工具→分析数据→图表→结论。真实电商数据(Kaggle)贯穿，指标口径/漏斗/转化/复购/RFM。pandas和pyecharts服务于Agent。核心：数据洞察而非只会写SQL；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付"
+      "status": "pushed",
+      "note": "用户问题→Agent选工具→分析数据→图表→结论。真实电商数据(Kaggle)贯穿，指标口径/漏斗/转化/复购/RFM。pandas和pyecharts服务于Agent。核心：数据洞察而非只会写SQL；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付。09-25推送"
     },
     {
       "num": 41,

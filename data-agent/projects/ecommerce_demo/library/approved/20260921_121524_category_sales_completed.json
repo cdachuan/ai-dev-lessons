@@ -1,0 +1,21 @@
+{
+ "id": "20260921_121524",
+ "name": "category_sales_completed",
+ "kind": "result_table",
+ "description": "orders 数据集各品类销售额（仅 completed 订单的 amount 求和）统计表。食品 46667.27、服饰 38714.26、数码 35335.61、家居 32187.08。",
+ "caliber": "口径：仅 status=completed 订单的 amount 求和，按 category 分组；口径不含 refunded/pending 等其他状态订单，仅代表下单完成口径的销售额，非净收入（不扣退款）。数据源：orders 数据集（mock，500 行）。",
+ "params": {
+  "dataset": "orders",
+  "group_col": "category",
+  "value_col": "amount",
+  "filter_col": "status",
+  "filter_value": "completed"
+ },
+ "source_steps": [
+  "groupby_sum:category/amount/status=completed",
+  "verify_groupby_sum:pass=true"
+ ],
+ "status": "approved",
+ "submitted": "2026-09-21 12:15",
+ "approved_at": "2026-09-21 12:15"
+}

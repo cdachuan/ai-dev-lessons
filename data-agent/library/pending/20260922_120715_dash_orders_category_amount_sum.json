@@ -1,0 +1,17 @@
+{
+ "id": "20260922_120715",
+ "name": "dash_orders_category_amount_sum",
+ "kind": "result_table",
+ "description": "BI 问数现算：dash_orders 按 category 汇总 amount",
+ "caliber": "dash_orders 全量，按 category 分组对 amount 求和",
+ "params": {
+  "dataset": "dash_orders",
+  "group_col": "category",
+  "value_col": "amount"
+ },
+ "source_steps": [
+  "bi_ask"
+ ],
+ "status": "pending",
+ "submitted": "2026-09-22 12:07"
+}

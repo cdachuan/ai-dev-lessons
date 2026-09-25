@@ -1,0 +1,16 @@
+{
+ "id": "20260921_121008",
+ "name": "category_refund_rate",
+ "kind": "result_table",
+ "description": "各品类退款率统计表",
+ "caliber": "口径：refunded=1 订单数 / 品类订单总数；不含 pending",
+ "params": {
+  "group_col": "category"
+ },
+ "source_steps": [
+  "exp_095703681"
+ ],
+ "status": "approved",
+ "submitted": "2026-09-21 12:10",
+ "approved_at": "2026-09-21 12:10"
+}

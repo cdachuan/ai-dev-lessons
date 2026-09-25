@@ -1,0 +1,14 @@
+streamlit>=1.36
+pandas>=2.0
+pyyaml>=6.0
+python-dotenv>=1.0
+openai>=1.40
+matplotlib>=3.8
+scikit-learn>=1.4
+
+[ml]
+scikit-learn>=1.4
+matplotlib>=3.8
+
+[report]
+pypandoc

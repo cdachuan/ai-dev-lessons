@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: data-agent
+Version: 0.2.0
+Summary: 数分 Agent 工具包：口径优先 + 核验闭环的自研 ReAct 数据分析框架
+Requires-Python: >=3.10
+Requires-Dist: streamlit>=1.36
+Requires-Dist: pandas>=2.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: python-dotenv>=1.0
+Requires-Dist: openai>=1.40
+Requires-Dist: matplotlib>=3.8
+Requires-Dist: scikit-learn>=1.4
+Provides-Extra: ml
+Requires-Dist: scikit-learn>=1.4; extra == "ml"
+Requires-Dist: matplotlib>=3.8; extra == "ml"
+Provides-Extra: report
+Requires-Dist: pypandoc; extra == "report"

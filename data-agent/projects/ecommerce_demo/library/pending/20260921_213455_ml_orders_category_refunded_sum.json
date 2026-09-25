@@ -1,0 +1,17 @@
+{
+ "id": "20260921_213455",
+ "name": "ml_orders_category_refunded_sum",
+ "kind": "result_table",
+ "description": "BI 问数现算：ml_orders 按 category 汇总 refunded",
+ "caliber": "ml_orders 全量，按 category 分组对 refunded 求和",
+ "params": {
+  "dataset": "ml_orders",
+  "group_col": "category",
+  "value_col": "refunded"
+ },
+ "source_steps": [
+  "bi_ask"
+ ],
+ "status": "pending",
+ "submitted": "2026-09-21 21:34"
+}

@@ -1,0 +1,11 @@
+{
+ "id": "20260921_121008",
+ "time": "2026-09-21 12:10",
+ "status": "已定",
+ "title": "退款预测采用 balanced 版",
+ "decision": "RF + class_weight=balanced 作为退款预测生产配置",
+ "why": "recall 0.39→0.50 且 precision 持平；业务宁可误召不可漏召",
+ "related": [
+  "steps/ml_runs/exp_095703681_pred.csv"
+ ]
+}

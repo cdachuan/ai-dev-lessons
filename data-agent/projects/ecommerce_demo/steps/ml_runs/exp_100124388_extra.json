@@ -1,0 +1,1 @@
+{"feature_cols": ["amount", "user_orders_30d", "discount_rate", "category_家居", "category_数码", "category_服饰", "category_食品"], "model_name": "RandomForestClassifier", "params": {"n_estimators": 300, "min_samples_leaf": 5, "random_state": 42}}

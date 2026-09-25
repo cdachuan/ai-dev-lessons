@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>电商数分工作台 · 问数大屏</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="assets/china.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0e1a; color: #c8d8f0;
+    font-family: "Microsoft YaHei", sans-serif;
+    width: 100vw; height: 100vh; overflow: hidden;
+    display: grid;
+    grid-template-columns: 380px 1fr 300px;
+    grid-template-rows: 60px 1fr;
+    grid-template-areas: "header header header" "chat center right";
+    gap: 8px; padding: 8px;
+    transition: grid-template-columns .25s ease;
+  }
+  body.chat-collapsed { grid-template-columns: 0 1fr 300px; }
+  .header {
+    grid-area: header; display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(90deg, rgba(20,40,80,.6), rgba(40,80,160,.3), rgba(20,40,80,.6));
+    border: 1px solid #1e3a6e; border-radius: 8px; padding: 0 24px;
+  }
+  .header h1 {
+    font-size: 22px; letter-spacing: 6px; font-weight: 600;
+    background: linear-gradient(180deg, #fff, #6ab7ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header .clock { font-size: 14px; color: #6ab7ff; font-variant-numeric: tabular-nums; }
+  .header .badge {
+    font-size: 11px; color: #51e08a; border: 1px solid rgba(81,224,138,.4);
+    border-radius: 10px; padding: 2px 10px; margin-left: 16px; white-space: nowrap;
+  }
+  .panel {
+    background: rgba(16,28,58,.55); border: 1px solid #1e3a6e; border-radius: 8px;
+    padding: 12px; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .panel h2 {
+    font-size: 14px; color: #6ab7ff; letter-spacing: 2px; margin-bottom: 8px;
+    border-left: 3px solid #2e6fd8; padding-left: 8px;
+  }
+  /* ---------- 左：对话工作台 ---------- */
+  .chat { grid-area: chat; display: flex; flex-direction: column; overflow: hidden; }
+  body.chat-collapsed .chat { display: none; }
+  .chat .panel { flex: 1; }
+  #chatHistory { flex: 1; overflow-y: auto; padding: 4px 2px; }
+  .msg { margin-bottom: 10px; animation: fadein .25s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; } }
+  .msg .bubble {
+    max-width: 92%; padding: 8px 12px; border-radius: 10px; font-size: 13px; line-height: 1.6;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .msg.user { display: flex; justify-content: flex-end; }
+  .msg.user .bubble {
+    background: linear-gradient(135deg, #2e6fd8, #1c4aa0); color: #eaf4ff;
+    border-bottom-right-radius: 2px;
+  }
+  .msg.bot .bubble {
+    background: rgba(30,58,110,.4); border: 1px solid rgba(46,111,216,.3);
+    border-bottom-left-radius: 2px;
+  }
+  .msg .meta { font-size: 10px; color: #6a84a8; margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    display: inline-block; font-size: 10px; border-radius: 8px; padding: 1px 7px;
+    border: 1px solid rgba(106,132,168,.4);
+  }
+  .chip.verify-pass { color: #51e08a; border-color: rgba(81,224,138,.5); }
+  .chip.verify-fail { color: #ff6a6a; border-color: rgba(255,106,106,.5); }
+  .chip.asset { color: #ffd479; border-color: rgba(255,212,121,.5); }
+  .chip.chart { color: #4dd8ff; border-color: rgba(77,216,255,.5); cursor: pointer; }
+  .chip.latency { color: #7d9cc5; }
+  .msg .caliber-text { font-size: 10px; color: #6a84a8; margin-top: 4px; line-height: 1.5; }
+  .typing { display: inline-flex; gap: 3px; padding: 4px 0; }
+  .typing i { width: 5px; height: 5px; background: #4dd8ff; border-radius: 50%; animation: blink 1s infinite; }
+  .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+  .chat-input-zone { border-top: 1px solid rgba(46,111,216,.25); padding-top: 8px; }
+  .dataset-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .dataset-bar select {
+    flex: 1; background: rgba(10,20,44,.8); border: 1px solid #2e6fd8; border-radius: 6px;
+    color: #c8d8f0; padding: 5px 8px; font-size: 12px; outline: none;
+  }
+  .dataset-bar label { font-size: 11px; color: #7d9cc5; white-space: nowrap; }
+  .quick-asks { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+  .quick-asks span {
+    font-size: 11px; color: #6ab7ff; border: 1px solid rgba(106,183,255,.4);
+    border-radius: 10px; padding: 2px 8px; cursor: pointer;
+  }
+  .quick-asks span:hover { background: rgba(46,111,216,.3); }
+  .chat-input { display: flex; gap: 6px; }
+  .chat-input textarea {
+    flex: 1; background: rgba(10,20,44,.8); border: 1px solid #2e6fd8; border-radius: 6px;
+    color: #c8d8f0; padding: 8px 10px; font-size: 13px; outline: none; resize: none;
+    font-family: inherit; height: 40px; line-height: 1.4;
+  }
+  .chat-input button {
+    background: linear-gradient(180deg, #2e6fd8, #1c4aa0); border: none; border-radius: 6px;
+    color: #fff; padding: 0 18px; cursor: pointer; font-size: 13px;
+  }
+  .chat-input button:disabled { opacity: .5; cursor: wait; }
+  /* ---------- 中：地图+趋势 ---------- */
+  .center { grid-area: center; display: flex; flex-direction: column; gap: 8px; }
+  #mapChart { flex: 1; min-height: 0; }
+  #trendChart { flex: 1; min-height: 0; }
+  /* ---------- 右：KPI+品类+数字人 ---------- */
+  .right { grid-area: right; display: flex; flex-direction: column; gap: 8px; }
+  .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kpi {
+    background: rgba(30,58,110,.35); border-radius: 6px; padding: 10px;
+    text-align: center; border: 1px solid rgba(46,111,216,.35);
+  }
+  .kpi .num { font-size: 20px; font-weight: 700; color: #4dd8ff; font-variant-numeric: tabular-nums; }
+  .kpi .num.up { color: #51e08a; } .kpi .num.down { color: #ff6a6a; }
+  .kpi .label { font-size: 11px; color: #7d9cc5; margin-top: 4px; }
+  #barChart { flex: 1; min-height: 0; }
+  /* 数字人 */
+  .avatar-zone { display: flex; flex-direction: column; align-items: center; height: 210px; }
+  .avatar-wrap { position: relative; width: 110px; height: 110px; margin-top: 6px; }
+  .avatar-face {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #3f7fe8, #16295c 70%);
+    border: 2px solid #4d9fff; position: relative;
+    box-shadow: 0 0 24px rgba(77,159,255,.45);
+    animation: idle 4s ease-in-out infinite;
+  }
+  @keyframes idle { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  .avatar-face.talking { animation: talk .28s ease-in-out infinite alternate, idle 4s ease-in-out infinite; }
+  @keyframes talk { from { transform: scale(1, .96); } to { transform: scale(.97, 1.04); } }
+  .eye { position: absolute; top: 34%; width: 12px; height: 17px; background: #bfe0ff; border-radius: 50%; }
+  .eye.l { left: 26%; } .eye.r { right: 26%; }
+  .mouth {
+    position: absolute; bottom: 22%; left: 50%; transform: translateX(-50%);
+    width: 24px; height: 8px; background: #0a1a3a; border-radius: 0 0 20px 20px;
+  }
+  .avatar-face.talking .mouth { animation: mouth .25s ease-in-out infinite alternate; }
+  @keyframes mouth { from { height: 6px; } to { height: 18px; } }
+  .avatar-status { margin-top: 8px; font-size: 12px; color: #7d9cc5; }
+  .avatar-status.speaking { color: #4dd8ff; text-shadow: 0 0 8px rgba(77,216,255,.6); }
+  /* 折叠按钮 */
+  .chat-toggle {
+    position: fixed; left: 396px; top: 74px; z-index: 10;
+    background: rgba(16,28,58,.9); border: 1px solid #2e6fd8; border-radius: 6px;
+    color: #6ab7ff; font-size: 14px; width: 26px; height: 26px; cursor: pointer; line-height: 1;
+  }
+  body.chat-collapsed .chat-toggle { left: 12px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div style="display:flex;align-items:center;">
+      <h1>电商数分工作台</h1>
+      <div class="badge" title="每个回答经过独立算法路径双路径复算，口径由数据字典权威管理">核验闭环 · 治理在线</div>
+    </div>
+    <div style="font-size:12px;color:#7d9cc5;">对话驱动分析 · Agent：data_agent</div>
+    <div class="clock" id="clock"></div>
+  </div>
+
+  <!-- 左：AI 对话工作台 -->
+  <div class="chat">
+    <div class="panel">
+      <h2>AI 问数工作台</h2>
+      <div id="chatHistory"></div>
+      <div class="chat-input-zone">
+        <div class="dataset-bar">
+          <label>数据源</label>
+          <select id="datasetSelect"><option value="dash_orders">dash_orders（加载中…）</option></select>
+        </div>
+        <div class="quick-asks" id="quickAsks">
+          <span>各品类销售额</span><span>各省销售额top5</span><span>各状态订单金额</span>
+        </div>
+        <div class="chat-input">
+          <textarea id="chatInput" placeholder="输入问题，Enter 提问（Shift+Enter 换行）"></textarea>
+          <button id="chatBtn">提问</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="chat-toggle" id="chatToggle" title="收起/展开对话面板">◀</button>
+
+  <!-- 中：地图 + 趋势 -->
+  <div class="center">
+    <div class="panel" style="flex:1;">
+      <h2>销售地图 · 问数联动</h2>
+      <div id="mapChart"></div>
+    </div>
+    <div class="panel" style="flex:0 0 200px;">
+      <h2>7日趋势</h2>
+      <div id="trendChart"></div>
+    </div>
+  </div>
+
+  <!-- 右：KPI + 品类 + 数字人 -->
+  <div class="right">
+    <div class="panel" style="flex:0 0 auto;">
+      <h2>核心指标（近7天）</h2>
+      <div class="kpi-row">
+        <div class="kpi"><div class="num" id="kpi-total">--</div><div class="label">销售额（元）</div></div>
+        <div class="kpi"><div class="num" id="kpi-orders">--</div><div class="label">订单量</div></div>
+        <div class="kpi"><div class="num" id="kpi-wow">--</div><div class="label">环比（周）</div></div>
+        <div class="kpi"><div class="num" id="kpi-avg">--</div><div class="label">客单价（元）</div></div>
+      </div>
+    </div>
+    <div class="panel" style="flex:1;">
+      <h2>品类结构</h2>
+      <div id="barChart"></div>
+    </div>
+    <div class="panel" style="flex:0 0 250px;">
+      <h2>数字人 · 播报</h2>
+      <div class="avatar-zone">
+        <div class="avatar-wrap">
+          <div class="avatar-face" id="avatarFace">
+            <div class="eye l"></div><div class="eye r"></div>
+            <div class="mouth"></div>
+          </div>
+        </div>
+        <div class="avatar-status" id="avatarStatus">待命中</div>
+      </div>
+    </div>
+  </div>
+
+<script src="js/main.js"></script>
+</body>
+</html>

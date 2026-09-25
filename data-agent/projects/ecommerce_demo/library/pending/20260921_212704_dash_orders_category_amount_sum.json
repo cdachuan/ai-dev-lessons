@@ -1,0 +1,17 @@
+{
+ "id": "20260921_212704",
+ "name": "dash_orders_category_amount_sum",
+ "kind": "step_template",
+ "description": "按品类汇总订单销售额",
+ "caliber": "dash_orders 全量订单按 category 分组，对 amount 求和，无过滤条件",
+ "params": {
+  "dataset": "dash_orders",
+  "group_col": "category",
+  "value_col": "amount"
+ },
+ "source_steps": [
+  "bi_ask"
+ ],
+ "status": "pending",
+ "submitted": "2026-09-21 21:27"
+}

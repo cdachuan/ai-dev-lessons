@@ -1,0 +1,1 @@
+{"feature_cols": ["amount", "refunded"], "model_name": "LogisticRegression", "params": {}}

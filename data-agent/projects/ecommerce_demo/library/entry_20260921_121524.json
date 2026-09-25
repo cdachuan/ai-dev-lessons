@@ -1,0 +1,12 @@
+{
+ "id": "20260921_121524",
+ "time": "2026-09-21 12:15",
+ "status": "待确认",
+ "title": "品类销售额口径：仅取 completed 订单",
+ "decision": "orders 数据集「各品类销售额」统一采用 status=completed 过滤口径，仅对 completed 订单的 amount 求和；refunded/pending 等其他状态订单不计入。",
+ "why": "应业务要求以 completed 为完成口径；核验通过（groupby vs 布尔索引双路径复算 pass=true，无 mismatch）。结果：食品 46667.27、服饰 38714.26、数码 35335.61、家居 32187.08。注意该口径不含退款扣减，不等于净收入；若需净口径需另立 refunded 处理规则。status 列 valid_values 已由字典注册，取值合法。",
+ "related": [
+  "category_sales_completed",
+  "groupby_sum:orders/category/amount/status=completed"
+ ]
+}

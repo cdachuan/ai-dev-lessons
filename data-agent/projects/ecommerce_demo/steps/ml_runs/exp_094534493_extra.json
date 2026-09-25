@@ -1,0 +1,1 @@
+{"feature_cols": ["amount", "user_orders_30d", "discount_rate", "cat_家居", "cat_数码", "cat_服饰", "cat_食品"], "model_name": "LogisticRegression", "params": {"max_iter": 1000}}

@@ -2,7 +2,7 @@
 """无 key 联调：直接打工具层，验证字典/画像/聚合/核验四件套跑通。"""
 import sys, json
 sys.path.insert(0, ".")
-from core.tools import profile_data, groupby_sum, verify_groupby_sum
+from data_agent.tools import profile_data, groupby_sum, verify_groupby_sum
 
 print("=== 1. 画像 ===")
 card = profile_data("orders")

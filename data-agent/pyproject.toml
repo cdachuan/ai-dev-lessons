@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "data-agent"
+version = "0.2.0"
+description = "数分 Agent 工具包：口径优先 + 核验闭环的自研 ReAct 数据分析框架"
+requires-python = ">=3.10"
+dependencies = [
+    "streamlit>=1.36",
+    "pandas>=2.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "openai>=1.40",
+    "matplotlib>=3.8",
+    "scikit-learn>=1.4",
+]
+
+[project.optional-dependencies]
+ml = ["scikit-learn>=1.4", "matplotlib>=3.8"]
+report = ["pypandoc"]
+
+[project.scripts]
+da = "data_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+data_agent = ["py.typed"]
