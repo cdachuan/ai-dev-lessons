@@ -277,7 +277,7 @@
       "topic": "ecommerce-data-analysis",
       "title": "电商数据分析实战",
       "status": "pushed",
-      "note": "用户问题→Agent选工具→分析数据→图表→结论。真实电商数据(Kaggle)贯穿，指标口径/漏斗/转化/复购/RFM。pandas和pyecharts服务于Agent。核心：数据洞察而非只会写SQL；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付。09-25推送"
+      "note": "用户问题→Agent选工具→分析数据→图表→结论。真实电商数据(Kaggle)贯穿，指标口径/漏斗/转化/复购/RFM。pandas和pyecharts服务于Agent。核心：数据洞察而非只会写SQL；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付。09-25推送。09-29 cron 第1次提醒（未确认，未推41课）"
     },
     {
       "num": 41,
