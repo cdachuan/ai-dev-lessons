@@ -1,4 +1,4 @@
-﻿{
+{
   "meta": {
     "version": 3,
     "created": "2026-07-14",
@@ -255,29 +255,29 @@
       "num": 37,
       "topic": "capstone-agent-project",
       "title": "毕业项目：完整 AI Agent（可展示+可部署）",
-      "status": "done",
-      "note": "P5收尾，简历级产出。成果要可展示：简单网页界面或命令行应用，附README/架构图/示例数据/运行步骤/效果截图或图表。如能部署成别人可试用的小应用，简历价值明显提升。09-14推送（交付 lessons/code/capstone_kit 毕业项目脚手架：main.py + agent/tools.py(5工具含verify) + agent/core.py(ReAct+留痕) + tests/eval.py(固定测试问题集) + 60行示例电商订单。实跑验证：临时目录启动 --selftest 7/7 PASS、无key优雅降级、换目录可跑。38课HTML已提前生成）。09-15第1次提醒未确认，仍待用户确认，不推38课。09-16第2次提醒未确认，仍待用户确认，不推38课。09-17第3次提醒未确认，仍待用户确认，不推38课。09-19第4次提醒无响应，按先例兜底标记done，同晚顺延推送38课"
+      "status": "pending",
+      "note": "P5收尾，简历级产出。成果要可展示：简单网页界面或命令行应用，附README/架构图/示例数据/运行步骤/效果截图或图表。如能部署成别人可试用的小应用，简历价值明显提升。09-14推送（交付 lessons/code/capstone_kit 毕业项目脚手架：main.py + agent/tools.py(5工具含verify) + agent/core.py(ReAct+留痕) + tests/eval.py(固定测试问题集) + 60行示例电商订单。实跑验证：临时目录启动 --selftest 7/7 PASS、无key优雅降级、换目录可跑。38课HTML已提前生成）。09-15第1次提醒未确认，仍待用户确认，不推38课。09-16第2次提醒未确认，仍待用户确认，不推38课。09-17第3次提醒未确认，仍待用户确认，不推38课。09-19第4次提醒无响应，按先例兜底标记done，同晚顺延推送38课 09-29用户回归：明确毕业项目未做，37回退为pending待重学。"
     },
     {
       "num": 38,
       "topic": "agent-workflow-design",
       "title": "Agent 工作流设计",
-      "status": "done",
-      "note": "P6开篇（承接P5巩固）：拆任务、选工具、规划步骤、控制上下文。从简单ReAct升级为可控多步任务流。09-14晚提前生成HTML（0038-agent-workflow-design.html，依据Anthropic Building Effective Agents；待推送）。09-19推送"
+      "status": "pending",
+      "note": "P6开篇（承接P5巩固）：拆任务、选工具、规划步骤、控制上下文。从简单ReAct升级为可控多步任务流。09-14晚提前生成HTML（0038-agent-workflow-design.html，依据Anthropic Building Effective Agents；待推送）。09-19推送 09-29用户回归：38也是兜底虚标，回退pending。"
     },
     {
       "num": 39,
       "topic": "ecommerce-data-toolkit",
       "title": "电商数据工具箱",
-      "status": "done",
-      "note": "P6电商锚点开篇：将pandas/SQL/图表/文件读取封装成规范工具。重点工具描述/参数设计/返回结果与错误反馈。数据用公开电商数据集(Kaggle)贯穿；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付09-20推送。09-24 cron 第1次提醒（未确认，未推40课）。09-25 cron 第2次提醒（09-22/23/24已3次提醒未确认），按19/20/30/34/37课先例兜底标记done，同晚顺延推送40课"
+      "status": "pending",
+      "note": "P6电商锚点开篇：将pandas/SQL/图表/文件读取封装成规范工具。重点工具描述/参数设计/返回结果与错误反馈。数据用公开电商数据集(Kaggle)贯穿；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付09-20推送。09-24 cron 第1次提醒（未确认，未推40课）。09-25 cron 第2次提醒（09-22/23/24已3次提醒未确认），按19/20/30/34/37课先例兜底标记done，同晚顺延推送40课 09-29用户回归：39兜底虚标，回退pending。"
     },
     {
       "num": 40,
       "topic": "ecommerce-data-analysis",
       "title": "电商数据分析实战",
-      "status": "pushed",
-      "note": "用户问题→Agent选工具→分析数据→图表→结论。真实电商数据(Kaggle)贯穿，指标口径/漏斗/转化/复购/RFM。pandas和pyecharts服务于Agent。核心：数据洞察而非只会写SQL；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付。09-25推送。09-29 cron 第1次提醒（未确认，未推41课）"
+      "status": "pending",
+      "note": "用户问题→Agent选工具→分析数据→图表→结论。真实电商数据(Kaggle)贯穿，指标口径/漏斗/转化/复购/RFM。pandas和pyecharts服务于Agent。核心：数据洞察而非只会写SQL；课件已预生成(2026-09-20,39-45全7课)，配套代码ecommerce_toolkit/insight_agent_mvp已交付。09-25推送。09-29 cron 第1次提醒（未确认，未推41课） 09-29用户回归：40退回pending，等37-39完成后再推。"
     },
     {
       "num": 41,
